@@ -1,0 +1,2635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<!-- 告诉浏览器：本页只支持浅色，别自作主张套用深色模式 -->
+<!-- 末尾的 only 是关键：没有它，Chrome 的"强制深色"仍会覆盖页面配色 -->
+<meta name="color-scheme" content="light only" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f4f5f7" />
+<title>Nova Offline</title>
+
+<!-- 站点图标：浏览器标签 / 书签 / 手机主屏 -->
+<link rel="icon" href="img/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="128x128" href="img/icon-128.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="img/icon-512.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="img/icon-512.png" />
+
+<!-- 样式：base 通用 → app 主界面 → tools 功能页 -->
+<link rel="stylesheet" href="css/base.css" />
+<link rel="stylesheet" href="css/app.css" />
+<!-- 功能页样式（格式转换等） -->
+<link rel="stylesheet" href="css/tools.css" />
+</head>
+<body>
+
+<!-- ============================================================
+     主页：欢迎区 + 功能卡片（离线版打开就是这一屏）
+     ============================================================ -->
+<div class="home-page" id="homePage">
+
+  <!-- 顶部品牌蓝区（占屏幕 1/3） -->
+  <header class="home-hero">
+    <!-- logo 直接用站点图标（深色圆角块 + 蓝色 N），和浏览器标签、手机主屏是同一张 -->
+    <div class="home-mark">
+      <img src="img/icon-128.png" alt="Nova 离线版" width="58" height="58" />
+    </div>
+    <h1 class="home-hello">你好，<b id="homeUsername">用户</b>！</h1>
+    <p class="home-sub">Nova 离线版</p>
+  </header>
+
+  <!-- 内容区：手机上在蓝区下方，PC 分栏时占右侧。
+       以后新增的功能入口往 .home-tools 里加即可（见 js/tools.js） -->
+  <main class="home-main">
+
+    <!-- 功能入口 -->
+    <section class="home-tools" id="homeTools">
+      <button type="button" class="tool-btn" id="btnConvert" data-tool="convert">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 照片描线图标：圆角外框 + 太阳 + 山峦 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4.5" width="18" height="15" rx="3.2" />
+            <circle cx="8.6" cy="9.6" r="1.7" />
+            <path d="M4.2 17.2l4.3-4.3a2 2 0 012.8 0l3.1 3.1" />
+            <path d="M13.4 15.2l1.6-1.6a2 2 0 012.8 0l2.2 2.2" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">格式转换</span>
+          <span class="tool-btn-desc">png、jpg 等格式图片互相转换</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnPoints24" data-tool="points24">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 二十四点：四张牌 + 中间一个加号。
+               原来在每张牌里画了点数花纹，缩到 26px 就糊成一团；
+               改成「四张牌围着一个加号」，小尺寸下反而一眼看懂
+               —— 四张牌，做加减乘除。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2.4" y="2.4" width="7.2" height="7.2" rx="1.8" />
+            <rect x="14.4" y="2.4" width="7.2" height="7.2" rx="1.8" />
+            <rect x="2.4" y="14.4" width="7.2" height="7.2" rx="1.8" />
+            <rect x="14.4" y="14.4" width="7.2" height="7.2" rx="1.8" />
+            <path d="M12 10.4v3.2M10.4 12h3.2" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">二十四点</span>
+          <span class="tool-btn-desc">四张牌算二十四</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnUnits" data-tool="units">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 单位换算：上下两条反向箭头（上条朝右、下条朝左）。
+               参考设计稿：两条水平方向互相错开，上条偏右、下条偏左。
+               箭杆（尾部）各向外延长到**与对方的箭头尖同一竖线** ——
+                 上条尾部延长到 x=5.5（正是下箭头尖所在）
+                 下条尾部延长到 x=18.5（正是上箭头尖所在）
+               于是两条箭杆等长（都是 13）、两头齐平，外框和原来一样大，
+               只是原来那截留白被补满。线条粗细不变。
+               底色和描线由 .tool-btn[data-tool="units"] 的两个变量给
+               （见 css/tools.css）。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5.5 8.5h13" />
+            <path d="M15 5l3.5 3.5L15 12" />
+            <path d="M18.5 15.5h-13" />
+            <path d="M9 12l-3.5 3.5L9 19" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">单位换算</span>
+          <span class="tool-btn-desc">同种单位互相换算</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnGraph" data-tool="graph">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 函数图像：一个**画出来的**「f(x)」轮廓（原来是 <text> 写上去的）。
+               这一张不走描线图标 —— 函数图像的标志就是那个记号本身，
+               写成文字比画一条曲线更好认（曲线和"图片格式转换"的图标
+               也容易看混）。
+               字形（参考设计稿）：**斜体衬线**，也就是数学里 f(x) 的排法
+               —— 正体的 sans 看着像普通文字，斜体才一眼认成函数记号。
+               ★ 为什么改成 path：<text> 的最终样子取决于**跑在谁的机器上**
+                 —— 字体清单里哪一个装了、哪个没装，落到不同的字体就是
+                 不同的字形和宽度（比如 Georgia 和 Songti SC 就差一截）。
+                 改成 path 后形状钉死在文件里，换设备、换字体都一样。
+               ★ 形状怎么来的：把原来那条 <text>（Georgia 斜体 12.5px，
+                 居中 x=13.4、基线 y=16.3）以每单位 2048/24 像素栅格化，
+                 沿 alpha=0.5 的等高线描出轮廓，再简化成折线。所以它
+                 就是原来那个字形，只是从"字"变成了"线"。
+               ★ 外扩描边别删：文字渲染器在 28px 这种小尺寸下会**对齐像素**，
+                 笔画比几何宽度略粗；纯填充的 path 拿不到这层补偿，
+                 小尺寸下会看着偏细。这里用同色描边
+                 （stroke-width=".2"，等于向外扩 0.1）把这点差补回来 ——
+                 实测在 28/36/56px 下的重合度因此明显提高，
+                 而在 128px 以上几乎逐像素一致。
+               底色和字色由 .tool-btn[data-tool="graph"] 的两个变量给
+               （见 css/tools.css）。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path style="fill: var(--tool-ico-fg); stroke: var(--tool-ico-fg);
+                         stroke-width: .2; stroke-linejoin: round;"
+                  fill-rule="evenodd"
+                  d="M8.47 6.86L9.02 6.88L9.25 6.94L9.45 7.05L9.55 7.16L9.66 7.34L9.70 7.57L9.66 7.82L9.55 8.03L9.40 8.16L9.12 8.23L8.85 8.19L8.66 8.09L8.55 7.99L8.35 7.73L8.12 7.35L8.05 7.35L7.88 7.40L7.66 7.54L7.46 7.76L7.29 8.05L6.99 8.84L6.65 10.32L8.18 10.33L8.07 10.88L6.54 10.89L5.39 16.22L5.21 16.77L4.95 17.29L4.63 17.74L4.25 18.15L3.84 18.48L3.42 18.74L3.01 18.91L2.50 19.00L2.00 18.98L1.66 18.86L1.49 18.72L1.41 18.62L1.32 18.35L1.36 18.04L1.41 17.92L1.55 17.75L1.71 17.65L1.90 17.62L2.07 17.63L2.26 17.70L2.43 17.82L2.57 17.98L2.89 18.49L3.02 18.48L3.33 18.33L3.61 18.01L3.87 17.52L4.06 17.02L4.28 16.15L5.40 10.90L4.22 10.89L4.34 10.34L5.51 10.32L5.67 9.63L5.93 8.92L6.20 8.42L6.60 7.88L6.96 7.52L7.49 7.16L8.02 6.95ZM13.15 6.95L13.18 6.95L13.08 7.44L12.55 7.60L12.00 7.92L11.45 8.43L11.04 8.94L10.70 9.49L10.26 10.41L9.99 11.17L9.77 12.00L9.58 12.98L9.46 13.97L9.43 14.94L9.48 15.79L9.57 16.28L9.67 16.58L9.81 16.92L10.00 17.23L10.22 17.46L10.41 17.60L10.69 17.74L11.04 17.85L10.94 18.29L10.66 18.25L10.24 18.13L9.88 17.97L9.62 17.81L9.28 17.52L8.84 16.96L8.54 16.29L8.34 15.45L8.28 14.53L8.33 13.45L8.53 12.15L8.86 11.03L9.27 10.09L9.70 9.35L10.38 8.47L10.91 7.97L11.40 7.60L11.70 7.43L11.98 7.29L12.55 7.07ZM20.27 6.95L20.75 7.04L21.14 7.18L21.40 7.31L21.76 7.57L21.94 7.73L22.23 8.09L22.59 8.73L22.82 9.53L22.89 10.02L22.92 10.61L22.88 11.78L22.69 13.03L22.43 13.98L22.14 14.74L21.95 15.13L21.51 15.89L20.87 16.71L20.31 17.26L19.80 17.64L19.52 17.80L19.22 17.96L18.64 18.17L18.04 18.30L18.12 17.80L18.60 17.66L19.21 17.32L19.77 16.80L20.26 16.16L20.68 15.43L20.98 14.74L21.32 13.69L21.53 12.79L21.68 11.81L21.77 10.77L21.78 10.00L21.68 9.18L21.50 8.53L21.31 8.16L21.15 7.95L20.96 7.76L20.68 7.57L20.17 7.39ZM18.06 10.20L18.41 10.21L18.59 10.30L18.73 10.44L18.82 10.61L18.84 10.80L18.81 11.02L18.73 11.19L18.62 11.30L18.47 11.39L18.18 11.49L17.81 11.48L17.25 11.33L16.89 11.70L16.60 12.06L16.16 12.70L15.92 13.10L16.43 14.89L16.54 15.18L16.67 15.38L16.91 15.59L17.04 15.66L17.26 15.72L17.66 15.72L18.23 15.60L18.14 16.00L17.38 16.29L16.86 16.39L16.62 16.40L16.29 16.36L15.93 16.21L15.76 16.05L15.57 15.71L15.12 14.05L14.31 15.25L13.89 15.76L13.49 16.13L13.23 16.29L12.86 16.40L12.52 16.38L12.26 16.25L12.10 16.01L12.07 15.77L12.13 15.50L12.28 15.29L12.56 15.13L12.89 15.08L13.15 15.11L13.66 15.28L14.45 14.37L14.98 13.54L14.47 11.68L14.36 11.39L14.24 11.18L14.11 11.05L13.99 10.99L13.72 10.92L13.35 10.93L12.83 11.05L12.95 10.65L13.78 10.33L14.24 10.21L14.63 10.24L15.00 10.41L15.18 10.59L15.39 11.03L15.80 12.61L16.42 11.63L17.06 10.80L17.50 10.42L17.74 10.29Z" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">函数图像</span>
+          <span class="tool-btn-desc">画函数图像，看形状变化</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnRoman" data-tool="roman">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 罗马数字：一个**画出来的**「V」轮廓（原来是 <text> 写上去的）。
+               和「函数图像」一样走文字造型 —— 罗马数字的标志就是那几个
+               字母本身，写成文字比画什么图形都直观。
+               ★ 为什么改成 path：同一个 <text>，装了「方正小标宋」的机器
+                 和退到 Songti SC / Georgia 的机器，字形宽度差
+                 （实测 90pt→83pt 那种量级），换个设备就换一副样子。
+                 改成 path 后形状钉死在文件里。
+               ★ 形状怎么来的：把原来那条 <text>（方正小标宋 20px，
+                 居中 x=12、基线 y=19.5）栅格化后沿 alpha=0.5 等高线描出
+                 轮廓，再简化成折线 —— 就是原来那个字形，只是从"字"
+                 变成了"线"。
+               ★ 外扩描边别删：小尺寸下文字渲染器会**对齐像素**，笔画比
+                 几何宽度略粗，纯填充的 path 会偏细。这里用同色描边
+                 （stroke-width=".2"，向外扩 0.1）补回来（同「函数图像」）。
+               ★ 字号 20 是有意的：这个 V 是整张卡片的标志，小一号就"飘"
+                 在色块中间显得单薄（12.5 那档是给 f(x) 三个字符的，
+                 它们仨拼一起才占得满；V 只有一个字形，得单个放大）。
+               底色和字色由 .tool-btn[data-tool="roman"] 的两个变量给
+               （见 css/tools.css）。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path style="fill: var(--tool-ico-fg); stroke: var(--tool-ico-fg);
+                         stroke-width: .2; stroke-linejoin: round;"
+                  fill-rule="evenodd"
+                  d="M4.96 5.64L10.69 5.64L10.69 6.33L9.86 6.41L9.21 6.55L8.99 6.71L8.95 6.86L8.97 7.02L9.07 7.36L12.54 16.63L13.83 13.42L15.26 9.75L15.75 8.38L15.94 7.62L15.96 7.09L15.86 6.89L15.68 6.75L15.39 6.61L15.00 6.49L14.59 6.41L13.92 6.33L13.92 5.64L19.07 5.64L19.07 6.33L18.63 6.39L18.29 6.49L17.99 6.62L17.73 6.78L17.40 7.11L17.03 7.77L15.54 11.39L12.27 19.67L11.46 19.66L6.90 7.50L6.75 7.24L6.59 7.04L6.14 6.68L5.94 6.57L5.59 6.44L4.96 6.33Z" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">罗马数字</span>
+          <span class="tool-btn-desc">阿拉伯数字与罗马数字互相转换</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnXor" data-tool="xor">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 异或法则：一个**画出来的**「XOR」轮廓（原来是 <text> 写上去的）。
+               字母用黑体的骨架：X / O / R 三个大写字母，一眼就是那个
+               记号本身，比画电路符号省地方也好认。
+               ★ 为什么改成 path：<text> 的样子跟着**字体清单里谁被装上**跑
+                 —— 装了 SimHei（Windows 的黑体）是一副样子，退到
+                 「微软雅黑 / Roboto」又是另一副，同一张卡在不同设备上
+                 字号观感能差一截。改成 path 后形状钉死在文件里。
+               ★ 形状怎么来的：把原来那条 <text>（SimHei 13px，
+                 居中 x=12、基线 y=16.7，textLength=19）栅格化后沿
+                 alpha=0.5 等高线描出轮廓，再简化成折线 —— 就是原来
+                 那三个字母，只是从"字"变成了"线"。
+                 （原来那条 textLength 是为了在没装黑体的机器上压住
+                 宽度；现在宽度本身就钉死在 path 里，那一手不再需要。）
+               ★ 外扩描边别删：小尺寸下文字渲染器会**对齐像素**，笔画比
+                 几何宽度略粗，纯填充的 path 会偏细。这里用同色描边
+                 （stroke-width=".2"，向外扩 0.1）补回来（同「函数图像」）。
+               ★ 居中按**大写字母**算：XOR 没有下伸部，基线取 16.7
+                 （比函数图像那张的 16.3 略低 —— 那边带括号和下伸部，
+                 重心比纯大写字母高）。
+               底色和字色由 .tool-btn[data-tool="xor"] 的两个变量给
+               （见 css/tools.css）。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path style="fill: var(--tool-ico-fg); stroke: var(--tool-ico-fg);
+                         stroke-width: .2; stroke-linejoin: round;"
+                  fill-rule="evenodd"
+                  d="M11.67 7.46L12.41 7.49L12.89 7.60L13.28 7.78L13.46 7.90L13.65 8.04L13.96 8.36L14.29 8.85L14.53 9.43L14.73 10.27L14.84 11.26L14.86 12.43L14.78 13.56L14.60 14.48L14.34 15.22L13.96 15.82L13.46 16.29L13.10 16.50L12.88 16.59L12.46 16.70L12.15 16.74L11.44 16.70L10.84 16.53L10.61 16.41L10.27 16.17L9.91 15.82L9.75 15.61L9.52 15.22L9.29 14.64L9.11 13.90L9.00 12.86L8.98 11.61L9.07 10.56L9.24 9.68L9.51 8.95L9.64 8.73L9.91 8.36L10.08 8.18L10.42 7.90L10.79 7.68L11.03 7.59L11.24 7.53ZM2.62 7.56L4.25 7.55L5.57 10.42L6.87 7.56L8.51 7.56L6.33 11.87L8.75 16.64L7.12 16.64L5.57 13.36L4.00 16.64L2.36 16.64L4.79 11.87ZM15.51 7.56L18.20 7.55L18.97 7.62L19.49 7.77L20.05 8.05L20.39 8.32L20.65 8.64L20.76 8.82L20.91 9.20L21.02 9.71L21.04 10.52L20.92 11.19L20.74 11.61L20.63 11.80L20.36 12.11L20.00 12.40L19.50 12.66L21.41 16.64L19.79 16.64L18.00 12.88L17.04 12.89L17.04 16.64L15.51 16.64ZM11.79 8.84L12.08 8.83L12.45 8.96L12.72 9.20L12.94 9.52L13.09 9.94L13.18 10.36L13.24 10.84L13.28 11.74L13.27 12.73L13.21 13.55L13.11 14.17L13.01 14.48L12.79 14.89L12.56 15.14L12.22 15.33L11.94 15.37L11.60 15.31L11.32 15.14L11.10 14.91L10.92 14.65L10.75 14.20L10.67 13.82L10.57 12.61L10.59 11.06L10.67 10.34L10.80 9.80L10.93 9.49L11.20 9.15L11.55 8.90ZM17.04 8.93L18.06 8.93L18.50 8.97L18.83 9.07L19.16 9.28L19.33 9.49L19.43 9.71L19.49 9.95L19.51 10.22L19.50 10.49L19.44 10.78L19.34 11.02L19.24 11.14L18.88 11.38L18.53 11.49L18.23 11.51L17.04 11.51Z" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">异或法则</span>
+          <span class="tool-btn-desc">叠加、抵消、还原</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnMagic" data-tool="magic">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 九宫幻方：一个圆角方框，里面切两刀横的、两刀竖的，
+               正好 3×3 九个格子 —— 九格全空，不填实。
+               （格线本身已经够读作九宫了；中间填一块反而像个补丁，
+               小尺寸下九宫反而看不出来。）
+               底色和描线色由 .tool-btn[data-tool="magic"] 的两个变量给
+               （见 css/tools.css），维护态由那边写死的灰色盖掉。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2.8" y="2.8" width="18.4" height="18.4" rx="3" />
+            <path d="M8.93 2.8v18.4" />
+            <path d="M15.07 2.8v18.4" />
+            <path d="M2.8 8.93h18.4" />
+            <path d="M2.8 15.07h18.4" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">九宫幻方</span>
+          <span class="tool-btn-desc">横竖斜同和</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnBash" data-tool="bash">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 巴什博弈：画一个「%」。
+               巴什博弈的胜负只看「总数 ÷ (m+1) 的余数」——先手把每轮
+               凑成 m+1，最后一定卡在同一个余数上，一个百分号正好点出
+               这份「同余」，比摆一堆石子更好认。
+               和其它描线图标一样画两个圆 + 一道斜杠，颜色走
+               --tool-ico-fg；% 没有下伸部，整块略微上提（圆心 8.2 /
+               15.8），在 24 的方框里才看着居中。
+               底色和描线色由 .tool-btn[data-tool="bash"] 的两个变量给
+               （见 css/tools.css）—— 和「格式转换」那张同色：黄底黑图。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="8.2" cy="8.2" r="2.9" />
+            <circle cx="15.8" cy="15.8" r="2.9" />
+            <path d="M18 5.9L6 18.1" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">巴什博弈</span>
+          <span class="tool-btn-desc">同余制衡</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnBrahma" data-tool="brahma">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 梵天汉诺：**汉诺塔开局** —— 一条底座、三根柱子，
+               中间那根套着三层由宽到窄的圆盘，左右两根空着。
+               前两版都不够认：只画一根柱 + 一摞盘，缩到 28px 就是一棵
+               小树，和「九宫幻方」那种纯几何图形摆一起分不出来。
+               这一版盯住汉诺塔真正的辨识点 —— **三根柱子 + 一摞递减的盘**，
+               盘只占中间一根，左右两根空着，才一眼是那个游戏。
+               两条经验：
+                 · 圆盘画成填充块（fill 取 --tool-ico-fg），柱子、底座走描线。
+                   全都走描线的话，盘就是一排横线，小尺寸下糊成一撇；
+                   填充块在 28px 下还剩 2 个像素高，读得出是"盘子"。
+                 · 盘宽按 9.6 / 6.8 / 4 递减（每层少 2.8，盘厚 2.4），
+                   上下两块之间不留缝 —— 拆成一条条独立的横线，整体就散了。
+                   最宽那块离两侧柱子各留 2.8 的空档，挨太近三根柱会和盘
+                   粘成一团。柱顶比最上面那块盘高出 1.0，露一点点柱尖。
+               底色和描线色由 .tool-btn[data-tool="brahma"] 的两个变量给
+               （见 css/tools.css）—— 和「二十四点」那张同色：红底白图。
+               填充块同样走 --tool-ico-fg，所以下线维护时跟着一起变白，
+               和描线部分保持一致（见那条 .is-maintenance 规则）。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2.8 19h18.4" />
+            <path d="M4.4 19V9.2" />
+            <path d="M12 19V9.2" />
+            <path d="M19.6 19V9.2" />
+            <rect x="7.2" y="16.4" width="9.6" height="2.4" rx="1.2"
+                  style="fill: var(--tool-ico-fg); stroke: none;" />
+            <rect x="8.6" y="13.3" width="6.8" height="2.4" rx="1.2"
+                  style="fill: var(--tool-ico-fg); stroke: none;" />
+            <rect x="10" y="10.2" width="4" height="2.4" rx="1.2"
+                  style="fill: var(--tool-ico-fg); stroke: none;" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">梵天汉诺</span>
+          <span class="tool-btn-desc">自相似展开</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnFourColor" data-tool="fourcolor">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 四色谜题：一个圆角正方形 + 它的两条对角线，对角斜切，
+               正好切成 **四个大小相同的三角形**（四色定理的经典画法：
+               相邻两块共用一条边、颜色不同，四色就够）。
+               两条线各从一个角对角连到另一个角，两端落在方框边角内侧
+               （2.8 的圆角那圈），不跟圆角打架。
+               底色和描线色由 .tool-btn[data-tool="fourcolor"] 的两个变量给
+               （见 css/tools.css）—— 和「单位换算」那张同色：蓝底白图。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2.8" y="2.8" width="18.4" height="18.4" rx="2.8" />
+            <path d="M3.62 3.62L20.38 20.38" />
+            <path d="M20.38 3.62L3.62 20.38" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">四色谜题</span>
+          <span class="tool-btn-desc">四色定理</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <!-- 囚徒困境：正式版这一页也还没做完，离线版直接写成「下线卡片」——
+           卡片置灰 + 名字后面挂「开发中」，点了只弹一句提示，
+           页面本身不存在（详见 js/tools.js 的 WIP_TOOLS）。 -->
+      <button type="button" class="tool-btn is-maintenance" id="btnPrisoner" data-tool="prisoner"
+              aria-description="开发中，暂时不可使用">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 囚徒困境：监狱铁栏杆 —— 上下两根横杆 + 四根竖栏杆，
+               立起来正好三格。
+               ★ 这一张不走"方框"的路子（原来是圆角正方形 + 两条竖线）：
+                 · 圆角被拿掉了 —— 铁栏杆的横杆是直的，带圆角反而不像
+                 · 上下两根横杆比四根竖栏杆**各向外伸出一截**（伸出 2.0），
+                   照着栏杆的横杆做得比栏身宽一点的样子
+                 · 四根竖栏杆里，最左最右两根就是原来的左右边框，
+                   中间两根是分隔 —— 于是横杆之间平分出三格
+               这样才读得出是"栏杆"，而不是又一个"方框里划线"（和
+               「九宫幻方」「四色谜题」那种纯几何图形分得开）。
+               底色和描线色由 .tool-btn[data-tool="prisoner"] 的两个变量给
+               （见 css/tools.css）—— 和「函数图像」那张同色：绿底白图。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5.4 5.2v13.6" />
+            <path d="M9.8 5.2v13.6" />
+            <path d="M14.2 5.2v13.6" />
+            <path d="M18.6 5.2v13.6" />
+            <path d="M3.4 5.2h17.2" />
+            <path d="M3.4 18.8h17.2" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">囚徒困境<span class="tool-maint-tag">开发中</span></span>
+          <span class="tool-btn-desc">背叛与信任</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnGame2048" data-tool="game2048">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 二零四八：一个**画出来的**「2048」轮廓（原来是 <text> 写上去的）。
+               和「函数图像 / 罗马数字 / 异或法则」一样走文字造型 —— 这游戏的
+               标志就是那四个数字本身，写出来比画方块直观。
+               ★ 为什么改成 path：<text> 的字形跟着设备装的字体跑
+                 （SimHei / 雅黑 / Arial 三副骨架宽度差一截），换设备就变样。
+                 改成 path 后形状钉死在文件里。
+               ★ 形状怎么来的：把原来那条 <text>（SimHei 220px）栅格化后沿
+                 alpha=0.5 等高线描出四个数字的内外轮廓，再简化成折线 ——
+                 就是那四个字形，只是从"字"变成了"线"。
+               ★ 外扩描边别删：小尺寸下文字渲染器会**对齐像素**，笔画比几何
+                 宽度略粗，纯填充的 path 会偏细。这里用同色描边
+                 （stroke-width=".2"，向外扩 0.1）补回来（同其它几张）。
+               底色和字色由 .tool-btn[data-tool="game2048"] 的两个变量给
+               （见 css/tools.css）—— 和「罗马数字」那张同色：橙底白字。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path style="fill: var(--tool-ico-fg); stroke: var(--tool-ico-fg);
+                         stroke-width: .2; stroke-linejoin: round;"
+                  fill-rule="evenodd"
+                  d="M2.63 7.9L2.03 8.04L1.4 8.44L0.81 9.21L0.5 9.97L1.32 10.12L1.74 9.43L2.19 9.04L2.74 8.8L3.4 8.8L3.83 9.02L4.18 9.43L4.3 9.86L4.23 10.52L3.84 11.39L2.98 12.65L0.92 14.99L0.7 15.49L0.65 15.92L0.72 16L5.31 16L5.4 15.87L5.39 15.21L5.31 15.14L2.08 15.1L4.62 11.88L4.99 11.23L5.27 10.35L5.2 9.26L4.6 8.35L3.78 7.93L2.69 7.89ZM8.85 7.89L8.36 7.99L7.76 8.32L7.36 8.72L6.92 9.43L6.55 10.9L6.54 13.03L6.87 14.39L7.38 15.31L7.87 15.73L8.47 16.04L9.45 16.11L10.38 15.65L11.01 14.83L11.44 13.14L11.49 11.56L11.26 9.86L10.77 8.83L10.44 8.43L9.89 8.05L8.91 7.89ZM16.06 7.93L12.28 13.36L12.26 14.18L15.79 14.22L15.87 15.98L16.66 16L16.76 15.87L16.77 14.26L17.86 14.18L17.87 13.52L17.81 13.43L16.75 13.36L16.75 8.01L16.66 7.92L16.11 7.92ZM20.59 7.94L20.04 8.04L19.57 8.28L19.04 8.83L18.78 9.32L18.7 10.25L18.82 10.79L19.09 11.28L19.61 11.72L18.93 12.27L18.61 12.81L18.43 13.58L18.49 14.45L18.77 15.21L19.44 15.81L20.43 16.11L21.57 16.11L22.23 15.93L22.75 15.59L23.17 15.05L23.44 14.39L23.5 13.47L23.23 12.59L22.83 12.14L22.13 11.77L22.76 11.28L23.06 10.85L23.23 10.3L23.23 9.48L22.95 8.83L22.34 8.27L21.63 7.99L20.64 7.93ZM8.91 8.76L8.36 9.03L7.85 9.75L7.53 11.01L7.45 12.37L7.59 13.52L7.97 14.5L8.53 15.07L9.18 15.23L9.78 14.93L10.23 14.28L10.52 13.03L10.54 11.61L10.46 10.46L10.12 9.48L9.56 8.86L8.96 8.76ZM20.48 8.81L19.99 9.02L19.71 9.37L19.58 9.7L19.59 10.3L19.81 10.79L20.1 11.08L20.64 11.3L21.19 11.3L21.68 11.13L22.12 10.68L22.31 10.03L22.24 9.48L22.01 9.11L21.63 8.86L20.53 8.8ZM15.79 9.83L13.28 13.36L15.73 13.42L15.85 13.3L15.84 9.83ZM20.64 12.32L19.99 12.57L19.53 13.08L19.41 13.52L19.47 14.34L19.71 14.83L20.04 15.07L20.64 15.23L21.46 15.17L22.01 14.94L22.35 14.56L22.53 14.01L22.52 13.36L22.31 12.92L21.84 12.52L21.19 12.29L20.7 12.3Z" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">二零四八</span>
+          <span class="tool-btn-desc">同值合并</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnMorse" data-tool="morse">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 异语道破：画一组摩斯电码「.-.-」（点 杠 点 杠）。
+               四个符号**同一水平中线**（都在 y=12），整组左右居中、
+               上下也居中 —— 点是小圆，杠是圆头短横，粗细对齐才读得出
+               是电码而不是一串乱点。
+               ★ 「.-.-」不是左右对称的（反过来是「-.-.」），所以居中按
+                 **整组的外接框**算：最左是第一个点的左边，最右是第二条杠
+                 圆头的那一端，两边到中线的距离相等，落在正中。
+               ★ 两条杠比第一版各拉长了半格（2.7 → 3.2）：原来太短，
+                 和点的大小拉不开，缩到 28px 看着像四个点。
+               点和杠都走 --tool-ico-fg（点用 fill、杠用 stroke），
+               所以下线维护变灰时一起跟着变，和描线部分保持一致。
+               底色和字色由 .tool-btn[data-tool="morse"] 的两个变量给
+               （见 css/tools.css）—— 和「异或法则」那张同色：天蓝底白图。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="3.35" cy="12" r="1.4"
+                    style="fill: var(--tool-ico-fg); stroke: none;" />
+            <path d="M7 12h3.2"
+                  style="stroke: var(--tool-ico-fg); stroke-width: 2.7;" />
+            <circle cx="13.85" cy="12" r="1.4"
+                    style="fill: var(--tool-ico-fg); stroke: none;" />
+            <path d="M17.5 12h3.2"
+                  style="stroke: var(--tool-ico-fg); stroke-width: 2.7;" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">异语道破</span>
+          <span class="tool-btn-desc">滴答滴答</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnBridge" data-tool="bridge">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 数字桥屿：左右两个**实心圆**（岛），中间两条平行线穿过圆心相连
+               （桥）。两条线在 28px 下才分得开 —— 只画一条会像根"杠铃"，
+               两条才看得出是"桥"的双线。
+               两个圆心、两条线的竖位都左右/上下对称，整块居中。
+               ★ 两个岛比第一版各向外挪了 1.2（圆心 6.6/17.4 → 5.4/18.6），
+                 整块左右拉长：岛离边缘留一点余量、中间的桥也跟着变长，
+                 看着才像"两座岛架着一条长桥"。
+               ★ 这一版把两个岛又**放大了一点**（半径 2.7 → 3.0），
+                 顺带再向外挪了 0.4（圆心 5.4/18.6 → 5.0/19.0）——
+                 岛大了之后，靠着边缘那点余量正好够，中间的桥也更长。
+               圆走 fill、线走 stroke，都取 --tool-ico-fg，维护变灰一起变。
+               底色和描线色由 .tool-btn[data-tool="bridge"] 的两个变量给
+               （见 css/tools.css）—— 和「九宫幻方」那张同色：紫底白图。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="5" cy="12" r="3"
+                    style="fill: var(--tool-ico-fg); stroke: none;" />
+            <circle cx="19" cy="12" r="3"
+                    style="fill: var(--tool-ico-fg); stroke: none;" />
+            <path d="M5 9.8h14M5 14.2h14"
+                  style="stroke: var(--tool-ico-fg); stroke-width: 1.6;" />
+          </svg>
+        </span>
+
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">数字桥屿</span>
+          <span class="tool-btn-desc">不交叉，不孤岛</span>
+        </span>
+
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5l7 7-7 7" />
+          </svg>
+        </span>
+      </button>
+    </section>
+
+  </main>
+
+  <!-- 底部栏：离线版只留一个「设置」齿轮
+       （站内信 / 好友 / 个人主页那几个都在离线版里砍掉了） -->
+  <div class="home-footer">
+    <button type="button" class="home-gear" id="btnSettings" aria-label="设置" title="设置">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
+      </svg>
+    </button>
+  </div>
+
+</div><!-- /#homePage -->
+
+<!-- ============================================================
+     功能页：格式转换
+     现在是一张白屏占位，只放了个返回按钮。
+     以后功能都写在这里（样式见 css/tools.css，逻辑见 js/tools.js）
+     ============================================================ -->
+<div class="tool-page" id="toolConvert">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">格式转换</h3>
+  </div>
+
+  <div class="tool-body" id="toolConvertBody">
+    <div class="cv-wrap">
+      <!-- ---------- 1) 选图片 ---------- -->
+      <section class="cv-card">
+        <button type="button" class="cv-drop" id="cvDrop">
+          <span class="cv-drop-ico" aria-hidden="true">
+            <!-- 上传：托盘 + 向上箭头 -->
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 15.5V4" />
+              <path d="M7.6 8.4L12 4l4.4 4.4" />
+              <path d="M4 14.5v4A1.5 1.5 0 005.5 20h13a1.5 1.5 0 001.5-1.5v-4" />
+            </svg>
+          </span>
+          <span class="cv-drop-txt">
+            <b>选择图片</b>
+            <span>点这里挑选，或把图片拖进来 · 支持多选</span>
+          </span>
+        </button>
+        <!-- 真正的文件选择器藏起来，由上面那块大按钮代为触发 -->
+        <input type="file" id="cvInput" accept="image/*,.heic,.heif" multiple hidden />
+      </section>
+
+      <!-- ---------- 2) 输出设置 ---------- -->
+      <section class="cv-card">
+
+        <div class="cv-group">
+          <div class="cv-row-label">转换为</div>
+          <div class="chips" id="cvFormats" role="radiogroup" aria-label="输出格式"></div>
+        </div>
+
+        <!-- 只有有损格式（JPG / WebP）才显示画质 -->
+        <div class="cv-group" id="cvQualityWrap" hidden>
+          <div class="cv-row-label">画质 <b id="cvQualityVal">90%</b></div>
+          <input type="range" id="cvQuality" class="cv-range"
+                 min="40" max="100" step="5" value="90" aria-label="输出画质" />
+        </div>
+
+        <!-- 只有 JPG 才显示底色（它没有透明通道）。
+             刻意不用 <input type="color">：它在安卓上会弹系统调色板，
+             样式和本站对不上；这里自己做一个「色块 + 6 位色码输入 + 常用色」。 -->
+        <div class="cv-group" id="cvBgWrap" hidden>
+          <div class="cv-row-label">透明区域填充</div>
+          <div class="input-wrap cv-hex" data-field>
+            <span class="cv-swatch" id="cvSwatch" aria-hidden="true"></span>
+            <input type="text" id="cvHex" maxlength="7"
+                   placeholder="#FFFFFF" autocomplete="off" autocapitalize="characters"
+                   spellcheck="false" aria-label="填充颜色，6 位十六进制色码" />
+          </div>
+          <div class="hint"></div>
+          <div class="cv-presets" id="cvPresets" aria-label="常用填充色"></div>
+          <p class="cv-subnote">JPG 不支持透明，PNG 里的透明部分会填成这个颜色</p>
+        </div>
+
+        <div class="cv-group">
+          <div class="cv-row-label">尺寸（最长边不超过）</div>
+          <div class="chips" id="cvSizes" role="radiogroup" aria-label="输出尺寸"></div>
+        </div>
+
+        <!-- 只影响「怎么把结果给你」，不影响转换本身，所以不用重新转换 -->
+        <div class="cv-group">
+          <label class="cv-check">
+            <span class="checkbox"><input type="checkbox" id="cvZip" /><span></span></span>
+            <span>打包成一个 ZIP 下载</span>
+          </label>
+        </div>
+
+        <p class="cv-note">
+          图片只在你自己的浏览器里处理，不会上传到服务器。
+        </p>
+      </section>
+
+      <!-- ---------- 3) 开始转换 ---------- -->
+      <button type="button" class="sub-save cv-go" id="cvGo" disabled>开始转换</button>
+
+      <!-- ---------- 4) 结果列表 ---------- -->
+      <section class="cv-card" id="cvListCard" hidden>
+        <div class="cv-list-head">
+          <span id="cvCount">—</span>
+          <div class="cv-head-acts">
+            <button type="button" class="mini-btn" id="cvAllBtn" disabled>全部下载</button>
+            <button type="button" class="mini-btn" id="cvClearBtn">清空</button>
+          </div>
+        </div>
+        <!-- 每一行由 js/convert.js 生成（文件名是用户数据，一律用 textContent 写入） -->
+        <div class="cv-list" id="cvList"></div>
+      </section>
+
+      <p class="cv-foot">动图（GIF / 动态 WebP）只保留第一帧 · SVG 暂不支持</p>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     功能页：二十四点
+     和其它功能页一样：一条顶栏（返回 + 标题）、下面 body 放内容。
+     玩法全在 js/points24.js 里：出题、判题都在浏览器本地完成，
+     不碰后端（见该文件头部说明）。
+     ============================================================ -->
+<div class="tool-page" id="toolPoints24">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">二十四点</h3>
+  </div>
+
+  <div class="tool-body" id="toolPoints24Body">
+    <div class="pt-wrap">
+
+      <!-- ---------- 1) 牌面 ---------- -->
+      <section class="pt-card">
+        <div class="pt-head">
+          <span class="pt-round" id="ptRound">第 1 局</span>
+          <span class="pt-score" id="ptScore">已解出 0 局</span>
+        </div>
+        <!-- 四张牌由 js/points24.js 生成：点一张，就把它的数字填进下面的算式 -->
+        <div class="pt-cards" id="ptCards"></div>
+        <p class="pt-tip">点一张牌，把它的数字填进算式</p>
+      </section>
+
+      <!-- ---------- 2) 算式 ---------- -->
+      <section class="pt-card">
+        <div class="pt-row-label">填一个算式，让结果等于 24</div>
+        <div class="input-wrap pt-input" data-field>
+          <input type="text" id="ptExpr" maxlength="120"
+                 placeholder="例如 (3+5)×(6−3)" autocomplete="off"
+                 autocapitalize="off" autocorrect="off" spellcheck="false"
+                 aria-label="你的算式" />
+        </div>
+        <div class="hint"></div>
+        <!-- 运算符快捷输入：手机上敲 × ÷ 和括号麻烦，点这些就行 -->
+        <div class="pt-keys" id="ptKeys"></div>
+      </section>
+
+      <!-- ---------- 3) 操作 ---------- -->
+      <button type="button" class="sub-save pt-go" id="ptSubmit">验 证</button>
+
+      <div class="pt-acts">
+        <button type="button" class="mini-btn" id="ptNew">换一组</button>
+        <button type="button" class="mini-btn" id="ptAnswer">看答案</button>
+      </div>
+
+      <!-- 参考答案（点「看答案」才出现） -->
+      <div class="pt-note" id="ptNote" hidden></div>
+
+      <p class="pt-foot">四个数字各用一次，可用 + − × ÷ 和括号 · 数字范围 1–13</p>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     功能页：单位换算
+     和其它功能页一样：一条顶栏（返回 + 标题）、下面 body 放内容。
+     body 里是**两层视图**（用 hidden 切，逻辑见 js/units.js）：
+       1) #unitCats  选类别（一张卡一个类别）
+       2) #unitConv  换算界面（上框输数值 → 下框同步出结果）
+     加一个类别：这里复制一张类别卡（换 data-unit-cat / 图标 / 文案），
+     再到 js/units.js 的 UNITS 里补一份单位表即可。
+     ============================================================ -->
+<div class="tool-page" id="toolUnits">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">单位换算</h3>
+  </div>
+
+  <div class="tool-body" id="toolUnitsBody">
+
+    <!-- ---------- 一、选类别 ----------
+         一张卡一个类别，沿用首页那种 .tool-btn（图标 + 大标题 + 箭头）。
+         只有大标题，不带 .tool-btn-desc —— 类别页就一张张名字摆着，
+         副标题那行说明是多余的。
+
+         两条约束（都和"别把自己变成首页卡片"有关）：
+           · **不能**带 data-tool —— 那是首页卡片 / tools.js 的登记键，
+             带上就会被当成功能入口，首页和「卡片维护」都会多出一条
+           · 图标只画形状：底色和描线由 css/tools.css 的 .unit-cat 统一给
+             （蓝底白画，和首页那张「单位换算」卡同色号）
+         所以加一个类别：这里复制一张卡（改 data-unit-cat 和图标），
+         再到 js/units.js 补一条同名数据即可。 -->
+    <div class="unit-cats" id="unitCats">
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="length">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 尺子：圆角长条 + 上缘几道长短刻度 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="10" rx="2.4" /><path d="M6.4 7v3.8" /><path d="M10.2 7v2.4" /><path d="M14 7v3.8" /><path d="M17.8 7v2.4" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">长度</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="area">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 面积：一个正方形切成四格，像单位方格铺满一块地 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="2.4" /><path d="M12 3.5v17" /><path d="M3.5 12h17" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">面积</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="volume">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 体积＆容积：等轴测的立方体（上盖 + 右侧面 + 前棱），一眼是"立体的块" -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2l7.6 4v9.6l-7.6 4-7.6-4V7.2z" /><path d="M4.4 7.2L12 11.2l7.6-4" /><path d="M12 11.2v9.6" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">体积＆容积</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="mass">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 质量：哑铃 —— 一根横杆，两端各一大一小两片配重。
+               片特意画得偏高偏厚：图标实际只有 28px，
+               太细的话缩下去就糊成几根线了（和「单位换算」那张卡的
+               图标一个道理）。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><rect x="2.6" y="9.2" width="2.8" height="5.6" rx="1.4" /><rect x="6" y="6.6" width="3.6" height="10.8" rx="1.8" /><rect x="14.4" y="6.6" width="3.6" height="10.8" rx="1.8" /><rect x="18.6" y="9.2" width="2.8" height="5.6" rx="1.4" /><path d="M9.6 12h4.8" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">质量</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="time">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 时间：钟面 + 时针分针 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6" /><path d="M12 7.2V12l3.4 2.1" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">时间</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="speed">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 速度：仪表盘（半圆刻度 + 偏上的指针 + 轴心） -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 17.6a9.2 9.2 0 0117.2 0" /><path d="M12 17.6l4.6-6" /><circle cx="12" cy="17.6" r="1.2" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">速度</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="temp">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 温度：温度计（管子 + 圆球）+ 里面那根水银柱 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4a2.3 2.3 0 012.3 2.3v9.1a3.8 3.8 0 11-4.6 0V5.7A2.3 2.3 0 0112 3.4z" /><path d="M12 15.8V8.2" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">温度</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="data">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 数据存储：数据库那个圆柱（顶面椭圆 + 侧壁 + 中间一道分层） -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6.4" rx="7.6" ry="3" /><path d="M4.4 6.4v11.2c0 1.66 3.4 3 7.6 3s7.6-1.34 7.6-3V6.4" /><path d="M4.4 12c0 1.66 3.4 3 7.6 3s7.6-1.34 7.6-3" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">数据存储</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="pressure">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 压力：向下的力压在一条面上（箭头 + 地面线） -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4v8.8" /><path d="M8.2 8.4l3.8 3.8 3.8-3.8" /><path d="M4.8 16.4h14.4" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">压力</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="power">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 功率：闪电 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 2.8L5.4 13.6h5.1l-.9 7.6 8-10.8h-5.1z" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">功率</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="freq">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 频率：一个正弦周期（上半弧 + 下半弧，接起来刚好一个波） -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a4.5 4.5 0 019 0 4.5 4.5 0 009 0" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">频率</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="energy">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 能量＆热量：火焰（外焰 + 内焰）。
+               画两层的理由和哑铃一样：28px 下只有一个轮廓会显得空，
+               里面补一片内焰才看得出是火。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.9 2.7 4.2 4.7 4.2 7.8a4.2 4.2 0 11-8.4 0c0-1.5.6-2.8 1.3-3.8.3 1.3 1 2.2 2 2.6C10.5 7.5 11.3 5.2 12 3z" /><path d="M12 12.4c.8 1 1.5 1.7 1.5 2.7a1.5 1.5 0 11-3 0c0-.8.4-1.5 1.5-2.7z" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">能量＆热量</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="luminance">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 亮度：灯泡（玻壳 + 两条螺口）
+               这一档的单位表跨了四个量，是最特别的一类，见 js/units.js -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2a5.6 5.6 0 00-3.2 10.1c.6.4 1 1.1 1 1.9v.6h4.4v-.6c0-.8.4-1.5 1-1.9A5.6 5.6 0 0012 3.2z" /><path d="M9.8 18.6h4.4" /><path d="M10.6 20.8h2.8" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">亮度</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+    </div>
+
+    <!-- ---------- 二、换算 ----------
+         上框是唯一输入源，下框只读、跟着算出来。
+         两个都用普通 text，不用 type=number：后者在各家浏览器里的取值和
+         报错行为不一致，而且它会吃掉负号和除号（我们要放行 - 和 /）。
+         也**不加** inputmode="decimal"：iOS 的数字小键盘上没有负号和除号，
+         加了就等于在手机上打不出 3/4 和 -2。默认键盘本来就能敲这些。
+         输入内容由 js/units.js 的 cvtFilter 现场过滤（只留数字/负号/
+         小数点/除号），整串读不通就由 cvtParse 报错。
+         .cvt-field 那层不能省：setError() 要求 .hint 紧跟在 .input-wrap 后面。
+
+         两栏的字段头（.cvt-head）里除了 label 还挂了颗「复制」：
+         它排在 .cvt-row 的**上一行**、靠右 —— 正好落在单位按钮的正上方，
+         两栏各一颗，位置彼此对得上。复制的是框里那串原文（不拼单位），
+         行为跟「罗马数字」那页的两颗一模一样，逻辑见 js/units.js 的七、复制。 -->
+    <div class="unit-conv" id="unitConv" hidden>
+      <section class="cvt-card">
+
+        <div class="field">
+          <div class="cvt-head">
+            <label for="cvtFrom">数值</label>
+            <button type="button" class="cvt-copy" id="cvtCopyFrom">复制</button>
+          </div>
+          <div class="cvt-row">
+            <div class="cvt-field">
+              <div class="input-wrap is-area" data-field>
+                <textarea id="cvtFrom" rows="1"
+                          autocomplete="off"
+                          autocapitalize="off" autocorrect="off" spellcheck="false"
+                          placeholder="例如 3.5、-2、3/4" aria-label="要换算的数值">1</textarea>
+              </div>
+              <div class="hint"></div>
+            </div>
+            <button type="button" class="cvt-unit" id="cvtFromUnit"
+                    title="点击更换单位">米 (m)</button>
+          </div>
+        </div>
+
+        <!-- 上下互换：单位和数字一起换位置 -->
+        <div class="cvt-swap">
+          <button type="button" class="cvt-swap-btn" id="cvtSwap"
+                  aria-label="交换上下单位" title="交换上下单位">
+            <!-- 双箭头：左线朝下、右线朝上，一眼看出是"互换" -->
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7.5 4v16" />
+              <path d="M4 16.5L7.5 20l3.5-3.5" />
+              <path d="M16.5 20V4" />
+              <path d="M13 7.5L16.5 4 20 7.5" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="field">
+          <div class="cvt-head">
+            <label for="cvtTo">换算结果</label>
+            <button type="button" class="cvt-copy" id="cvtCopyTo">复制</button>
+          </div>
+          <div class="cvt-row">
+            <div class="cvt-field">
+              <div class="input-wrap cvt-readonly is-area" data-field>
+                <textarea id="cvtTo" rows="1" readonly
+                          placeholder="—" aria-label="换算结果"></textarea>
+              </div>
+              <div class="hint"></div>
+            </div>
+            <button type="button" class="cvt-unit" id="cvtToUnit"
+                    title="点击更换单位">厘米 (cm)</button>
+          </div>
+        </div>
+
+        <!-- ---------- 副输入（只有需要几何量的类别才出现） ----------
+             亮度那一档跨了「光通量 / 发光强度 / 光照度 / 亮度」四个量，
+             单位之间差的不只是一个系数 —— 还要知道**立体角**和**面积**，
+             所以那里除了数值，还得再补一个几何量。
+             整块按当前上下单位动态显隐（平时 hidden），逻辑全在
+             js/units.js 的 cvtAuxNeed / cvtPaintAux；
+             什么时候要哪几个，由「上下单位的指数差」算出来，不是写死的。
+
+             立体角那栏额外挂了一排药丸：4π / 2π / π 这种值**用户敲不出来**
+             （键盘上没有 π，主输入框的白名单也不放字母），所以做成点一下
+             直接填进去 —— 能不让用户手打就别让他手打。
+             其余情况（比如 0.5π、12.566）才需要他在框里写，π 依然是点药丸。
+
+             .cvt-aux-item 里面也是「.input-wrap + .hint」的结构：
+             core.js 的 setError 要求 .hint 紧跟在 [data-field] 后面。 -->
+        <section class="cvt-aux" id="cvtAux" hidden>
+          <p class="cvt-aux-head" id="cvtAuxHead"></p>
+
+          <div class="cvt-aux-item" id="cvtAuxOmegaItem" hidden>
+            <label for="cvtAuxOmega" id="cvtAuxOmegaLabel">立体角 Ω（sr）</label>
+            <div class="cvt-aux-chips" id="cvtAuxOmegaChips"
+                 role="radiogroup" aria-label="常用立体角">
+              <button type="button" class="chip" role="radio" aria-checked="false"
+                      data-cvt-omega="4π" title="整个球面，各向同性光源">4π</button>
+              <button type="button" class="chip" role="radio" aria-checked="false"
+                      data-cvt-omega="2π" title="半个球面">2π</button>
+              <button type="button" class="chip" role="radio" aria-checked="false"
+                      data-cvt-omega="π" title="一个 π 球面度">π</button>
+            </div>
+            <div class="input-wrap" data-field>
+              <input type="text" id="cvtAuxOmega"
+                     autocomplete="off"
+                     autocapitalize="off" autocorrect="off" spellcheck="false"
+                     placeholder="例如 4π、0.5π、4/3π" aria-label="立体角，单位球面度" />
+            </div>
+            <div class="hint"></div>
+          </div>
+
+          <div class="cvt-aux-item" id="cvtAuxAreaItem" hidden>
+            <label for="cvtAuxArea" id="cvtAuxAreaLabel">面积 A（m²）</label>
+            <div class="input-wrap" data-field>
+              <input type="text" id="cvtAuxArea"
+                     autocomplete="off"
+                     autocapitalize="off" autocorrect="off" spellcheck="false"
+                     placeholder="例如 1、0.5" aria-label="面积，单位平方米" />
+            </div>
+            <div class="hint"></div>
+          </div>
+        </section>
+
+      </section>
+
+      <!-- 类别自己的注释（比如能量那档要说明「大卡 = 千卡」、亮度那档要列出
+           四个量各自配哪个单位）。内容由 js/units.js 按 UNITS[类别].note 填；
+           没有注的类别整块不显示。注里可以写 \n 分行（CSS 那边是 pre-line）。 -->
+      <p class="cvt-cat-note" id="cvtCatNote" hidden></p>
+
+      <p class="cvt-foot">结果最多保留 10 位有效数字；整数原样显示，极大或极小的数用科学计数法</p>
+    </div>
+
+  </div>
+
+  <!-- 软键盘。和「函数图像」「罗马数字」那两块一样：它是 .tool-page 的 flex 子项，
+       不是浮层 —— 撑开多少就占多少，收起时空间原样还回去，不会盖住上面输入框。
+       按键由 js/units.js 生成（顶上 4 键的 e+ e- / π + 下面的 3 列数字盘，
+       靠 .is-numpad 那个 12 列网格排出来）。 -->
+  <div class="gfx-pad" id="cvtPad" hidden>
+    <div class="gfx-pad-head">
+      <button type="button" class="mini-btn" id="cvtPadClear">清空</button>
+      <button type="button" class="mini-btn" id="cvtPadDone">完成</button>
+    </div>
+    <div class="gfx-pad-keys is-numpad" id="cvtPadKeys"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     功能页：函数图像
+     和其它功能页一样：一条顶栏（返回 + 标题）、下面 body 放内容。
+     作图还没做，所以 body 是空的 —— 先只留这条顶栏。
+     以后画图时把界面放进 #toolGraphBody（canvas 或 SVG 都行）；
+     要动逻辑就仿 js/points24.js 单开一个文件，再到 js/tools.js
+     的 TOOLS 里登记。现在这一页不需要自己的 JS。
+     ============================================================ -->
+<div class="tool-page" id="toolGraph">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">函数图像</h3>
+  </div>
+
+  <!-- 作图区。函数列表由 js/graph.js 生成（行里的输入框、颜色、开关都是现造的）
+       桌面端（lg + wide）走左右分栏：左半屏输入、右半屏图像；
+       移动 / 平板（非分栏）仍是上(输入)下(图像)单列。
+       软键盘是钉在屏幕底部的浮层，点输入框才出现，不随分栏拆开。 -->
+  <div class="tool-body" id="toolGraphBody">
+    <div class="graph-wrap">
+
+      <!-- 左半屏：输入（变量 + 函数列表 + 软键盘） -->
+      <div class="gfx-input-pane">
+
+      <!-- ---------- 自定义变量 ---------- -->
+      <section class="graph-card">
+        <div class="gfx-sec-head">
+          <span class="gfx-sec-title">自定义变量</span>
+          <button type="button" class="mini-btn" id="gfxAddVar">+ 添加变量</button>
+        </div>
+        <!-- 变量行由 js/graph.js 生成 -->
+        <div class="gfx-vars" id="gfxVars"></div>
+        <p class="graph-tip" id="gfxVarsHint" hidden>
+          定义后可在函数里直接用，例如 <b>a*sin(b*x)</b>；值本身也能写算式（<b>pi/2</b>、<b>2*e</b>），还可以引用别的变量。
+        </p>
+      </section>
+
+      <!-- ---------- 函数列表 ---------- -->
+      <section class="graph-card">
+        <div class="gfx-rows" id="gfxList"></div>
+        <div class="gfx-rows-foot">
+          <button type="button" class="mini-btn" id="gfxAdd">+ 添加函数</button>
+        </div>
+        <p class="graph-tip">
+          输入 <b>x</b> 的函数。可用 <b>+ − × ÷ ^</b> 与括号，能写 <b>2x</b>、<b>x(x+1)</b> 这类省略乘号的形式；
+          函数有 sin / cos / tan / ln / log（常用对数）/ log2 / sqrt / abs / min / max…；
+          常量 <b>pi</b>（或 <b>π</b>）、<b>e</b>；根号可直接写 <b>√x</b>，绝对值写 <b>|x|</b>。
+        </p>
+      </section>
+
+      <!-- 软键盘：钉在屏幕底部（position:fixed），点输入框才出现，PC 和触摸都能用；
+           若它盖住输入框，js/graph.js 会把输入框顶到键盘上沿之上。按键由 graph.js 生成。 -->
+      <div class="gfx-pad" id="gfxPad" hidden>
+        <div class="gfx-pad-head">
+          <!-- 清空放左上角（和罗马数字键盘一个位置） -->
+          <button type="button" class="mini-btn" id="gfxPadClear">清空</button>
+          <!-- π 紧挨在「完成」左边；log 没排进 5×5 的格子，和它放一起 -->
+          <span class="gfx-pad-actions">
+            <button type="button" class="mini-btn" id="gfxPadLog">log</button>
+            <button type="button" class="mini-btn" id="gfxPadPi">π</button>
+            <button type="button" class="mini-btn" id="gfxPadDone">完成</button>
+          </span>
+        </div>
+        <div class="gfx-pad-keys" id="gfxPadKeys"></div>
+      </div>
+
+      </div><!-- /.gfx-input-pane -->
+
+      <!-- 右半屏：图像 -->
+      <div class="gfx-plot-pane">
+
+      <!-- ---------- 画布 ---------- -->
+      <section class="graph-plot" id="gfxPlot">
+        <canvas id="gfxCanvas" class="graph-canvas"></canvas>
+
+        <div class="graph-zoom">
+          <button type="button" class="graph-zbtn" id="gfxZoomIn" aria-label="放大" title="放大">+</button>
+          <button type="button" class="graph-zbtn" id="gfxZoomOut" aria-label="缩小" title="缩小">−</button>
+          <button type="button" class="graph-zbtn is-wide" id="gfxReset" title="回到初始视野">复位</button>
+        </div>
+
+        <div class="graph-readout" id="gfxReadout">—</div>
+      </section>
+
+      <p class="graph-foot">拖动平移 · 滚轮或双指缩放 · 点色块换颜色</p>
+
+      </div><!-- /.gfx-plot-pane -->
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     功能页：罗马数字
+     和其它功能页一样：一条顶栏（返回 + 标题）、下面 body 放内容、
+     最底下是软键盘。两栏互转的逻辑全在 js/roman.js 里 ——
+     换算和校验都在浏览器本地做，不碰后端。
+     ============================================================ -->
+<div class="tool-page" id="toolRoman">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">罗马数字</h3>
+  </div>
+
+  <div class="tool-body" id="toolRomanBody">
+    <div class="rm-wrap">
+
+      <!-- ---------- 1) 输入 → 结果 ----------
+           只有一个输入框：先看里面是数字还是字母，自己决定往哪边转
+           （1999 → MCMXCIX，MCMXCIX → 1999），所以没有方向开关。
+           下面那栏是只读结果。两栏各挂一个「复制」。 -->
+      <section class="rm-card">
+
+        <div class="field">
+          <label for="rmIn">输入（阿拉伯数字或罗马数字）</label>
+          <div class="rm-row">
+            <div class="rm-field">
+              <div class="input-wrap rm-input" data-field>
+                <input type="text" id="rmIn" placeholder="点击输入…" maxlength="32"
+                       autocomplete="off" autocapitalize="characters" autocorrect="off"
+                       spellcheck="false" aria-label="输入阿拉伯数字或罗马数字" />
+              </div>
+              <!-- 报错文字必须紧跟在 .input-wrap 后面（core.js 的 setError 靠这个找位置），
+                   所以它留在 .rm-field 里，复制按钮在它外面 -->
+              <div class="hint"></div>
+            </div>
+            <button type="button" class="rm-copy" id="rmCopyIn">复制</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="rmOut">结果</label>
+          <div class="rm-row">
+            <div class="rm-field">
+              <div class="input-wrap rm-input rm-readonly">
+                <input type="text" id="rmOut" readonly placeholder="—"
+                       aria-label="转换结果" />
+              </div>
+            </div>
+            <button type="button" class="rm-copy" id="rmCopyOut">复制</button>
+          </div>
+        </div>
+
+        <!-- 拆解：把结果按位拆回加法式，看得见"为什么写成这样"。
+             内容由 js/roman.js 的 rmPaintBreak 填，没结果时整块收起来。 -->
+        <div class="rm-break" id="rmBreak" hidden>
+          <span class="rm-break-k">拆解</span>
+          <span class="rm-break-v" id="rmBreakRom"></span>
+          <span class="rm-break-eq">=</span>
+          <span class="rm-break-v" id="rmBreakNum"></span>
+        </div>
+
+      </section>
+
+      <!-- ---------- 2) 规律（静态说明，不需要 JS） ---------- -->
+      <section class="rm-card">
+        <div class="rm-sec-title">罗马数字的规律</div>
+
+        <!-- 七个基本符号 + 0。竖排「符号 / 数值」，一眼对得上 -->
+        <div class="rm-syms">
+          <span class="rm-sym"><b>I</b><i>1</i></span>
+          <span class="rm-sym"><b>V</b><i>5</i></span>
+          <span class="rm-sym"><b>X</b><i>10</i></span>
+          <span class="rm-sym"><b>L</b><i>50</i></span>
+          <span class="rm-sym"><b>C</b><i>100</i></span>
+          <span class="rm-sym"><b>D</b><i>500</i></span>
+          <span class="rm-sym"><b>M</b><i>1000</i></span>
+          <span class="rm-sym is-zero"><b>N</b><i>0</i></span>
+        </div>
+
+        <ul class="rm-list">
+          <li><b>大的在前、小的在后，按位相加</b>：<b>MDCLXVI</b> = 1000 + 500 + 100 + 50 + 10 + 5 + 1 = 1666</li>
+          <li><b>小的在大的左边就表示相减</b>，而且只有六种固定搭配：<b>IV</b> = 4、<b>IX</b> = 9、<b>XL</b> = 40、<b>XC</b> = 90、<b>CD</b> = 400、<b>CM</b> = 900</li>
+          <li><b>同一个符号最多连写三次</b>：4 是 <b>IV</b>（不是 IIII）、30 是 <b>XXX</b>、300 是 <b>CCC</b>、3000 是 <b>MMM</b></li>
+          <li><b>V、L、D 不连写、也不当减数</b>：10 只能写 <b>X</b>（没有 VV），5 只能写 <b>V</b>（没有 VX）</li>
+          <li>本工具支持 <b>0–3999</b>：这七个符号就够用，最大是 <b>MMMCMXCIX</b> = 3999</li>
+          <li>古罗马没有 <b>0</b> 这个符号，这里按惯例写作 <b>N</b>（拉丁语 nulla，意思是"没有"）</li>
+        </ul>
+      </section>
+
+      <p class="rm-foot">只认标准写法：同一符号最多连写三次 · 0 用 N 表示</p>
+
+    </div>
+  </div>
+
+  <!-- 软键盘。和「函数图像」那一块一样：它是 .tool-page 里的 flex 子项
+       （不是浮层）—— 撑开多少就占多少，收起时空间原样还回去，
+       不会盖住上面那两栏。按键由 js/roman.js 生成（3 列网格，数字 / 罗马
+       两套键位靠「切换」换），外观复用 css/tools.css 第六节那套 .gfx-pad。 -->
+  <div class="gfx-pad" id="rmPad" hidden>
+    <div class="gfx-pad-head">
+      <button type="button" class="mini-btn" id="rmPadClear">清空</button>
+      <button type="button" class="mini-btn" id="rmPadDone">完成</button>
+    </div>
+    <div class="gfx-pad-keys" id="rmPadKeys"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     功能页：异或法则 / 九宫幻方
+     和其它功能页一样：一条顶栏（返回 + 标题）、下面 body 放内容。
+     ★ 目前只有顶栏，body 是空的 —— 点卡片能进来，也能返回，
+       但里面还没写东西（先把入口接通）。
+       以后补功能就往各自的 .tool-body 里放，别的不用动：
+         · 页面 id（toolXor / toolMagic）已经在 js/tools.js 的 TOOLS
+           里登记好了（key = 卡片的 data-tool = 页面 id）
+         · 顶栏标题跟卡片名一致，和上面几张同一个写法
+       （异或法则那一页已经补上了内容，见下面 #toolXorBody。）
+       样式：顶栏和 body 的留白都走 css/tools.css 里那套 .tool-bar /
+       .tool-body；两页各自的小样式在 css/tools.css 的第九 / 第十节。
+     ============================================================ -->
+<div class="tool-page" id="toolXor">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">异或法则</h3>
+  </div>
+
+  <!-- 内容：选盘数 → 对局。出题、判题全在 js/xor.js 里，一次请求都不发。
+       对局里的三块面板（.xo-pane 目标是左上/左下、.xo-boardcard 是操作盘、
+       .xo-nums 是序号）都在一个 .xo-stage 网格里，靠 CSS 换 grid-template-areas
+       来切"手机 / PC"两套排版，DOM 只有一份：
+         手机：目标 实时 / 操作盘 / 序号（横排，在最下面）
+         PC  ：左列 目标+实时 · 中间 操作盘 · 右侧 序号（竖着排）
+       格子（.xo-cell）和方块（.xo-piece）都由 js/xor.js 现铺。 -->
+  <div class="tool-body" id="toolXorBody">
+    <div class="xo-wrap">
+
+      <!-- ---------- 1) 开局：选几个操作盘 ---------- -->
+      <section class="xo-card xo-setup" id="xoSetup">
+        <div class="xo-setup-title">选几个操作盘</div>
+
+        <div class="xo-counts" id="xoCounts">
+          <button type="button" class="xo-count" data-count="2">2 个操作盘</button>
+          <button type="button" class="xo-count on" data-count="3">3 个操作盘</button>
+          <button type="button" class="xo-count" data-count="4">4 个操作盘</button>
+          <button type="button" class="xo-count" data-count="5">5 个操作盘</button>
+          <button type="button" class="xo-count" data-count="6">6 个操作盘</button>
+          <button type="button" class="xo-count" data-count="7">7 个操作盘</button>
+        </div>
+        <button type="button" class="sub-save xo-start" id="xoStart">开 始</button>
+        <p class="xo-setup-note">盘数选定之后，这一局里就不能再改了。</p>
+
+        <!-- 玩法说明。规则就这么几条，摆在「开始」下面，想先看再玩 -->
+        <div class="xo-rules">
+          <div class="xo-rules-title">玩法规则</div>
+          <ul class="xo-rules-list">
+            <li><b>目标图形</b>（左上角）就是要摆成的样子：把右边这块
+                <b>当前图形</b>摆得跟它一模一样就过关。</li>
+            <li>每个操作盘里固定三个<b>俄罗斯方块</b>。点一下选中，
+                <b>拖动</b>挪位，点盘外的 ⟲ ⟳ 旋转。</li>
+            <li>方块不能拖出本盘，也不能压到<b>同一个盘里</b>的别的方块 ——
+                放不下会自动弹回原处。</li>
+            <li>盘与盘之间随便叠：每个格子被<b>奇数</b>个方块压住就亮，
+                <b>偶数</b>个压住就灭，这就是「<b>奇现偶消</b>」。跨盘的重叠
+                是解题的关键。</li>
+            <li>一次只显示一个操作盘，点下面的<b>序号</b>切换。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ---------- 2) 对局 ---------- -->
+      <section class="xo-game" id="xoGame" hidden>
+
+        <div class="xo-head">
+          <span class="xo-round" id="xoRound">第 1 局</span>
+          <span class="xo-meta" id="xoMeta">3 个操作盘</span>
+          <!-- 撤销 / 重置放右边；「放弃」在最角上，还得二次确认 -->
+          <div class="xo-head-acts" id="xoHeadActs">
+            <button type="button" class="xo-tool" id="xoUndo">撤销</button>
+            <button type="button" class="xo-tool" id="xoReset">重置</button>
+            <button type="button" class="xo-quit" id="xoQuit">放弃</button>
+          </div>
+          <!-- 看过答案之后，上面那三个换成这两个（方块已锁定，撤销/重置没意义） -->
+          <div class="xo-head-acts" id="xoHeadActsAns" hidden>
+            <button type="button" class="xo-tool" id="xoAgain2">再来一局</button>
+            <button type="button" class="xo-tool" id="xoRechoose2">重选盘数</button>
+          </div>
+        </div>
+
+        <div class="xo-stage" id="xoStage">
+
+          <!-- 左上/左下那两张小图。包一层 .xo-left 只为了电脑上能把"左列"整个
+               和右边隔开（手机上这层是 display:contents，等于不存在，两张小图
+               照旧各占一个网格区域）。 -->
+          <div class="xo-left">
+
+            <!-- 目标图形（PC 上是左上角） -->
+            <div class="xo-pane xo-tgt">
+              <span class="xo-pane-label">目标图形</span>
+              <div class="xo-grid" id="xoTgtGrid"></div>
+            </div>
+
+            <!-- 当前实时图形（PC 上是左下角） -->
+            <div class="xo-pane xo-live">
+              <span class="xo-pane-label">当前图形</span>
+              <div class="xo-grid" id="xoLivGrid"></div>
+            </div>
+
+          </div>
+
+          <!-- 操作盘：同一时间只显示一个，点序号切 -->
+          <div class="xo-boardcard">
+            <div class="xo-rotrow">
+              <span class="xo-boardname" id="xoBoardName">操作盘1</span>
+              <!-- 旋转按钮：点中的那块转；转不开就整个不生效 -->
+              <button type="button" class="xo-rot" id="xoRotL"
+                      aria-label="逆时针旋转选中的方块" title="逆时针旋转">&#10226;</button>
+              <button type="button" class="xo-rot" id="xoRotR"
+                      aria-label="顺时针旋转选中的方块" title="顺时针旋转">&#10227;</button>
+            </div>
+            <div class="xo-board" id="xoBoard">
+              <!-- 64 个底格 + 一层方块，都由 js/xor.js 铺 -->
+              <div class="xo-cells" id="xoCells"></div>
+              <div class="xo-pieces" id="xoPieces"></div>
+            </div>
+            <p class="xo-tip" id="xoTip">点方块选中 · 拖动挪位 · ⟲ ⟳ 旋转（放不下会自动弹回）</p>
+          </div>
+
+          <!-- 序号：手机在下面横排，PC 在右侧竖排 -->
+          <div class="xo-nums" id="xoNums"></div>
+
+        </div>
+      </section>
+
+      <!-- 过关 / 放弃之后的小浮层
+           ★「确认」只在**过关**的时候出现（由 js/xor.js 的 xoWin 放出、
+             xoAbandon 收掉）。它本身不干别的，就是关掉浮层把盘面还回去 ——
+             方块已经锁死，顶栏换成「再来一局 / 重选盘数」，
+             可以点序号逐个盘看自己是怎么摆出来的。 -->
+      <div class="xo-overlay" id="xoOverlay" hidden>
+        <div class="xo-overlay-box">
+          <h4 id="xoOverlayTitle">过关！</h4>
+          <p id="xoOverlayText"></p>
+          <button type="button" class="sub-save" id="xoOverlayOk" hidden>确 认</button>
+          <div class="xo-overlay-acts">
+            <button type="button" class="sub-save" id="xoAgain">再来一局</button>
+            <button type="button" class="mini-btn" id="xoRechoose">重选盘数</button>
+          </div>
+          <!-- 只有「放弃」之后才给看答案（过关了就不必看了，见 js/xor.js） -->
+          <button type="button" class="mini-btn xo-answer-btn" id="xoShowAnswer" hidden>查看答案</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 放弃的二次确认（样式复用 base.css 里那套通用小弹框）。
+         标题下面没有说明文字：这个弹框只问一句"放不放弃"，
+         多说一行反而啰嗦。 -->
+    <div class="confirm-overlay" id="xoQuitConfirm">
+      <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="xoQuitTitle">
+        <h4 id="xoQuitTitle">放弃这一局？</h4>
+        <div class="acts">
+          <button type="button" id="xoQuitCancel">取消</button>
+          <button type="button" class="danger" id="xoQuitOk">放弃</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 重置的二次确认。重置是可撤销的（撤销栈里有这一步），
+         但整盘摆回开局毕竟是个大动作，手滑点到的代价不小，所以也问一句。 -->
+    <div class="confirm-overlay" id="xoResetConfirm">
+      <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="xoResetTitle">
+        <h4 id="xoResetTitle">重置这一局？</h4>
+        <p>所有方块都摆回开局的位置。这一下也可以用「撤销」退回来。</p>
+        <div class="acts">
+          <button type="button" id="xoResetCancel">取消</button>
+          <button type="button" class="danger" id="xoResetOk">重置</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tool-page" id="toolMagic">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">九宫幻方</h3>
+  </div>
+
+  <!-- 内容：选阶数 / 难度 → 棋盘 → 操作 → 说明。
+       出题、判题、提示全在 js/magic.js 里，一次请求都不发。
+       棋盘（#mgBoard）由 js/magic.js 按阶数现场铺格子：n 阶就
+       n×n 个格子，外加最右一列、最下一行共 2n+1 个"当前和"。 -->
+  <div class="tool-body" id="toolMagicBody">
+    <div class="mg-wrap">
+
+      <!-- ---------- 1) 选阶数 / 选难度（可收起） ----------
+           收起是为了防误触：玩的时候手指在棋盘上忙，这块设置区就在棋盘
+           正上方，很容易顺手划到。收起后只剩一行摘要 + 「展开」，
+           状态记在 localStorage，下次进来还是收着的。 -->
+      <section class="mg-card">
+        <div class="mg-set-head">
+          <!-- 收起后全靠它显示当前选的是什么 -->
+          <span class="mg-set-sum" id="mgSetSum">3 阶 · 易</span>
+          <button type="button" class="mini-btn mg-set-toggle" id="mgSetToggle"
+                  aria-expanded="true" aria-controls="mgSetBody">收起</button>
+        </div>
+
+        <div class="mg-set-body" id="mgSetBody">
+          <div class="mg-row">
+            <span class="mg-label">阶数</span>
+            <!-- 3–9 由 js/magic.js 的 MG_ORDERS 填（奇数/双偶数/单偶数三种
+                 造法正好各覆盖到，见该文件头部说明） -->
+            <div class="mg-chips" id="mgOrders" role="radiogroup" aria-label="阶数"></div>
+          </div>
+          <div class="mg-row">
+            <span class="mg-label">难度</span>
+            <!-- 易 / 中 / 难，由 MG_DIFFS 填；只改"挖掉多少格" -->
+            <div class="mg-chips" id="mgDiffs" role="radiogroup" aria-label="难度"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- 2) 棋盘 ---------- -->
+      <section class="mg-card">
+        <div class="mg-head">
+          <span class="mg-round" id="mgRound">3 阶 · 第 1 题</span>
+          <span class="mg-score" id="mgScore">常数 15 · 空 3 格</span>
+        </div>
+
+        <div class="mg-boardwrap">
+          <!-- 格子由 js/magic.js 铺：已知数是 text，空格子是 input -->
+          <div class="mg-board" id="mgBoard"></div>
+        </div>
+
+        <p class="mg-tip" id="mgTip">点一个空格，填上 1 到 n² 里的数</p>
+      </section>
+
+      <!-- ---------- 3) 操作 ---------- -->
+      <button type="button" class="sub-save mg-go" id="mgCheck">校 验</button>
+
+      <div class="mg-acts">
+        <button type="button" class="mini-btn" id="mgHint">提示</button>
+        <button type="button" class="mini-btn" id="mgNew">换一题</button>
+        <button type="button" class="mini-btn" id="mgReset">重来</button>
+        <button type="button" class="mini-btn" id="mgAnswer">看答案</button>
+      </div>
+
+      <!-- ---------- 4) 玩法与三种造法（静态说明，不需要 JS） ---------- -->
+      <section class="mg-card">
+        <div class="mg-sec-title">玩法规则</div>
+        <ul class="mg-list">
+          <li>把空格填满，<b>1 到 n² 每个数用一次</b>，一个不能重、一个不能少</li>
+          <li>让<b>每一行、每一列、两条对角线</b>的和都等于<b>幻方常数</b>
+              <code>M = n(n²+1)/2</code></li>
+          <li>棋盘右侧和下方一直在报<b>每条线眼下的和</b>：填满且正好等于 M 会转绿，
+              不等于 M 转红（灰的是还没填满）</li>
+          <li><b>不比对固定答案</b> —— 只要盘面符合规则就算过关。
+              幻方常有不止一组解，转一转、翻个面都还是幻方</li>
+        </ul>
+
+        <div class="mg-sec-title" style="margin-top:18px">3–9 阶是怎么造出来的</div>
+        <ul class="mg-list">
+          <li><b>奇数阶（3 / 5 / 7 / 9）· 连续摆数法</b>：1 放第一行正中间，
+              之后一直往右上方走，出界就绕回来；撞上已填的格子就改落在正下方。
+              3 阶出来就是洛书</li>
+          <li><b>双偶数阶（4 / 8）· 互补对换法</b>：先按顺序 1…n² 填满，
+              再把"行号列号对 4 取余相等或余数和为 3"的格子取补数
+              <code>n²+1−v</code>。4 阶出来的就是丢勒的《忧郁 I》</li>
+          <li><b>单偶数阶（6）· LUX 法</b>：先造一个 3 阶幻方当"地块编号"，
+              每块摊成 2×2 小块，按中间那处对调决定是 L、U 还是 X 摆法，
+              再往每块里填 4 个连续的数</li>
+        </ul>
+      </section>
+
+      <p class="mg-foot">任意一阶都有解 · 每行每列每条对角线的和都等于 M</p>
+
+    </div>
+  </div>
+
+  <!-- 软键盘。和罗马数字那一页一样：它是 .tool-page 的 flex 子项（不是浮层），
+       撑开多少就占多少，不会盖住上面的棋盘。只在非 PC 设备上、点到空格子时
+       才弹出来（电脑直接敲键盘）。按键由 js/magic.js 的 mgPadRender 生成。 -->
+  <div class="gfx-pad" id="mgPad" hidden>
+    <div class="gfx-pad-head">
+      <span class="gfx-pad-title" id="mgPadTitle">点一个空格再按数字</span>
+      <button type="button" class="mini-btn" id="mgPadDone">完成</button>
+    </div>
+    <div class="gfx-pad-keys" id="mgPadKeys"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     功能页：巴什博弈 / 梵天汉诺
+     和「异或法则 / 九宫幻方」那两张一样，先把入口接通：
+     一条顶栏（返回 + 标题），body 是空的 —— 点卡片能进来、能返回，
+     里面还没写东西。以后补功能就往各自的 .tool-body 里放，别的不用动：
+       · 页面 id（toolBash / toolBrahma）已经在 js/tools.js 的 TOOLS 里
+         登记好了（key = 卡片的 data-tool = 页面 id）
+       · 顶栏标题跟卡片名一致，和上面几张同一个写法
+     ============================================================ -->
+<div class="tool-page" id="toolBash">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">巴什博弈</h3>
+  </div>
+
+  <!-- 选难度 / 对局 / 结算，三段式，照 #toolFourColor 的骨架抄（见 js/bash.js） -->
+  <div class="tool-body" id="toolBashBody">
+    <div class="bs-wrap">
+
+      <!-- 1) 开局：选难度 + 玩法说明（规则垫在下面） -->
+      <section class="bs-card bs-setup" id="bsSetup">
+        <div class="bs-setup-title">选择难度</div>
+        <div class="bs-tiers" id="bsTiers">
+          <button type="button" class="bs-tier on" data-tier="easy">
+            <b>入门</b><span>12–20 颗 · 显刻度</span>
+          </button>
+          <button type="button" class="bs-tier" data-tier="normal">
+            <b>进阶</b><span>20–35 颗 · 仅刻度</span>
+          </button>
+          <button type="button" class="bs-tier" data-tier="hard">
+            <b>困难</b><span>30–50 颗 · 无刻度</span>
+          </button>
+        </div>
+        <button type="button" class="sub-save bs-start" id="bsStart">开 始</button>
+        <p class="bs-setup-note">每一局都让你有必胜策略——只要你找得对。</p>
+
+        <div class="bs-rules">
+          <div class="bs-rules-title">玩法规则</div>
+          <ul class="bs-rules-list">
+            <li>一堆石子，你和对手轮流取走 <b>1 到 m</b> 颗（m 每局不同）。</li>
+            <li>谁取走<b>最后一颗</b>，谁就赢。</li>
+            <li>胜负只看总数除以 <b>m+1</b> 的余数：把残局每次都凑成 m+1 的倍数，就稳赢。</li>
+            <li>你先手时，余数不为 0 你必胜；你后手时，余数恰为 0 你必胜。</li>
+            <li>点下面的数字一次取走对应颗数；轮到对手时它会自动应对。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 2) 对局 -->
+      <section class="bs-game" id="bsGame" hidden>
+        <div class="bs-head">
+          <span class="bs-round" id="bsRound">第 1 局</span>
+          <span class="bs-meta" id="bsMeta"></span>
+          <div class="bs-head-acts">
+            <button type="button" class="bs-tool" id="bsReset">重来本局</button>
+            <button type="button" class="bs-tool" id="bsRechoose">重选难度</button>
+          </div>
+        </div>
+
+        <div class="bs-pilecard">
+          <div class="bs-remain">
+            <span class="bs-remain-num" id="bsRemainNum">0</span>
+            <span class="bs-remain-label">颗剩余</span>
+          </div>
+          <div class="bs-stones" id="bsStones"></div>
+        </div>
+
+        <!-- 刻度尺：标出 m+1 的倍数（对手的必败线）。困难档整体 hidden -->
+        <div class="bs-ruler" id="bsRuler" hidden>
+          <div class="bs-ruler-bar"><div class="bs-ruler-fill" id="bsRulerFill"></div></div>
+          <div class="bs-ruler-ticks" id="bsRulerTicks"></div>
+        </div>
+
+        <p class="bs-tip" id="bsTip"></p>
+
+        <!-- 取子按钮 1..m，由 js/bash.js 现场铺 -->
+        <div class="bs-takes" id="bsTakes"></div>
+
+        <!-- 回合记录：最近几手 -->
+        <div class="bs-log" id="bsLog"></div>
+      </section>
+
+      <!-- 3) 结算浮层 -->
+      <div class="bs-overlay" id="bsOverlay">
+        <div class="bs-overlay-box" role="dialog" aria-modal="true" aria-labelledby="bsOvTitle">
+          <h4 id="bsOvTitle">你赢了</h4>
+          <p id="bsOvText"></p>
+          <div class="bs-overlay-acts">
+            <button type="button" class="sub-save" id="bsOvOk">确 认</button>
+            <div class="bs-overlay-row">
+              <button type="button" class="mini-btn" id="bsOvNew">换一局</button>
+              <button type="button" class="mini-btn" id="bsOvBack">重选难度</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 二次确认（重来本局 / 重选难度）复用 base.css 的 .confirm-overlay -->
+      <div class="confirm-overlay" id="bsAskConfirm">
+        <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="bsAskTitle">
+          <h4 id="bsAskTitle">确认？</h4>
+          <p id="bsAskText"></p>
+          <div class="acts">
+            <button type="button" id="bsAskCancel">取消</button>
+            <button type="button" class="danger" id="bsAskOk">确认</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="tool-page" id="toolBrahma">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">梵天汉诺</h3>
+
+    <!-- 手机端的「横屏」按钮：按一下，整个界面（连这条顶栏一起）顺时针转 90°，
+         用户把手机横过来看就是了 —— 见 css/tools.css 第十三节第 10 小节
+         和 js/brahma.js 的 bhSetLand。再按一下转回去。
+         藏起来的三种情况（都在 js 的 bhSyncRotBtn 里）：
+           · 电脑端 —— 本来就是三柱并排，没什么可转的
+           · 屏幕自己就是横的 —— 盘面已经是并排的，转了反而歪
+           · 还没开局 —— 选阶数那一屏不放这个按钮
+         图标是个顺时针回转箭头；转成横屏之后镜像一下当"转回去"用。 -->
+    <button type="button" class="bh-rotbtn" id="bhRotBtn" hidden aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19.4 12a7.4 7.4 0 1 0-2.5 5.6" />
+        <path d="M19.4 6.6V12h-5.4" />
+      </svg>
+      <span id="bhRotLabel">横屏</span>
+    </button>
+  </div>
+
+  <!-- 内容：选阶数 → 对局。三根柱子、盘面几何、动画全在 js/brahma.js 里，
+       一次请求都不发（和二十四点 / 罗马数字 / 九宫幻方 / 异或法则一样）。
+
+       ★ 排版只有一份 DOM，靠 CSS 换 .bh-pegs 的 flex-direction 切两套：
+           手机：flex-direction: column —— 三根柱子从上到下摞成三行
+           电脑：flex-direction: row    —— 三根柱子并排立在一条底座上
+         手机端按下顶栏那个「横屏」按钮，等于给 .bh-board 挂上 .is-flat，
+         也走 row 那一套（见 css/tools.css 第十三节）。
+       ★ 盘不是 DOM 里排出来的，是绝对定位在 .bh-disks 这一层里、靠
+         transform 平移 —— 位置由 js/brahma.js 量完柱子再算，
+         所以换排版、缩放窗口、切横屏都要重量一次（bhLayout）。 -->
+  <div class="tool-body" id="toolBrahmaBody">
+    <div class="bh-wrap">
+
+      <!-- ---------- 1) 开局：选择阶数 ---------- -->
+      <section class="bh-card bh-setup" id="bhSetup">
+        <div class="bh-setup-title">选择阶数</div>
+
+        <!-- 几阶 = 几个盘。3–9 同 js/brahma.js 的 BH_ORDERS；
+             默认那一档（3）先把 on 写上，免得进来一瞬间没有选中的样子 -->
+        <div class="bh-orders" id="bhOrders" role="radiogroup" aria-label="阶数">
+          <button type="button" class="bh-order on" data-order="3">3</button>
+          <button type="button" class="bh-order" data-order="4">4</button>
+          <button type="button" class="bh-order" data-order="5">5</button>
+          <button type="button" class="bh-order" data-order="6">6</button>
+          <button type="button" class="bh-order" data-order="7">7</button>
+          <button type="button" class="bh-order" data-order="8">8</button>
+          <button type="button" class="bh-order" data-order="9">9</button>
+        </div>
+        <button type="button" class="sub-save bh-start" id="bhStart">开 始</button>
+        <p class="bh-setup-note">阶数一经选定，本局之内不再更改。</p>
+
+        <!-- 玩法说明，摆在「开始」下面，想先看再玩。
+             文案走"说明书"那一路：条目短、动词准、少感叹号 ——
+             别写成"大盘绝对不能压上去！"那种吆喝腔。 -->
+        <div class="bh-rules">
+          <div class="bh-rules-title">玩法规则</div>
+          <ul class="bh-rules-list">
+            <li>三根柱子。开局时，3–9 个圆盘由大到小依次套在第一根柱子上，
+                盘面标有序号，1 号最小。</li>
+            <li>每次只能移动一根柱子上最顶端的圆盘，且大盘不能压在小盘之上。</li>
+            <li>将整摞圆盘原样移到最后一根柱子上，即为过关。</li>
+            <li>最少步数为 <b>2ⁿ−1</b> —— 三阶 7 步、五阶 31 步、七阶 127 步、九阶 511 步。
+                走得比它多同样算过关，多出的步数记在顶栏。</li>
+            <li>轻点一根柱子取起顶端的圆盘，再轻点另一根柱子放下（想反悔就再点原来那根）。
+                手机端可点顶栏的「横屏」，将整个界面转成横屏。</li>
+          </ul>
+        </div>
+
+        <!-- 卡片就叫「梵天汉诺」，把典故一并放在这儿 -->
+        <div class="bh-lore">
+          <div class="bh-rules-title">梵天塔</div>
+          <p>传说在贝拿勒斯的庙宇里立着三根宝石柱，梵天创世时在第一根柱上套了
+             <b>64 枚金盘</b>，命僧侣将它们尽数移到第三根柱上 —— 规矩与上述相同。</p>
+          <p>僧侣每移动一枚金盘，尘世便少去一分光阴；待金盘尽数归位，塔将倾颓，
+             殿宇化为尘土，世界随之终结。</p>
+          <p>只是这一天遥遥无期：64 枚金盘共需移动 <b>2⁶⁴−1</b> 次，即便每秒搬动一次，
+             也要 <b>约 5849 亿年</b> —— 比宇宙至今的年龄还要长。</p>
+        </div>
+      </section>
+
+      <!-- ---------- 2) 对局 ---------- -->
+      <section class="bh-game" id="bhGame" hidden>
+
+        <div class="bh-head">
+          <span class="bh-round" id="bhRound">第 1 局</span>
+          <span class="bh-meta" id="bhMeta">3 阶 · 已用 0 步 · 最优 7 步</span>
+          <!-- 撤销 / 重来 在右边，「放弃」在最角上（它还得二次确认） -->
+          <div class="bh-head-acts" id="bhHeadActs">
+            <button type="button" class="bh-tool" id="bhUndo">撤销</button>
+            <button type="button" class="bh-tool" id="bhRestart">重来</button>
+            <button type="button" class="bh-quit" id="bhQuit">放弃</button>
+          </div>
+          <!-- 看过答案（或过关确认过）之后，上面那三个换成这两个：
+               盘已经锁死，撤销/重来都没意义了 -->
+          <div class="bh-head-acts" id="bhHeadActsAns" hidden>
+            <button type="button" class="bh-tool" id="bhAgain2">再来一局</button>
+            <button type="button" class="bh-tool" id="bhRechoose2">重选阶数</button>
+          </div>
+          <!-- 自动演示最优解时的三个（暂停/继续 · 停止） -->
+          <div class="bh-head-acts" id="bhHeadActsPlay" hidden>
+            <button type="button" class="bh-tool" id="bhPlayPause">暂停</button>
+            <button type="button" class="bh-quit" id="bhPlayStop">停止</button>
+          </div>
+        </div>
+
+        <!-- 盘面。三根柱子（连底座）铺在 .bh-pegs 里，盘单独一层绝对定位，
+             两层叠在一起 —— 盘的动画就是 transform，不参与布局。 -->
+        <div class="bh-board" id="bhBoard">
+          <div class="bh-pegs" id="bhPegs"></div>
+          <div class="bh-disks" id="bhDisks"></div>
+        </div>
+
+        <p class="bh-tip" id="bhTip">点一根柱子拿起最上面的盘，再点另一根放下</p>
+      </section>
+
+      <!-- 过关 / 放弃 / 看答案 的小浮层。
+           ★「确认」只在**过关**的时候出现：它本身不干别的，就是收掉浮层、
+             把玩家自己搬出来的盘面留在眼前（已经锁死，只能看）。
+           ★ 放弃之后浮层换成两个「看答案」的入口，且**不直接代劳**：
+             想看得自己再点一下（从头演示 / 从当前接着走）。 -->
+      <div class="bh-overlay" id="bhOverlay" hidden>
+        <div class="bh-overlay-box">
+          <h4 id="bhOverlayTitle">过关！</h4>
+          <p id="bhOverlayText"></p>
+          <button type="button" class="sub-save" id="bhOverlayOk" hidden>确 认</button>
+          <!-- 放弃之后才给：整局从头演示 / 按现在的盘面接着走 -->
+          <div class="bh-overlay-acts" id="bhOverlayAns" hidden>
+            <button type="button" class="sub-save" id="bhAnsStart">从头演示</button>
+            <button type="button" class="mini-btn" id="bhAnsNow">从当前接着走</button>
+          </div>
+          <!-- 换局的两个出口，过关 / 放弃都在 -->
+          <div class="bh-overlay-acts" id="bhOverlayNew">
+            <button type="button" class="mini-btn" id="bhAgain">再来一局</button>
+            <button type="button" class="mini-btn" id="bhRechoose">重选阶数</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 重来的二次确认（样式复用 base.css 里那套通用小弹框）。
+         重来是可撤销的（撤销栈里就是一步），但"整摞盘搬回第一根柱"
+         是个大动作，手滑点到挺烦的，所以也问一句。 -->
+    <div class="confirm-overlay" id="bhRestartConfirm">
+      <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="bhRestartTitle">
+        <h4 id="bhRestartTitle">重来一局？</h4>
+        <p>所有盘都搬回第一根柱子。这一下也可以用「撤销」退回来。</p>
+        <div class="acts">
+          <button type="button" id="bhRestartCancel">取消</button>
+          <button type="button" class="danger" id="bhRestartOk">重来</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 放弃的二次确认。标题下面没有说明文字：只问一句"放不放弃"，
+         多说一行反而啰嗦（和异或法则那个一样）。 -->
+    <div class="confirm-overlay" id="bhQuitConfirm">
+      <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="bhQuitTitle">
+        <h4 id="bhQuitTitle">放弃这一局？</h4>
+        <div class="acts">
+          <button type="button" id="bhQuitCancel">取消</button>
+          <button type="button" class="danger" id="bhQuitOk">放弃</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     功能页：四色谜题 / 囚徒困境 / 二零四八 / 异语道破 / 数字桥屿
+     和「巴什博弈 / 梵天汉诺」那几张一样，先把入口接通：
+     一条顶栏（返回 + 标题），body 是空的 —— 点卡片能进来、能返回，
+     里面还没写东西。以后补功能就往各自的 .tool-body 里放，别的不用动：
+       · 页面 id 已经在 js/tools.js 的 TOOLS 里登记好了
+         （key = 卡片的 data-tool = 页面 id）
+       · 顶栏标题跟卡片名一致，和上面几张同一个写法
+     ============================================================ -->
+<div class="tool-page" id="toolFourColor">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">四色谜题</h3>
+  </div>
+
+  <div class="tool-body" id="toolFourColorBody">
+    <div class="fc-wrap">
+
+      <!-- ---------- 1) 开局：选难度 + 玩法规则 ----------
+           对齐「数字桥屿 / 梵天汉诺 / 异或法则」：先选、再开始、规则垫在下面。 -->
+      <section class="fc-card fc-setup" id="fcSetup">
+        <div class="fc-setup-title">选择难度</div>
+
+        <div class="fc-tiers" id="fcTiers">
+          <button type="button" class="fc-tier on" data-tier="easy">
+            <b>6 块</b><span>入门</span>
+          </button>
+          <button type="button" class="fc-tier" data-tier="normal">
+            <b>10 块</b><span>进阶</span>
+          </button>
+          <button type="button" class="fc-tier" data-tier="hard">
+            <b>16 块</b><span>困难</span>
+          </button>
+          <button type="button" class="fc-tier" data-tier="master">
+            <b>24 块</b><span>大师</span>
+          </button>
+        </div>
+
+        <button type="button" class="sub-save fc-start" id="fcStart">开 始</button>
+        <p class="fc-setup-note">每一局都保证有解，且四种颜色足够。</p>
+
+        <div class="fc-rules">
+          <div class="fc-rules-title">玩法规则</div>
+          <ul class="fc-rules-list">
+            <li>盘面被不规则地分成若干块。相邻（共用一条边）的两块不能同色。</li>
+            <li>从下方选一种颜色，再点任意一块上色；已上色的块可改色，也可点橡皮擦掉。</li>
+            <li>把所有块都填上颜色，且没有两块同色相邻，即过关。</li>
+            <li>共四种颜色：依据四色定理，任何平面地图都只需四种颜色即可做到相邻区域互不同色。</li>
+            <li>相邻仅按「共用一条边」判定；角碰角（只共用一个顶点）不算相邻，可以同色。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ---------- 2) 对局 ---------- -->
+      <section class="fc-game" id="fcGame" hidden>
+        <div class="fc-head">
+          <span class="fc-round" id="fcRound">第 1 局</span>
+          <span class="fc-meta" id="fcMeta">入门 · 6 块</span>
+          <div class="fc-head-acts">
+            <button type="button" class="fc-tool" id="fcUndo">撤销</button>
+            <button type="button" class="fc-tool" id="fcReset">重来</button>
+            <button type="button" class="fc-tool" id="fcNew">换一题</button>
+            <button type="button" class="fc-tool" id="fcRechoose">重选难度</button>
+            <button type="button" class="fc-quit" id="fcGiveUp">放弃</button>
+          </div>
+        </div>
+
+        <div class="fc-boardcard">
+          <div class="fc-board">
+            <svg class="fc-svg" id="fcSvg" viewBox="0 0 100 100" role="img" aria-label="四色谜题盘面">
+              <g id="fcCells"></g>
+              <g id="fcRed"></g>
+            </svg>
+          </div>
+          <p class="fc-tip" id="fcTip">先选一种颜色，再点任意一块上色</p>
+        </div>
+
+        <!-- 调色板：四色取自主页另四张卡片；末位为橡皮 -->
+        <div class="fc-palette" id="fcPalette">
+          <button type="button" class="fc-swatch on" data-color="0" style="--fc-c:#FFD900"></button>
+          <button type="button" class="fc-swatch" data-color="1" style="--fc-c:#21B731"></button>
+          <button type="button" class="fc-swatch" data-color="2" style="--fc-c:#F66A00"></button>
+          <button type="button" class="fc-swatch" data-color="3" style="--fc-c:#0CBAEF"></button>
+          <button type="button" class="fc-erase" id="fcErase" aria-label="橡皮">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <!-- 橡皮：斜 45° 圆角矩形，上端一段留白，其余实心 -->
+              <g transform="rotate(-45 12 12)">
+                <rect x="7.6" y="2.6" width="8.8" height="18.8" rx="2.4" fill="#1a1a1a"/>
+                <path d="M7.6 9.4 V5 Q7.6 2.6 10 2.6 H14 Q16.4 2.6 16.4 5 V9.4 Z" fill="#fff"/>
+                <rect x="7.6" y="2.6" width="8.8" height="18.8" rx="2.4" fill="none" stroke="#1a1a1a" stroke-width="1.9"/>
+                <line x1="7.6" y1="9.4" x2="16.4" y2="9.4" stroke="#1a1a1a" stroke-width="1.9"/>
+              </g>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- 过关 / 放弃浮层（复用 xo / bh / br 那套统一交互） -->
+      <div class="fc-overlay" id="fcOverlay">
+        <div class="fc-overlay-box" role="dialog" aria-modal="true" aria-labelledby="fcOvTitle">
+          <h4 id="fcOvTitle">过关！</h4>
+          <p id="fcOvText"></p>
+          <div class="fc-overlay-acts">
+            <button type="button" class="sub-save" id="fcOvOk">确 认</button>
+            <div class="fc-overlay-row">
+              <button type="button" class="mini-btn" id="fcOvNew">换一题</button>
+              <button type="button" class="mini-btn" id="fcOvBack">重选难度</button>
+            </div>
+          </div>
+          <button type="button" class="mini-btn fc-answer-btn" id="fcOvAnswer" hidden>查看答案</button>
+        </div>
+      </div>
+
+      <!-- 二次确认（复用 base.css 的通用小弹框） -->
+      <div class="confirm-overlay" id="fcAskConfirm">
+        <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="fcAskTitle">
+          <h4 id="fcAskTitle">重来这一局？</h4>
+          <p id="fcAskText"></p>
+          <div class="acts">
+            <button type="button" id="fcAskCancel">取消</button>
+            <button type="button" class="danger" id="fcAskOk">重来</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     功能页：二零四八
+     和其它功能页一样：一条顶栏（返回 + 标题）、下面 body 放内容。
+     玩法全在 js/game2048.js 里：移动、合并、判负都在浏览器本地完成；
+     最高分存在本机浏览器的 localStorage 里（离线版没有后端）。
+
+     ★ 棋盘（#g48Board）里有两层，都由 js/game2048.js 现场铺：
+         · 16 个底格（.g48-cell）—— 不动的背景格子
+         · 若干方块（.g48-tile）—— 绝对定位，靠 transform 滑动
+       分两层是为了让运动干净：底格永远不动，只有方块在动。
+     ★ 方向键是「十字方向盘」，四个键各占 3×3 网格的一格（见 tools.css）。
+     ★ 结束 / 胜利浮层和「重开」确认弹窗，都放在 .tool-page 里、
+       .tool-body 外面 —— 它们是浮层，不该跟着内容区一起滚。
+     ============================================================ -->
+<div class="tool-page" id="toolGame2048">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">二零四八</h3>
+  </div>
+
+  <div class="tool-body" id="toolGame2048Body">
+    <div class="g48-wrap">
+
+      <!-- ---------- 1) 分数条 ----------
+           得分和最高分并排两块；下面一行小字是这个玩法的状态提示
+           （平时是玩法摘要，撤销 / 满了 / 结束时由 js/game2048.js 临时改写） -->
+      <section class="g48-card g48-hud">
+        <div class="g48-stat">
+          <span class="g48-stat-label">得分</span>
+          <span class="g48-stat-val" id="g48Score">0</span>
+        </div>
+        <div class="g48-stat">
+          <span class="g48-stat-label">最高分</span>
+          <span class="g48-stat-val" id="g48Best">0</span>
+        </div>
+        <p class="g48-note" id="g48Note">合并同值方块，凑出 2048</p>
+      </section>
+
+      <!-- ---------- 2) 棋盘 ----------
+           两层：底格（.g48-cells 里的 16 个格子）+ 方块层。
+           方块层不额外包一层，方块直接是 #g48Board 的子元素 ——
+           它们 position: absolute，相对棋盘定位（见 tools.css 的 .g48-tile）。 -->
+      <section class="g48-card g48-boardcard">
+        <div class="g48-board" id="g48Board">
+          <div class="g48-cells" id="g48Cells"></div>
+        </div>
+      </section>
+
+      <!-- ---------- 3) 操作 ----------
+           方向盘在上面、按钮在下面：拇指够得着的那块给方向，
+           误触代价大的那两个（撤销 / 重开）放远一点 -->
+      <section class="g48-card g48-controls">
+        <!-- 十字方向盘：四个键各占 3×3 网格的一格，中间那格空着 -->
+        <div class="g48-pad" id="g48Pad">
+          <button type="button" class="g48-key g48-key-up" data-dir="up" aria-label="向上移动" title="向上">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 19V5" /><path d="M5.5 11.5L12 5l6.5 6.5" />
+            </svg>
+          </button>
+          <button type="button" class="g48-key g48-key-left" data-dir="left" aria-label="向左移动" title="向左">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5" /><path d="M11.5 5.5L5 12l6.5 6.5" />
+            </svg>
+          </button>
+          <button type="button" class="g48-key g48-key-right" data-dir="right" aria-label="向右移动" title="向右">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14" /><path d="M12.5 5.5L19 12l-6.5 6.5" />
+            </svg>
+          </button>
+          <button type="button" class="g48-key g48-key-down" data-dir="down" aria-label="向下移动" title="向下">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 5v14" /><path d="M5.5 12.5L12 19l6.5-6.5" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="g48-acts">
+          <button type="button" class="mini-btn" id="g48Undo" disabled>撤销一步</button>
+          <button type="button" class="sub-save g48-new" id="g48New">重开一局</button>
+        </div>
+      </section>
+
+      <p class="g48-foot">
+        手机：在棋盘上滑动，或点下面的方向键 · 电脑：方向键 / W A S D
+        <br />另外：<b>U</b> 撤销一步 · <b>R</b> 重开一局
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ---------- 结束 / 胜利浮层 ----------
+       两种情形共用一块，文案和按钮由 js/game2048.js 现场换：
+         · 无处可动 —— 报分数，「撤销一步」「重开一局」
+         · 凑出 2048 —— 道个喜，「继续挑战」「重开一局」
+       盖在 .tool-page 上（z-index 比它高），不占内容区的高度。 -->
+  <div class="g48-overlay" id="g48Overlay">
+    <div class="g48-overlay-box" role="dialog" aria-modal="true" aria-labelledby="g48OvTitle">
+      <h4 id="g48OvTitle">这一局结束了</h4>
+      <p id="g48OvText">本局得分 0</p>
+      <div class="g48-overlay-acts">
+        <button type="button" class="sub-save" id="g48OvPrimary">重开一局</button>
+        <button type="button" class="mini-btn" id="g48OvSecond" hidden>撤销一步</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- 「重开一局」的二次确认 ----------
+       样式复用 base.css 里那套通用小弹框。
+       ★ 只有盘上**已经有进展**（得分不为零、或走到过半局）才会弹这个；
+         一进来就按重开（等于什么都没损失）直接重开，不必多问一句。
+         判断写在 js/game2048.js 的 g48AskNewGame 里。 -->
+  <div class="confirm-overlay" id="g48ResetConfirm">
+    <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="g48ResetTitle">
+      <h4 id="g48ResetTitle">重开这一局？</h4>
+      <p id="g48ResetText">盘面清空，得分从零开始。这一下也可以用「撤销」退回来。</p>
+      <div class="acts">
+        <button type="button" id="g48ResetCancel">取消</button>
+        <button type="button" class="danger" id="g48ResetOk">重开</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tool-page" id="toolMorse">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">异语道破</h3>
+  </div>
+
+  <div class="tool-body" id="toolMorseBody">
+    <div class="ms-wrap">
+
+      <!-- ============ 二级：模式选择 ============ -->
+      <section class="ms-card ms-choose" id="msHome">
+        <div class="ms-choose-title">选择模式</div>
+        <div class="ms-modes">
+          <button type="button" class="ms-mode" id="msGoTrans">
+            <b>摩斯翻译</b><span>文字与电码互查 · 双向</span>
+          </button>
+          <button type="button" class="ms-mode" id="msGoGame">
+            <b>译电挑战</b><span>听电码 · 逐字母译出整词</span>
+          </button>
+          <button type="button" class="ms-mode" id="msGoChart">
+            <b>电码对照</b><span>数字 0–9 · 字母 A–Z · 常用标点</span>
+          </button>
+        </div>
+        <div class="ms-rules">
+          <div class="ms-rules-title">电码约定</div>
+          <ul class="ms-rules-list">
+            <li>翻译里 <b>/</b> 分隔字母、<b>\</b> 分隔单词。</li>
+            <li>例：<b>Thank you.</b> → <b>-/····/·-/-·/-·-\-·--/---/··-\·-·-·-</b></li>
+            <li>支持英文字母 A–Z、数字 0–9 和常用标点。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============ 三级 A：翻译方向 ============ -->
+      <section class="ms-card ms-choose" id="msTransHome" hidden>
+        <div class="ms-backrow"><button type="button" class="mini-btn" data-ms-back="home">‹ 返回</button></div>
+        <div class="ms-choose-title">选择方向</div>
+        <div class="ms-modes">
+          <button type="button" class="ms-mode" id="msGoEnc">
+            <b>文字 → 电码</b><span>输入英文 / 拼音，译成摩斯</span>
+          </button>
+          <button type="button" class="ms-mode" id="msGoDec">
+            <b>电码 → 文字</b><span>输入摩斯，译回英文 / 拼音</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ============ 三级 A2：翻译工具（双输入框，照罗马数字） ============ -->
+      <section class="ms-card" id="msTrans" hidden>
+        <div class="ms-backrow">
+          <button type="button" class="mini-btn" data-ms-back="transHome">‹ 返回</button>
+          <span class="ms-dir-tag" id="msDirTag">文字 → 电码</span>
+        </div>
+        <div class="field">
+          <label for="msIn" id="msInLabel">输入（英文 / 拼音）</label>
+          <div class="rm-row">
+            <div class="rm-field">
+              <div class="input-wrap rm-input is-area" data-field>
+                <textarea id="msIn" rows="1" placeholder="点击输入…" maxlength="120"
+                          autocomplete="off" autocapitalize="off" autocorrect="off"
+                          spellcheck="false" aria-label="输入原文"></textarea>
+              </div>
+              <div class="hint"></div>
+            </div>
+            <button type="button" class="rm-copy" id="msCopyIn">复制</button>
+          </div>
+        </div>
+        <div class="ms-case" id="msCase" hidden>
+          <button type="button" class="ms-case-toggle" id="msCaseToggle" aria-expanded="false">
+            <span>输出大小写</span>
+            <em id="msCaseCur">自动</em>
+            <i class="ms-case-arrow" id="msCaseArrow">▾</i>
+          </button>
+          <div class="ms-case-opts" id="msCaseOpts" hidden>
+            <button type="button" class="ms-case-opt is-on" data-case="auto">自动</button>
+            <button type="button" class="ms-case-opt" data-case="upper">全部大写</button>
+            <button type="button" class="ms-case-opt" data-case="lower">全部小写</button>
+            <button type="button" class="ms-case-opt" data-case="sentence">仅句子首字母大写</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="msOut">结果</label>
+          <div class="rm-row">
+            <div class="rm-field">
+              <div class="input-wrap rm-input rm-readonly is-area">
+                <textarea id="msOut" rows="1" readonly placeholder="—" aria-label="翻译结果"></textarea>
+              </div>
+            </div>
+            <button type="button" class="rm-copy" id="msCopyOut">复制</button>
+          </div>
+        </div>
+        <p class="ms-note" id="msNote">/ 分隔字母 · \ 分隔单词 · 空格自动变 \</p>
+      </section>
+
+      <!-- ============ 三级 A3：电码对照表（0–9 / A–Z / 常用标点） ============ -->
+      <section class="ms-card" id="msChart" hidden>
+        <div class="ms-backrow"><button type="button" class="mini-btn" data-ms-back="home">‹ 返回</button></div>
+        <div class="ms-chart" id="msChartBody"></div>
+      </section>
+
+      <!-- ============ 三级 B：译电难度 + 规则 ============ -->
+      <section class="ms-card ms-choose" id="msGameHome" hidden>
+        <div class="ms-backrow"><button type="button" class="mini-btn" data-ms-back="home">‹ 返回</button></div>
+        <div class="ms-choose-title">选择难度</div>
+        <div class="ms-tiers" id="msTiers">
+          <button type="button" class="ms-tier on" data-tier="easy">
+            <b>入门</b><span>4–5 字母 · 有对照表</span>
+          </button>
+          <button type="button" class="ms-tier" data-tier="normal">
+            <b>进阶</b><span>6–8 字母 · 对照表可展开</span>
+          </button>
+          <button type="button" class="ms-tier" data-tier="hard">
+            <b>困难</b><span>8–12 字母或数字 · 无对照表</span>
+          </button>
+        </div>
+        <button type="button" class="sub-save ms-start" id="msStart">开 始</button>
+        <div class="ms-rules">
+          <div class="ms-rules-title">玩法规则</div>
+          <ul class="ms-rules-list">
+            <li>一局译<b>一个词</b>：纸带每格上方是电码，下方填对应的字母 / 数字。</li>
+            <li>点「播放整词」从头听一遍，正在发的符号会亮；也可以只重放当前格。</li>
+            <li>用屏幕键盘或电脑键盘作答；填错会抖一下并记一次错误。</li>
+            <li>卡住了点「提示」揭晓当前字母（计次）。译完整条纸带即过关。</li>
+            <li>入门对照表常显、进阶可展开；困难档不给表，而且发得更快。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============ 三级 B2：译电游戏 ============ -->
+      <section class="ms-game" id="msGame" hidden>
+        <div class="ms-head">
+          <span class="ms-round" id="msRound">第 1 局</span>
+          <span class="ms-meta" id="msMeta"></span>
+          <div class="ms-head-acts">
+            <button type="button" class="ms-tool" id="msExit">退出</button>
+            <button type="button" class="ms-tool" id="msSound">声音开</button>
+            <button type="button" class="ms-tool" id="msTableBtn">对照表</button>
+            <button type="button" class="ms-tool" id="msHint">提示</button>
+            <button type="button" class="ms-tool" id="msReset">重来本局</button>
+            <button type="button" class="ms-tool" id="msRechoose">重选难度</button>
+            <button type="button" class="ms-tool" id="msDoneExit" hidden>退出</button>
+            <button type="button" class="ms-tool" id="msDoneNew" hidden>再来一局</button>
+            <button type="button" class="ms-tool" id="msDoneRechoose" hidden>更改难度</button>
+          </div>
+        </div>
+
+        <div class="ms-stat">
+          <span>用时 <b id="msTime">0s</b></span>
+          <span>错误 <b id="msErr">0</b></span>
+          <span>提示 <b id="msHints">0</b></span>
+        </div>
+
+        <!-- 电报纸带：格子上电码、下字母，js 现铺 -->
+        <div class="ms-tape-wrap">
+          <div class="ms-tape" id="msTape"></div>
+        </div>
+
+        <div class="ms-playrow">
+          <button type="button" class="mini-btn" id="msPlayAll">播放整词</button>
+          <button type="button" class="mini-btn" id="msPlayCur">重放当前格</button>
+        </div>
+
+        <!-- 电码对照表：入门常显 / 进阶可开关 / 困难不给 -->
+        <div class="ms-table" id="msTable" hidden></div>
+
+        <!-- 作答键盘（A–Z 或 0–9，js 现铺） -->
+        <div class="ms-keys" id="msKeys"></div>
+      </section>
+
+      <!-- 结算浮层 -->
+      <div class="ms-overlay" id="msOverlay">
+        <div class="ms-overlay-box" role="dialog" aria-modal="true" aria-labelledby="msOvTitle">
+          <h4 id="msOvTitle">译完了</h4>
+          <p id="msOvText"></p>
+          <div class="ms-overlay-acts">
+            <button type="button" class="sub-save" id="msOvOk">确 认</button>
+            <div class="ms-overlay-row">
+              <button type="button" class="mini-btn" id="msOvNew">再来一局</button>
+              <button type="button" class="mini-btn" id="msOvBack">重选难度</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 二次确认（重来本局 / 重选难度）复用 base.css 的 .confirm-overlay -->
+      <div class="confirm-overlay" id="msAskConfirm">
+        <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="msAskTitle">
+          <h4 id="msAskTitle">确认？</h4>
+          <p id="msAskText"></p>
+          <div class="acts">
+            <button type="button" id="msAskCancel">取消</button>
+            <button type="button" class="danger" id="msAskOk">确认</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 软键盘：摩斯键位（· — 两个大键 + / \ 退格，头部清空 / 完成）。
+       点「电码 → 文字」的输入框才出现；外观复用第六节 .gfx-pad。
+       键面由 js/morse.js 现铺（点 / 划用图形画，分隔键带小字说明）。 -->
+  <div class="gfx-pad ms-pad" id="msPad" hidden>
+    <div class="gfx-pad-head">
+      <button type="button" class="mini-btn" id="msPadClear">清空</button>
+      <button type="button" class="mini-btn" id="msPadDone">完成</button>
+    </div>
+    <div class="gfx-pad-keys is-rows" id="msPadKeys"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     功能页：数字桥屿（数桥 / Hashi）
+     和「异或法则」一个路子，分成前后两页，DOM 只有一份、靠 hidden 切：
+       第一页 #brSetup —— 玩法说明 + 选尺寸 + 「开始」
+       第二页 #brGame  —— 用时步数 / 盘面 / 操作
+     出题和判题全在 js/bridge.js 里，一次请求都不发（这个玩法也不记战绩）。
+     ★ 盘面是一张 SVG（#brSvg），岛 / 桥 / 虚线提示 / 红标都是脚本现铺的：
+       岛的坐标 = 格子坐标 × 100，所以 viewBox 跟着尺寸走（见 js/bridge.js）。
+     ============================================================ -->
+<div class="tool-page" id="toolBridge">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">数字桥屿</h3>
+  </div>
+
+  <div class="tool-body" id="toolBridgeBody">
+    <div class="br-wrap">
+
+      <!-- ---------- 1) 第一页：选尺寸 + 玩法规则 ----------
+           和 <section class="xo-setup"> 同构：**先选、再开始、规则垫在下面**
+           —— 选盘这件事点开就要做，放最上面；规则是选完顺手往下看的那一段。
+           选完点开始，这一页 hidden，换到游戏那一页；「改尺寸」再换回来。 -->
+      <section class="br-card br-setup" id="brSetup">
+        <div class="br-setup-title">选一张盘</div>
+        <div class="br-sizes" id="brSizes">
+          <button type="button" class="br-size on" data-size="5">
+            <b>5 × 5</b><span>入门</span>
+          </button>
+          <button type="button" class="br-size" data-size="7">
+            <b>7 × 7</b><span>进阶</span>
+          </button>
+          <button type="button" class="br-size" data-size="9">
+            <b>9 × 9</b><span>困难</span>
+          </button>
+          <button type="button" class="br-size" data-size="11">
+            <b>11 × 11</b><span>专家</span>
+          </button>
+          <button type="button" class="br-size" data-size="13">
+            <b>13 × 13</b><span>大师</span>
+          </button>
+        </div>
+        <button type="button" class="sub-save br-start" id="brStart">开 始</button>
+        <p class="br-setup-note">每一局都有解，而且解只有一种。</p>
+
+        <!-- 玩法说明：规则就这么五条，摆在「开始」下面，想先看再玩 -->
+        <div class="br-rules">
+          <div class="br-rules-title">玩法规则</div>
+          <ul class="br-rules-list">
+            <li>岛上的<b>数字</b> = 这座岛要连的<b>桥数</b>。桥只走<b>横竖</b>，
+                两座岛之间最多连<b>两条</b>（单桥 / 双桥）。</li>
+            <li>点一座岛，再点它上下左右的另一座岛，桥就架上了 ——
+                同一对再点一次变<b>双桥</b>，第三次<b>拆掉</b>。
+                也可以直接<b>拖</b>过去；点桥身上一下就拆掉这条桥。</li>
+            <li>桥不能<b>穿过别的岛</b>，这种桥架不上去。桥与桥之间可以
+                <b>交叉</b>（有时候绕不过去），但会在交点上标一个<b>红结</b>——
+                有红结就不算过关，得改掉。</li>
+            <li>岛上的桥比数字<b>多了</b>：这样画得出来，只是岛和数字会
+                <b>标红</b>提醒。改回正确的条数就恢复。</li>
+            <li>所有岛都连够自己的数字，并且全部连成<b>一片</b>（没有孤岛），
+                就算过关。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ---------- 2) 第二页：对局 ---------- -->
+      <section class="br-game" id="brGame" hidden>
+
+        <!-- 顶栏。通关 / 放弃之后（#brGame 挂上 is-done）「撤销 / 重开 / 放弃」
+             会自动藏掉，只剩「换一题 / 改尺寸」——那时候盘已经锁了，前三个没意义。
+             见 css/tools.css 的 .br-game.is-done -->
+        <div class="br-head">
+          <span class="br-round" id="brRound">第 1 局</span>
+          <span class="br-meta" id="brMeta">5 × 5</span>
+          <div class="br-head-acts">
+            <button type="button" class="br-tool" id="brUndo">撤销</button>
+            <button type="button" class="br-tool" id="brReset">重开</button>
+            <button type="button" class="br-tool" id="brAgain">换一题</button>
+            <button type="button" class="br-tool" id="brBack">改尺寸</button>
+            <!-- 「放弃」放最角上、还得二次确认（和异或法则那个 #xoQuit 一路） -->
+            <button type="button" class="br-tool br-quit" id="brGiveUp">放弃</button>
+          </div>
+        </div>
+
+        <!-- 用时 / 步数：和 g48-hud 那两块同样的长相 -->
+        <div class="br-hud">
+          <div class="br-stat">
+            <span class="br-stat-label">用时</span>
+            <span class="br-stat-val" id="brTime">0:00</span>
+          </div>
+          <div class="br-stat">
+            <span class="br-stat-label">步数</span>
+            <span class="br-stat-val" id="brSteps">0</span>
+          </div>
+        </div>
+
+        <div class="br-boardcard">
+          <!-- 盘面。岛和桥都铺在这张 SVG 里（js/bridge.js 现铺）。
+               空的（没岛的）地方按下照样能滚页面：只有岛上那块
+               touch-action: none，见 css/tools.css 的 .br-hit。 -->
+          <div class="br-board">
+            <svg class="br-svg" id="brSvg" viewBox="0 0 100 100" role="img"
+                 aria-label="数字桥屿盘面"></svg>
+          </div>
+          <p class="br-tip" id="brTip">
+            点一座岛，再点它上下左右的另一座岛 → 架桥；同一对再点一次是双桥，第三次拆掉
+          </p>
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- 过关 / 放弃浮层（样式跟着 g48-overlay 那一套走）
+         ★ 主按钮分两种，由 js/bridge.js 切换显隐：
+           · 过关 →「确认」= "知道了，我要看看自己摆出来的盘"：点完关掉浮层，
+             盘面留在眼前（棋盘已锁，看得见不动），顶栏的「撤销 / 重开 / 放弃」
+             跟着藏起来，只剩「换一题 / 改尺寸」。
+           · 放弃 →「查看答案」：点完把这一局的标准解摆上来（和异或法则那路一样，
+             放弃本身不摆答案）。
+           下面那两颗（换一题 / 改尺寸）两种状态下都在，想直接开新的就点它们，省一步。 -->
+    <div class="br-overlay" id="brOverlay">
+      <div class="br-overlay-box" role="dialog" aria-modal="true" aria-labelledby="brOvTitle">
+        <h4 id="brOvTitle">过关！</h4>
+        <p id="brOvText"></p>
+        <div class="br-overlay-acts">
+          <button type="button" class="sub-save" id="brOvOk">确 认</button>
+          <div class="br-overlay-row">
+            <button type="button" class="mini-btn" id="brOvAgain">再来一题</button>
+            <button type="button" class="mini-btn" id="brOvBack">改尺寸</button>
+          </div>
+        </div>
+        <!-- 只有「放弃」之后才给看答案（过关了就不必看了，见 js/bridge.js） -->
+        <button type="button" class="mini-btn br-answer-btn" id="brOvAnswer" hidden>查看答案</button>
+      </div>
+    </div>
+
+    <!-- 二次确认：重开 / 换一题 / 改尺寸 / 放弃共用这一个壳，标题·说明·按钮字
+         由 js/bridge.js 的 BR_ASK 现填（几处只差"问什么、点了干什么"）。
+         ★ 换一题 / 改尺寸 / 放弃一律问，不管盘上有没有桥；只有「重开」
+           在盘上一条桥都没有的时候给一句提示、不弹框（没什么可拆的）。 -->
+    <div class="confirm-overlay" id="brAskConfirm">
+      <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="brAskTitle">
+        <h4 id="brAskTitle">重开这一局？</h4>
+        <p id="brAskText">架好的桥全部拆掉，重新来过。这一下也可以用「撤销」退回来。</p>
+        <div class="acts">
+          <button type="button" id="brAskCancel">取消</button>
+          <button type="button" class="danger" id="brAskOk">重开</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 单位选择的悬浮窗（单位换算用）
+     外观和上面星座/性别那个是同一套（.picker-overlay + .picker-sheet + .chips），
+     但各是独立的一个：那个弹窗被 app.js 绑死在个人资料的字段上，这里由
+     js/units.js 自己管（同一个弹窗要服务上下两栏，选项也跟着类别走）。 -->
+<div class="picker-overlay" id="unitPicker">
+  <div class="picker-sheet" role="dialog" aria-modal="true">
+    <div class="picker-head">
+      <h4 id="unitPickerTitle">选择单位</h4>
+      <button type="button" class="x" id="unitPickerClose" aria-label="关闭">✕</button>
+    </div>
+    <div class="picker-body">
+      <div class="chips" id="unitPickerChips" role="radiogroup" aria-label="可选单位"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- ============================================================
+     设置：齿轮菜单 → 更改称呼 / 关于 Nova
+     离线版没有账号体系，设置里就这两项（逻辑见 js/settings.js）
+     ============================================================ -->
+<div class="menu-overlay" id="menuOverlay">
+  <div class="menu-sheet" role="dialog" aria-modal="true" aria-label="设置">
+    <button type="button" class="menu-item" id="miName">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4.5 20a7.5 7.5 0 0115 0" />
+      </svg>
+      更改称呼
+    </button>
+    <button type="button" class="menu-item" id="miAbout">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 11v5.6" />
+        <path d="M12 7.6h.01" />
+      </svg>
+      关于 Nova
+    </button>
+    <div class="menu-sep"></div>
+    <button type="button" class="menu-cancel" id="miCancel">取消</button>
+  </div>
+</div>
+
+<!-- 更改称呼：只改欢迎页显示的名字，存在本机浏览器里 -->
+<div class="confirm-overlay" id="nameOverlay">
+  <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="nameTitle">
+    <h4 id="nameTitle">更改称呼</h4>
+    <p>改的是欢迎页上叫你的名字，只存在这台设备的浏览器里。</p>
+    <div class="set-field">
+      <div class="input-wrap">
+        <input id="nameInput" type="text" maxlength="12" autocomplete="off"
+               placeholder="最多 12 个字，留空就是「用户」" />
+      </div>
+      <div class="set-hint" id="nameHint">留空保存 = 恢复成默认的「用户」</div>
+    </div>
+    <div class="acts">
+      <button type="button" id="nameCancel">取消</button>
+      <button type="button" class="primary" id="nameSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 关于 Nova：版本号 / 上次更新时间（写死在 js/settings.js 顶部两个常量里） -->
+<div class="confirm-overlay" id="aboutOverlay">
+  <div class="confirm-box2 about-box" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <img class="about-logo" src="img/icon-128.png" alt="" />
+    <h4 id="aboutTitle">Nova 离线版</h4>
+    <div class="about-rows">
+      <div><span>版本号</span><b id="aboutVer">—</b></div>
+      <div><span>上次更新</span><b id="aboutDate">—</b></div>
+    </div>
+    <div class="acts">
+      <button type="button" class="primary" id="aboutClose">知道了</button>
+    </div>
+  </div>
+</div>
+
+<!--
+  脚本按依赖顺序加载（全部是纯前端，没有任何请求后端的代码）：
+    core.js     公共工具（$ / toast / 表单校验 / 设备检测）
+    home.js     主页启动（欢迎语里那个名字、把主页显示出来）
+    tools.js    功能页的进入 / 返回
+  之后是各功能页自己的逻辑
+-->
+<script src="js/core.js"></script>
+<script src="js/home.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/convert.js"></script>
+<script src="js/points24.js"></script>
+<script src="js/graph.js"></script>
+<script src="js/units.js"></script>
+<script src="js/roman.js"></script>
+<script src="js/magic.js"></script>
+<script src="js/xor.js"></script>
+<script src="js/brahma.js"></script>
+<script src="js/game2048.js"></script>
+<script src="js/bridge.js"></script>
+<script src="js/fourcolor.js"></script>
+<script src="js/bash.js"></script>
+<script src="js/morse.js"></script>
+</body>
+</html>

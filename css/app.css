@@ -1,0 +1,624 @@
+/* ==========================================================================
+   app.css —— 主界面
+   主页（欢迎区 + 功能卡片）/ PC 分栏 / 平板放大
+   （离线版：登录页、设置页、站内信、好友、后台那些样式已经删掉）
+   ========================================================================== */
+
+/* ======================================================
+   主页
+   ====================================================== */
+.home-page {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  flex-direction: column;
+  overflow-y: auto;
+}
+.home-page.show { display: flex; }
+
+/* 顶部品牌蓝区：略小于 1/3 屏，底部收一点 */
+.home-hero {
+  flex: 0 0 auto;
+  /* 置顶常驻：蓝区永远钉在可视区顶部，下面的卡片从它底下滚过去。
+     sticky 的参照物是本页的滚动容器 .home-page（overflow-y: auto），
+     所以这里 top: 0 就是"贴在滚动区上沿"。
+     必须给 z-index：不然滚上来的卡片会盖住它（同层的 sticky 兄弟里，
+     后面的文档顺序更高）。 */
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  /* --vh 是 JS 写入的真实视口高度；0.31 ≈ 三分之一再收一点 */
+  height: calc(var(--vh, 100vh) * 0.31);
+  /* 矮屏兜底：内容本身要放得下，所以留足够的最小高度 */
+  min-height: 202px;
+  background: var(--brand);
+  color: var(--on-brand);
+  display: flex;
+  flex-direction: column;
+  align-items: center;        /* 水平居中 */
+  text-align: center;
+  /* 顶部偏上：上方留一点白，不垂直居中 */
+  padding: 52px 24px 0;
+  box-sizing: border-box;
+  /* 蓝白交界处的一条细分界线。
+     描在蓝区**下边**而不是内容区上边：蓝区是常驻的，界线跟着它一起
+     常驻；画在内容上就会跟着内容滚走，交界处就成了一条毛边。 */
+  border-bottom: 1px solid #E6E7EB;
+}
+
+/* 站点图标（img/icon-128.png：深色圆角块 + 蓝色 N）
+   图片本身四角是透明的，放在蓝底上就是「一块深色图标浮在蓝区上」 */
+.home-mark {
+  width: 58px; height: 58px; border-radius: 15px;
+  display: grid; place-items: center;
+  flex: 0 0 auto;
+  margin-bottom: 20px;
+}
+.home-mark img {
+  width: 100%; height: 100%;
+  display: block; border-radius: inherit;
+}
+
+.home-hello {
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.35;
+  word-break: break-word;
+  max-width: 100%;
+  /* 行尾是全角「！」，字形本身偏左、右半格看着像空的，
+     整行居中时视觉重心会偏左。
+     往右补 0.25 格（1 格 = 1em，即 0.25em）把视觉居中找回来。
+     用 transform 而不是 margin/padding：不参与布局、不影响折行。 */
+  transform: translateX(0.25em);
+}
+.home-hello b { font-weight: 700; }
+
+.home-sub {
+  font-size: 14px;
+  color: rgba(255, 255, 255, .8);
+  margin-top: 8px;
+  letter-spacing: .3px;
+}
+
+/* 内容区：手机上蓝区下方，PC 分栏时占右侧（里面放功能入口 .home-tools） */
+.home-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 24px;
+  /* 底部栏是占位的（sticky），内容不会被压住，所以只要常规留白 */
+  padding: 22px 20px calc(28px + env(safe-area-inset-bottom));
+}
+
+/* 小屏手机：字号略收，保证「你好，xxx！」不折行太难看 */
+html[data-viewport="xs"] .home-hello { font-size: 24px; }
+html[data-viewport="xs"] .home-mark { width: 52px; height: 52px; border-radius: 14px; font-size: 24px; }
+/* 矮屏时内容会顶到蓝区下边，间距收一点 */
+html[data-short="1"] .home-hero { padding-top: 32px; }
+
+/* ======================================================
+   PC 端：左右分栏
+   与登录页保持一致——左栏纯蓝品牌区，右侧留白内容区
+   ====================================================== */
+html[data-viewport="lg"][data-aspect="wide"] .home-page {
+  flex-direction: row;
+  overflow: hidden;
+}
+
+html[data-viewport="lg"][data-aspect="wide"] .home-hero {
+  /* 不再用 1/3 屏高，改成和登录页同宽的竖向色块 */
+  height: auto;
+  min-height: 0;
+  /* 比登录页左栏略窄一点，给内容区留更多空间 */
+  width: clamp(340px, 40%, 560px);
+  flex: 0 0 auto;
+  /* 左对齐更有版式感，和手机端的居中区分开 */
+  align-items: flex-start;
+  text-align: left;
+  justify-content: center;    /* 内容竖直居中 */
+  padding: 48px 52px;
+  /* 这一档是左右分栏、整页不滚动（.home-page 改成 row + overflow: hidden），
+     蓝区本来就不会跑 —— 把手机端那套置顶收回去，免得留个没用的定位属性 */
+  position: static;
+  z-index: auto;
+  /* 交界线也跟着转向：这里蓝白是**左右**相邻，画在蓝区右缘 */
+  border-bottom: 0;
+  border-right: 1px solid #E6E7EB;
+}
+
+html[data-viewport="lg"][data-aspect="wide"] .home-mark {
+  width: 62px; height: 62px; border-radius: 16px;
+  font-size: 29px;
+  margin-bottom: 24px;
+}
+/* 大标题不止一行，字号跟着栏宽走，避免折行 */
+html[data-viewport="lg"][data-aspect="wide"] .home-hello {
+  font-size: clamp(26px, 2.4vw, 34px);
+  line-height: 1.3;
+  /* 这一栏是左对齐，不需要为全角「！」做视觉居中补偿，恢复原样。
+     （只有居中的布局才需要那 0.25 格右移） */
+  transform: none;
+}
+html[data-viewport="lg"][data-aspect="wide"] .home-sub { font-size: 15px; margin-top: 10px; }
+
+/* 右侧内容区：功能入口靠上排（不上下居中） */
+html[data-viewport="lg"][data-aspect="wide"] .home-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;   /* 内容贴顶，不再垂直居中 */
+  gap: 36px;
+  /* 右侧多留 110px：右上角浮着设置齿轮 + 个人主页两个按钮，
+     不留的话窗口一窄，居中的卡片右缘就会钻到按钮底下 */
+  padding: 40px 110px 40px 40px;
+  background: #fff;
+  min-width: 0;
+  /* ★ 右侧这一栏自己滚，别删。
+     整页在这一档是「row + overflow: hidden」（见上面 .home-page）——
+     左栏蓝区钉住不动，页面本身也不滚。原来假定右侧内容一定放得下，
+     卡片少的时候确实放得下；可一旦卡片变多（或窗口变矮），
+     内容就会高过视口，而整页又是 hidden —— 滚轮完全没反应，
+     下面几张卡永远够不着（电脑端"滚不动"就是这么来的）。
+     所以这里让内容区自己成为滚动容器：超出就滚，和手机端
+     滚动整页的效果一致，左栏依旧不动。
+     min-height: 0 是配套的兜底：flex 项默认不肯缩到内容高度以下，
+     不给它，overflow 就没有生效的余地。 */
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* 保存按钮：普通流式布局，放在表单最下面 */
+.sub-save {
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+  border: 0; border-radius: 8px;
+  background: var(--brand);
+  color: var(--on-brand);
+  font-family: inherit; font-size: 15.5px; font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  transition: background .15s;
+}
+.sub-save:hover { background: var(--brand-hover); }
+.sub-save:disabled { background: #e3e5ea; color: #9aa1ac; cursor: not-allowed; }
+.sub-save.loading { color: transparent; pointer-events: none; }
+.sub-save.loading::after {
+  content: ""; position: absolute; inset: 0; margin: auto;
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.35); border-top-color: var(--on-brand);
+  animation: spin .6s linear infinite;
+}
+html[data-viewport="lg"][data-aspect="wide"] .sub-page.show { display: grid; }
+.admin-page.show { display: grid; }
+
+.mini-btn {
+  padding: 8px 15px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-family: inherit; font-size: 14px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.mini-btn:hover { background: #f8f9fb; border-color: #b9c0cb; }
+.mini-btn:disabled { opacity: .5; cursor: not-allowed; }
+/* 正常状态 → 显示「禁用」，用暖色提醒 */
+.mini-act.off { border: 1px solid #f0dcb4; color: #b47710; }
+.mini-act.off:hover { background: #fdf8ee; border-color: #e3c88a; }
+/* 已禁用 → 显示「启用」，用绿色 */
+.mini-act.on { border: 1px solid #bfe3d2; color: #15803d; }
+.mini-act.on:hover { background: #f1faf5; border-color: #9ed6ba; }
+.pw-box .field { margin-bottom: 14px; }
+.pw-box .field > label { font-size: 13.5px; }
+.admin-view.show { display: block; }
+#adminHome.show { display: flex; flex-direction: column; gap: 14px; }
+.fb-toolbar .mini-btn:disabled { opacity: .5; cursor: not-allowed; }
+/* 悬停高亮只在真能悬停的设备上生效。
+   触摸设备上点一下会把 :hover 一直卡住，那一行就一直是灰的。 */
+@media (hover: hover) {
+  .fb-item:hover { background: #fafbfc; }
+}
+.fb-state.done { background: #eef2f0; color: #6b7280; }
+.mail-panel.show { display: block; }
+.mail-toolbar .mini-btn[hidden] { display: none; }
+
+/* ---------- 写信 ----------
+   现在它独占一块，不再和列表并排，所以不需要 .mail-head 那个
+   「写新邮件」标题了 —— 顶上那个标签已经说明了这是在干什么。 */
+#mailComposeView .field:last-of-type { margin-bottom: 0; }
+.fr-btn.danger { border-color: #f2c9ce; color: var(--danger); }
+.fr-btn.danger:hover { background: #fdf2f3; border-color: #e8a8b0; }
+/* 查找结果里「已发送 / 已是好友」的灰色态（与品牌蓝 .primary 对应） */
+.fr-btn.is-done {
+  background: #eceef2; border-color: #dfe3ea; color: #8a93a1;
+}
+.fr-btn.is-done:disabled { opacity: 1; cursor: not-allowed; }
+.chat-ctx.show { display: block; }
+.chat-ctx-btn.danger { color: #e5484d; }
+.chat-ctx-btn.danger:hover { background: #fdecec; }
+/* 一定要覆盖 .sub-save 默认的 width:100%，否则在 flex 横排里
+   发送按钮会把输入框挤成一条缝 */
+.chat-input .sub-save {
+  flex: 0 0 auto; width: auto;
+  margin-top: 0; padding: 0 18px; height: 42px;
+}
+.chat-switch.on { background: var(--brand); }
+.chat-switch.on i { transform: translateX(20px); }
+
+/* 添加好友：最后一个输入框是好友码，下面的保存按钮自己带外边距 */
+#friendAddView .field:last-of-type { margin-bottom: 0; }
+/* 校验被关掉时用暖色提醒：毕竟门是开着的 */
+.sec-note.off { background: #fdf8ee; color: #b47710; }
+/* 网格里改用 row-gap 控制间距，去掉字段自带的 margin */
+html[data-viewport="lg"] #pageProfile .sub-body .field { margin-bottom: 0; }
+
+/* 右侧下拉箭头 */
+.picker-arrow {
+  flex: 0 0 auto;
+  width: 8px; height: 8px;
+  margin-top: -4px;
+  border-right: 1.7px solid var(--muted);
+  border-bottom: 1.7px solid var(--muted);
+  transform: rotate(45deg);
+}
+
+/* ---------- 选择悬浮窗 ---------- */
+.picker-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  /* 要盖住个人主页（235），但低于退出确认（250） */
+  z-index: 245;
+  background: rgba(17, 24, 39, .4);
+}
+.picker-overlay.show { display: block; }
+
+/* 手机：从底部滑出的面板 */
+.picker-sheet {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  max-height: 72vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 -8px 32px -8px rgba(16, 24, 40, .28);
+  animation: sheetUp .22s cubic-bezier(.2,.9,.3,1) both;
+}
+.picker-head {
+  flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  padding: 17px 20px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.picker-head h4 { font-size: 16.5px; font-weight: 600; }
+.picker-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 18px 20px 22px;
+}
+
+/* 电脑：改成居中的小悬浮窗，从底部滑出太怪 */
+html[data-viewport="lg"][data-aspect="wide"] .picker-overlay {
+  display: none;
+  place-items: center;
+  padding: 24px;
+}
+html[data-viewport="lg"][data-aspect="wide"] .picker-overlay.show { display: grid; }
+html[data-viewport="lg"][data-aspect="wide"] .picker-sheet {
+  position: static;
+  width: 100%; max-width: 420px;
+  border-radius: 12px;
+  padding-bottom: 0;
+  animation: none;
+}
+
+/* ---------- 药丸选择器（星座 / 性别） ----------
+   原生 <select> 在移动端和桌面上样式难统一、弹层也不好看，
+   这里改成可直接点选的药丸按钮，放在上面的悬浮窗里：
+     选中态用品牌蓝，未选中的浅灰白底、悬停微亮
+   ------------------------------------------------------ */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* 让某项（星座里的「保密」）独占一整行，下一条从新行开始；
+   药丸本身尺寸不变，只是外面套了个占满整行的盒子 */
+.chips-full { flex: 0 0 100%; display: flex; }
+
+/* 弹窗里分组的小标题（地区按华北 / 东北等大区切分，和单位换算那套一致）：
+   占满整行，下一组药丸自然从新行开始。.chips-full 让它单独一行 */
+#pickerOverlay .chips-group {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+  letter-spacing: .2px;
+}
+#pickerOverlay .chips-group:first-child { margin-top: 0; }
+
+/* 地区选项很多（34 个 + 8 个大区标题），整页铺开、尽量不滚动：
+   放宽弹窗高度到近满屏、收紧药丸与分组标题、缩小内边距，让一屏装下 */
+#pickerOverlay.is-region .picker-sheet { max-height: 96vh; }
+#pickerOverlay.is-region .picker-body { padding: 14px 16px 18px; }
+#pickerOverlay.is-region .chips { gap: 6px; }
+#pickerOverlay.is-region .chip { padding: 7px 12px; font-size: 13px; }
+#pickerOverlay.is-region .chips-group { margin-top: 5px; font-size: 11.5px; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 9px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;           /* 全圆角，做成药丸 */
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14.5px;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+}
+.chip:hover { background: #f8f9fb; border-color: #b9c0cb; }
+.chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--brand);
+}
+/* 选中：蓝底白字，和主按钮同一套语汇 */
+.chip[aria-checked="true"] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--on-brand);
+  font-weight: 600;
+}
+.chip[aria-checked="true"]:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
+
+/* 星座符号单独一档：给个略小的字号，和文字区分开 */
+.chip .sym {
+  font-size: 15px;
+  line-height: 1;
+  opacity: .85;
+}
+.chip[aria-checked="true"] .sym { opacity: 1; }
+/* 数字框去掉浏览器自带的上下箭头，界面更干净 */
+.input-wrap > input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.input-wrap > input[type="number"]::-webkit-outer-spin-button,
+.input-wrap > input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none; margin: 0;
+}
+/* 勾了「保密」后年龄框禁用，压暗一点表示不参与填写 */
+.input-wrap > input:disabled { color: #9aa1ac; cursor: not-allowed; }
+
+/* ---------- 个性签名（多行） ---------- */
+.input-wrap.is-area {
+  align-items: stretch;
+  padding-top: 11px;
+  padding-bottom: 11px;
+}
+.input-wrap.is-area textarea {
+  flex: 1; min-width: 0;
+  background: none; border: 0; outline: 0;
+  resize: vertical;
+  font-family: inherit; font-size: 16px;
+  line-height: 1.65;
+  color: var(--text);
+  padding: 0;
+  min-height: 70px;
+  max-height: 180px;
+}
+.input-wrap.is-area textarea::placeholder { color: #9aa1ac; }
+
+/* ======================================================
+   平板专属放大 —— 由 JS 判定后写在 html[data-layout="tablet"] 上
+   （判定规则见 js/core.js 的 apply：真平板，或桌面窗口缩到平板宽度）
+   平板并入 sm 档、与手机共用基础配置，这里只把
+   「三行字」「设置 / 个人主页两个按钮」「选择弹窗与胶囊按钮」放大；
+   手机与 PC 的 data-layout 为 default，完全不受影响。
+   ====================================================== */
+
+/* 三行字放大：N logo → 你好，xxx！→ Nova工具箱
+   （蓝区最小高度跟着抬高，免得内容顶到边际） */
+html[data-layout="tablet"] .home-hero { min-height: 340px; padding-top: 64px; }
+html[data-layout="tablet"] .home-mark {
+  width: 100px; height: 100px; border-radius: 26px;
+  font-size: 48px;
+  margin-bottom: 30px;
+}
+html[data-layout="tablet"] .home-hello { font-size: 48px; }
+html[data-layout="tablet"] .home-sub { font-size: 22px; margin-top: 12px; }
+html[data-layout="tablet"] .home-main {
+  gap: 30px;
+  padding: 30px 24px calc(34px + env(safe-area-inset-bottom));
+}
+
+/* ---- 选择弹窗（星座 / 性别）一起放大 ---- */
+html[data-layout="tablet"] .picker-head { padding: 22px 28px 18px; }
+html[data-layout="tablet"] .picker-head h4 { font-size: 21px; }
+html[data-layout="tablet"] .picker-head .x { font-size: 26px; }
+html[data-layout="tablet"] .picker-body { padding: 24px 28px 30px; }
+html[data-layout="tablet"] .picker-trigger .picker-arrow { width: 10px; height: 10px; }
+
+/* 胶囊按钮：字号与内边距同步放大，间距也拉开 */
+html[data-layout="tablet"] .chips { gap: 12px; }
+html[data-layout="tablet"] .chip { padding: 13px 21px; font-size: 19px; gap: 7px; }
+html[data-layout="tablet"] .chip .sym { font-size: 20px; }
+
+/* ======================================================
+   底部栏 + 设置齿轮
+   离线版底部只留一个「设置」（站内信 / 好友 / 个人主页都没有）：
+   手机贴底常驻、靠右；PC 浮在右上角（见文件末的 wide 规则）。
+   ====================================================== */
+.home-footer {
+  /* 内容不满一屏时也贴着底部 */
+  margin-top: auto;
+  flex: 0 0 auto;
+  /* 贴底常驻：跟着滚动容器走，始终停在可视区底部 */
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+
+  display: flex;
+  /* row-reverse 下主轴起点在右侧，flex-start 即「靠右收拢」 */
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  padding-left: calc(20px + env(safe-area-inset-left));
+  padding-right: calc(20px + env(safe-area-inset-right));
+  background: #fff;
+  border-top: 1px solid var(--line);
+}
+
+/* 齿轮：只有图标，不写「设置」二字 */
+.home-gear {
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted);
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.home-gear:hover { background: #f8f9fb; border-color: #b9c0cb; color: var(--text); }
+.home-gear:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+.home-gear svg { width: 21px; height: 21px; stroke: currentColor; }
+
+/* ======================================================
+   设置菜单（齿轮弹出）
+   手机 = 底部抽屉；PC = 居中小弹窗（见文件末的 wide 规则）
+   ====================================================== */
+.menu-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  /* 盖住主页(200)，但低于功能页(260)与提示层(.toasts 400) */
+  z-index: 240;
+  background: rgba(17, 24, 39, .4);
+}
+.menu-overlay.show { display: block; }
+
+.menu-sheet {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 32px -8px rgba(16, 24, 40, .28);
+  animation: sheetUp .22s cubic-bezier(.2,.9,.3,1) both;
+}
+@keyframes sheetUp { from { transform: translateY(24px); opacity: .6; } }
+
+.menu-item {
+  width: 100%;
+  display: flex; align-items: center; gap: 13px;
+  padding: 15px 22px;
+  background: none; border: 0; cursor: pointer;
+  font-family: inherit; font-size: 15.5px;
+  color: var(--text);
+  text-align: left;
+  transition: background .15s;
+}
+.menu-item:hover { background: #f7f8fa; }
+.menu-item:focus-visible { outline: none; background: #f2f6fe; }
+.menu-item svg { width: 19px; height: 19px; stroke: var(--muted); flex: 0 0 auto; }
+
+.menu-sep { height: 1px; background: var(--line); margin: 6px 0; }
+
+.menu-cancel {
+  width: calc(100% - 24px);
+  margin: 6px 12px 0;
+  padding: 14px;
+  background: #f4f5f7; border: 0; border-radius: 10px;
+  font-family: inherit; font-size: 15.5px; font-weight: 500;
+  color: var(--text); cursor: pointer;
+}
+.menu-cancel:hover { background: #eceef2; }
+
+/* ---------- 更改称呼 / 关于 Nova 两个小弹窗 ---------- */
+/* 复用 base.css 的 .confirm-overlay + .confirm-box2（居中卡片 + .acts 按钮组），
+   这里只补"输入框"和"关于"的排版 */
+.confirm-box2 .set-field { margin-top: 16px; }
+.confirm-box2 .set-field .input-wrap > input { font-size: 15px; }
+.confirm-box2 .set-hint {
+  margin-top: 8px;
+  font-size: 12.5px; color: #9aa1ac;
+}
+.confirm-box2 .set-hint.err { color: var(--danger); }
+
+.about-box { text-align: center; }
+.about-logo {
+  width: 64px; height: 64px;
+  display: block;
+  margin: 0 auto 14px;
+  border-radius: 16px;
+}
+.about-box h4 { font-size: 18px; }
+.about-rows {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.about-rows div {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 2px;
+  font-size: 14.5px;
+  border-bottom: 1px solid var(--line);
+}
+.about-rows span { color: var(--muted); }
+.about-rows b { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+.about-box .acts { justify-content: center; }
+.about-box .acts button { min-width: 120px; }
+
+/* ======================================================
+   PC（lg + wide）：底部栏回到「浮在右上角」，菜单改居中弹窗
+   ====================================================== */
+html[data-viewport="lg"][data-aspect="wide"] .home-footer {
+  position: fixed;            /* 浮在内容之上，不占版面 */
+  top: 0;
+  bottom: auto;
+  /* fixed 元素若不给横向定位，会缩到内容宽度并贴在左边（变成左上角），
+     所以显式靠右 */
+  left: auto;
+  right: 0;
+  margin-top: 0;
+  background: none;
+  border-top: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 26px 34px;
+  padding-right: calc(34px + env(safe-area-inset-right));
+  /* 容器是整屏宽的透明层，别挡住底下的内容；只有按钮本身可点 */
+  pointer-events: none;
+}
+html[data-viewport="lg"][data-aspect="wide"] .home-footer > * { pointer-events: auto; }
+
+html[data-viewport="lg"][data-aspect="wide"] .menu-overlay {
+  display: none;
+  place-items: center;
+  padding: 24px;
+}
+html[data-viewport="lg"][data-aspect="wide"] .menu-overlay.show { display: grid; }
+html[data-viewport="lg"][data-aspect="wide"] .menu-sheet {
+  position: static;
+  width: 100%; max-width: 340px;
+  border-radius: 12px;
+  padding: 8px 0;
+  animation: none;
+}

@@ -1,0 +1,4356 @@
+/* ==========================================================================
+   tools.css —— 功能页（格式转换等）
+   1) 欢迎页上的「功能入口」大按钮 .home-tools / .tool-btn
+   2) 点进去的功能页 .tool-page（现在是白屏占位 + 返回按钮）
+
+   配色沿用全局变量（见 base.css :root）：
+   品牌蓝 --brand / 蓝底上的字 --on-brand / 深底 --on-brand
+   ========================================================================== */
+
+/* ======================================================
+   一、欢迎页的功能入口
+   ====================================================== */
+.home-tools {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;   /* 多个入口时纵向排下去 */
+  gap: 14px;
+}
+
+/* 单个功能入口：一行「图标 + 标题/说明 + 箭头」的卡片 */
+.tool-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s, border-color .15s, background .15s;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+.tool-btn:hover {
+  border-color: #c7d7f5;
+  background: #f7faff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 24, 40, .06), 0 14px 28px -16px rgba(16, 24, 40, .24);
+}
+.tool-btn:active { transform: translateY(0); }
+.tool-btn:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+/* 左侧图标：圆角块 + 描线。
+   配色走两个变量，默认是全局的主题黄 + 深色描线；
+   个别卡片要换自己的主色时，只覆盖这两个变量就行 ——
+   形状（尺寸、圆角、描线粗细）完全不动。 */
+.tool-btn-ico {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: var(--tool-ico-bg, var(--icon-tile-bg));
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+.tool-btn-ico svg {
+  width: 28px; height: 28px;
+  stroke: var(--tool-ico-fg, var(--icon-tile-fg));
+}
+
+/* 二十四点：棕红底 + 白色描线（色号由设计指定）。
+   换的只是颜色，图标形状一点没动。
+   注意维护态仍然盖得住它：那边的规则直接写 background / stroke，
+   选择器权重更高（.tool-btn.is-maintenance … 比这里多一层），
+   所以下线维护时照样是灰底白线。 */
+.tool-btn[data-tool="points24"] {
+  --tool-ico-bg: #E25539;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 单位换算：蓝紫底 + 白色描线（色号由设计指定）。
+   同样只换颜色，图标形状不动。
+   维护态照样盖得住：.tool-btn.is-maintenance 那条规则权重更高。 */
+.tool-btn[data-tool="units"] {
+  --tool-ico-bg: #2A67F5;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 函数图像：绿底 + 白色「f(x)」（色号由设计指定）。
+   和上面两张一样只换颜色 —— 这一张的图标是文字（见 index.html），
+   --tool-ico-fg 同时管着它的 fill。
+   维护态照样盖得住：那边直接写死 background / stroke。 */
+.tool-btn[data-tool="graph"] {
+  --tool-ico-bg: #1DB994;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 罗马数字：橙底 + 白色「V」（色号由设计指定）。
+   和上面几张一样只换颜色 —— 这一张的图标也是文字（见 index.html），
+   --tool-ico-fg 同时管着它的 fill。
+   维护态照样盖得住：那边直接写死 background / stroke。 */
+.tool-btn[data-tool="roman"] {
+  --tool-ico-bg: #F66A00;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 异或法则：天蓝底 + 白色「XOR」字标（色号由设计指定）。
+   这一张的图标是文字（黑体，见 index.html），--tool-ico-fg 同时管着
+   它的 fill —— 白字配蓝底，照色号写死，不跟全局的主题黄走。 */
+.tool-btn[data-tool="xor"] {
+  --tool-ico-bg: #0CBAEF;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 九宫幻方：紫底 + 白色九宫格（色号由设计指定）。 */
+.tool-btn[data-tool="magic"] {
+  --tool-ico-bg: #6947F5;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 巴什博弈：黄底 + 黑色「%」（主色参考「格式转换」那张）。
+   「格式转换」走的就是默认色，这里把两个变量显式写成同一组全局变量 ——
+   写出来是为了留住"和格式转换同色"这个意图，同时主题黄以后调了也跟着走。
+   维护态照样盖得住：.tool-btn.is-maintenance 那条规则权重更高。 */
+.tool-btn[data-tool="bash"] {
+  --tool-ico-bg: var(--icon-tile-bg);
+  --tool-ico-fg: var(--icon-tile-fg);
+}
+
+/* 梵天汉诺：砖红底 + 白色三层汉诺塔（底色参考「二十四点」那张，色号 #E25539）。 */
+.tool-btn[data-tool="brahma"] {
+  --tool-ico-bg: #E25539;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 四色谜题：蓝紫底 + 白色对角斜切（底色参考「单位换算」那张，色号 #2A67F5）。 */
+.tool-btn[data-tool="fourcolor"] {
+  --tool-ico-bg: #2A67F5;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 囚徒困境：绿底 + 白色铁栏杆（底色参考「函数图像」那张，色号 #1DB994）。 */
+.tool-btn[data-tool="prisoner"] {
+  --tool-ico-bg: #1DB994;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 二零四八：橙底 + 白色「2048」字标（底色参考「罗马数字」那张，色号 #F66A00）。
+   这一张的图标是文字造型（见 index.html），--tool-ico-fg 同时管着它的 fill。 */
+.tool-btn[data-tool="game2048"] {
+  --tool-ico-bg: #F66A00;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 异语道破：天蓝底 + 白色摩斯电码（底色参考「异或法则」那张，色号 #0CBAEF）。 */
+.tool-btn[data-tool="morse"] {
+  --tool-ico-bg: #0CBAEF;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 数字桥屿：紫底 + 白色双圆双线（底色参考「九宫幻方」那张，色号 #6947F5）。 */
+.tool-btn[data-tool="bridge"] {
+  --tool-ico-bg: #6947F5;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* 中间文字：标题 + 说明，占满剩余宽度 */
+.tool-btn-text {
+  flex: 1 1 auto;
+  min-width: 0;            /* 允许在窄屏下收缩，不把箭头挤出去 */
+  display: block;
+}
+.tool-btn-name {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: var(--text);
+}
+.tool-btn-desc {
+  display: block;
+  margin-top: 4px;
+  font-size: 13.5px;
+  color: var(--muted);
+  /* 说明文字过长时省略，别撑破卡片 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 右侧箭头：指示「可以点进去」 */
+.tool-btn-go {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  color: #c3c9d4;
+  transition: color .15s, transform .15s;
+}
+.tool-btn-go svg { width: 20px; height: 20px; stroke: currentColor; }
+.tool-btn:hover .tool-btn-go { color: var(--muted); transform: translateX(2px); }
+
+/* 触摸设备上把整行做高一点，好点 */
+html[data-touch="1"] .tool-btn { padding-top: 16px; padding-bottom: 16px; }
+
+/* ---------- 「维护中」的卡片 ----------
+   三个地方变灰，和正常卡片一眼分得开：
+     · logo 的彩色底（黄）→ 灰
+     · logo 上那些黑色描线 → 白（灰底上要浅色才看得清）
+     · 卡片大标题（近黑）→ 灰
+   另外标题后面挂一个灰药丸写「维护中」。
+   —— 卡片仍然可点：点进去是「管理员验证」，不是禁用。 */
+.tool-btn.is-maintenance .tool-btn-ico {
+  background: #c8ced8;
+  /* ★ 文字类图标（罗马数字的 V、函数图像的 f(x)、异或法则的 XOR）
+     不走 stroke 走 fill，fill 取的是 --tool-ico-fg；下面那条只管
+     stroke，管不到它们。所以这里把变量本身也换成白，免得哪天有张
+     卡片把图标配成深色，那笔深色会原样留在灰底上，看着还像启用状态。
+     这个变量同时喂着 stroke 的默认值，换掉正好和下面那条一致。
+     写在这一层（.tool-btn-ico）而不是 .tool-btn 上：多一层，
+     权重稳稳压过上面 .tool-btn[data-tool=…] 里那几条。 */
+  --tool-ico-fg: #fff;
+}
+.tool-btn.is-maintenance .tool-btn-ico svg { stroke: #fff; }
+.tool-btn.is-maintenance .tool-btn-name { color: var(--muted); }
+/* 悬停也别再泛蓝光，否则看着像还是启用状态 */
+.tool-btn.is-maintenance:hover {
+  border-color: #cdd3dc;
+  background: #fafbfc;
+}
+.tool-btn.is-maintenance:hover .tool-btn-go { color: #c3c9d4; }
+
+/* 标题后面那个「维护中」药丸（由 js/cards.js 插入 .tool-btn-name 里） */
+.tool-maint-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: #eef0f4;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.6;
+  vertical-align: middle;
+}
+html[data-layout="tablet"] .tool-maint-tag { font-size: 14px; padding: 3px 11px; }
+
+/* 平板放大（判定见 js/core.js 的 data-layout） */
+html[data-layout="tablet"] .home-tools { max-width: 560px; gap: 16px; }
+html[data-layout="tablet"] .tool-btn { padding: 18px 22px; gap: 20px; }
+html[data-layout="tablet"] .tool-btn-ico { width: 66px; height: 66px; border-radius: 17px; }
+html[data-layout="tablet"] .tool-btn-ico svg { width: 36px; height: 36px; }
+html[data-layout="tablet"] .tool-btn-name { font-size: 21px; }
+html[data-layout="tablet"] .tool-btn-desc { font-size: 15.5px; }
+html[data-layout="tablet"] .tool-btn-go svg { width: 24px; height: 24px; }
+
+/* ======================================================
+   二、功能页（整屏白底）
+   ====================================================== */
+.tool-page {
+  display: none;
+  position: fixed;
+  inset: 0;
+  /* 盖住主页(200) 与各种设置页(235/240/245/250)，但低于提示层(.toasts 400) */
+  z-index: 260;
+  background: #fff;          /* 白屏 */
+  flex-direction: column;
+  overflow: hidden;
+}
+.tool-page.show { display: flex; }
+
+/* 顶栏：返回按钮 + 标题
+   底色用品牌蓝，和登录页的 .brand、主页的 .home-hero 是同一套语汇 ——
+   进来一眼就知道还在 Nova 里。文字/图标统一用蓝底上的白色 --on-brand。
+   这条顶栏本来就不会动（.tool-page 是整屏 fixed 的纵向 flex，它不参与滚动），
+   但蓝白交界处要和主页那条保持一致，所以同样描一条细分界线。 */
+.tool-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  background: var(--brand);
+  color: var(--on-brand);
+  /* 蓝白交界处的细分界线（颜色同主页 .home-hero 那条） */
+  border-bottom: 1px solid #E6E7EB;
+}
+.tool-back {
+  width: 40px; height: 40px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  color: var(--on-brand);
+  cursor: pointer;
+  transition: background .15s;
+}
+/* 蓝底上不能用浅灰 hover（看不见），改成压一层淡白 */
+.tool-back:hover { background: rgba(255, 255, 255, .18); }
+.tool-back:active { background: rgba(255, 255, 255, .28); }
+.tool-back:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .4);
+}
+.tool-back svg { width: 21px; height: 21px; stroke: currentColor; }
+
+.tool-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--on-brand);
+}
+
+/* 内容区：白屏占位，撑满剩余高度 */
+.tool-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  background: #fff;
+  /* 功能做出来之前先留白；有内容时直接往这里放 */
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  /* ★ 滚动条槽常驻（scrollbar-gutter: stable），别删。
+     软键盘（.gfx-pad）是本区的**兄弟**、功能页里的 flex 子项：它一撑开，
+     这一区就矮一截，本来放得下的内容立刻变成"要滚" —— 滚动条从无到有，
+     可用宽度少掉十几像素，里面居中的卡片（.rm-card / .cvt-card /
+     .unit-cats）就整块**横跳**一下，收起时又跳回来。
+     留一条槽位就没这回事：有没有滚动条，内容宽度都不变。
+     （滚动条是浮层（overlay）的系统本来就占 0 宽，这条规则自然不生效。） */
+  scrollbar-gutter: stable;
+}
+
+/* 触摸设备：返回按钮加大 */
+html[data-touch="1"] .tool-back { width: 46px; height: 46px; }
+html[data-touch="1"] .tool-back svg { width: 23px; height: 23px; }
+
+/* 平板放大 */
+html[data-layout="tablet"] .tool-bar { padding: calc(16px + env(safe-area-inset-top)) 24px 16px; gap: 14px; }
+html[data-layout="tablet"] .tool-back { width: 50px; height: 50px; border-radius: 12px; }
+html[data-layout="tablet"] .tool-back svg { width: 26px; height: 26px; }
+html[data-layout="tablet"] .tool-title { font-size: 21px; }
+html[data-layout="tablet"] .tool-body { padding: 26px 24px calc(26px + env(safe-area-inset-bottom)); }
+
+/* ======================================================
+   三、图片格式转换（.cv-* 见 js/convert.js）
+   配色沿用全局变量，卡片样式对齐 .tool-btn
+   ====================================================== */
+.cv-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+/* hidden 属性优先于下面这些 display 改写，否则藏不住 */
+.cv-wrap [hidden] { display: none !important; }
+
+.cv-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* ---------- 选图（虚线大按钮） ---------- */
+.cv-drop {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 26px 18px;
+  background: #f7faff;
+  border: 1.5px dashed #c2d6f7;
+  border-radius: 12px;
+  font-family: inherit;
+  color: var(--text);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.cv-drop:hover { background: #eef4ff; border-color: var(--brand); }
+.cv-drop:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+/* 拖到上面时：虚线变实线，底色更明显 */
+.cv-drop.is-over {
+  background: #fff5cc;
+  border-color: var(--brand);
+  border-style: solid;
+}
+.cv-drop-ico {
+  width: 48px; height: 48px;
+  flex: 0 0 auto;
+  border-radius: 14px;
+  background: var(--brand);
+  display: grid;
+  place-items: center;
+}
+.cv-drop-ico svg { width: 25px; height: 25px; stroke: var(--on-brand); }
+.cv-drop-txt { display: block; text-align: center; }
+.cv-drop-txt b { display: block; font-size: 16px; font-weight: 700; }
+.cv-drop-txt > span {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------- 设置区分组 ----------
+   每组之间用发丝线隔开。以前只靠 margin 拉开，四组标签连成一片、
+   分不清哪个标签管哪一排控件；有了分隔线，扫一眼就知道边界在哪。 */
+.cv-group + .cv-group {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.cv-row-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+/* 数值（画质的 90%）单独跳出来，和标签文字拉开层级 */
+.cv-row-label b {
+  color: var(--accent);
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.cv-range {
+  width: 100%;
+  height: 26px;
+  accent-color: var(--brand);   /* 轨道/滑块跟着主题走 */
+  cursor: pointer;
+}
+
+/* ---------- 底色：色块 + 色码输入 + 常用色 ----------
+   不用 <input type="color">：安卓上它会弹一个系统调色板（样式和本站完全
+   对不上），而且没法直接敲色码。这里自己拼一个，三件事一起给到：
+   左边色块即时预览、中间可输 6 位色码、下面几个常用色一点即用。 */
+.cv-swatch {
+  flex: 0 0 auto;
+  width: 26px; height: 26px;
+  margin-right: 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(16, 24, 40, .18);
+  /* 内阴影让浅色（白/浅灰）在白色输入框里也有轮廓 */
+  box-shadow: inset 0 1px 2px rgba(16, 24, 40, .06);
+  background: #fff;
+}
+
+.cv-hex > input {
+  /* 色码是"代码"，用等宽数字 + 字距，读起来更像色码而不是一段文字 */
+  letter-spacing: .6px;
+  font-variant-numeric: tabular-nums;
+  /* 只影响显示，值本身在失焦时会归一成大写 */
+  text-transform: uppercase;
+}
+.cv-hex > input::placeholder {
+  letter-spacing: .6px;
+  text-transform: none;
+}
+
+/* 常用色：小方块，选中的加一圈黑边 */
+.cv-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.cv-pip {
+  width: 28px; height: 28px;
+  padding: 0;
+  border: 1px solid rgba(16, 24, 40, .18);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: inset 0 1px 2px rgba(16, 24, 40, .06);
+  transition: transform .12s, box-shadow .15s;
+}
+.cv-pip:hover { transform: translateY(-1px); }
+.cv-pip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+.cv-pip.on {
+  /* 选中的那个：外圈描一道，不管本身是深色还是浅色都看得见 */
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--text);
+}
+
+.cv-subnote {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* ---------- 「打包成 ZIP」勾选（复用 base.css 的 .checkbox 方块） ---------- */
+.cv-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14.5px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+.cv-check .checkbox { margin-top: 0; }
+
+.cv-note {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+/* ---------- 开始转换（复用 .sub-save 的外观，只去掉它的上边距） ---------- */
+.cv-go { margin-top: 0; }
+
+.cv-foot {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ---------- 结果列表 ---------- */
+.cv-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cv-list-head > span { font-size: 14px; color: var(--muted); }
+.cv-head-acts { display: flex; gap: 8px; }
+
+.cv-list {
+  margin-top: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cv-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  transition: border-color .15s, background .15s;
+}
+.cv-item.is-working { background: #fcfcfd; }
+.cv-item.is-fail { border-color: #f1cfcf; background: #fffafa; }
+
+/* 缩略图：透明图垫棋盘格，一眼看出哪儿是透明的 */
+.cv-thumb {
+  position: relative;
+  width: 54px; height: 54px;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  overflow: hidden;
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #eef0f4 25%, transparent 25%),
+    linear-gradient(-45deg, #eef0f4 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #eef0f4 75%),
+    linear-gradient(-45deg, transparent 75%, #eef0f4 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+}
+.cv-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* 转换中：缩略图上盖个转圈 */
+.cv-item.is-working .cv-thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, .14);
+  border-top-color: var(--on-brand);
+  animation: spin .6s linear infinite;
+}
+
+.cv-info { flex: 1 1 auto; min-width: 0; }
+.cv-name {
+  font-size: 14.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cv-meta {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cv-out {
+  margin-top: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ok);
+  line-height: 1.5;
+}
+.cv-item.is-fail .cv-out { color: var(--danger); font-weight: 400; }
+
+.cv-acts {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cv-dl {
+  padding: 7px 13px;
+  border: 1px solid var(--brand);
+  border-radius: 8px;
+  background: var(--brand);
+  color: var(--on-brand);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.cv-dl:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
+.cv-dl:disabled {
+  background: #e3e5ea; border-color: #e3e5ea;
+  color: #9aa1ac; cursor: not-allowed;
+}
+.cv-rm {
+  width: 30px; height: 30px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.cv-rm:hover { background: #f1f3f7; color: var(--text); }
+
+/* ---------- 触摸设备：可点区域放大 ---------- */
+html[data-touch="1"] .cv-rm { width: 36px; height: 36px; }
+html[data-touch="1"] .cv-dl { padding: 9px 15px; }
+
+/* ---------- 电脑 / 平板：整体放宽一点 ---------- */
+html[data-viewport="lg"] .cv-wrap { max-width: 620px; }
+
+html[data-layout="tablet"] .cv-wrap { max-width: 660px; gap: 18px; }
+html[data-layout="tablet"] .cv-card { padding: 20px; border-radius: 16px; }
+html[data-layout="tablet"] .cv-drop { padding: 34px 22px; }
+html[data-layout="tablet"] .cv-drop-ico { width: 58px; height: 58px; border-radius: 16px; }
+html[data-layout="tablet"] .cv-drop-ico svg { width: 30px; height: 30px; }
+html[data-layout="tablet"] .cv-drop-txt b { font-size: 19px; }
+html[data-layout="tablet"] .cv-drop-txt > span { font-size: 15px; }
+html[data-layout="tablet"] .cv-row-label { font-size: 16px; }
+html[data-layout="tablet"] .cv-note,
+html[data-layout="tablet"] .cv-foot,
+html[data-layout="tablet"] .cv-subnote { font-size: 14px; }
+html[data-layout="tablet"] .cv-swatch { width: 30px; height: 30px; border-radius: 8px; }
+html[data-layout="tablet"] .cv-pip { width: 34px; height: 34px; border-radius: 10px; }
+html[data-layout="tablet"] .cv-check { font-size: 16px; }
+html[data-layout="tablet"] .cv-thumb { width: 64px; height: 64px; border-radius: 11px; }
+html[data-layout="tablet"] .cv-name { font-size: 16.5px; }
+html[data-layout="tablet"] .cv-meta,
+html[data-layout="tablet"] .cv-out { font-size: 14px; }
+html[data-layout="tablet"] .cv-list-head > span { font-size: 16px; }
+html[data-layout="tablet"] .cv-dl { font-size: 15px; padding: 9px 16px; }
+
+/* ======================================================
+   四、二十四点（.pt-* 见 js/points24.js）
+   卡片、字号、圆角都沿用上面的 .cv-* / .tool-btn，
+   配色继续走全局变量（--brand / --line / --text …）
+   ====================================================== */
+.pt-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+/* hidden 属性优先于下面这些 display 改写，否则藏不住 */
+.pt-wrap [hidden] { display: none !important; }
+
+.pt-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* 顶行：第几局 + 战绩 */
+.pt-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; margin-bottom: 14px;
+}
+.pt-round { font-size: 15px; font-weight: 600; color: var(--text); }
+.pt-score {
+  font-size: 13px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+/* 解出过至少一局就转成绿色 */
+.pt-score.done { color: var(--ok); font-weight: 600; }
+
+/* ---------- 四张牌 ---------- */
+.pt-cards { display: flex; gap: 10px; }
+
+.pt-num {
+  flex: 1 1 0;
+  min-width: 0;
+  /* 竖长一点，像一张牌；数字就一个，宽高比定了高度也就定了 */
+  aspect-ratio: 4 / 5;
+  display: grid; place-items: center;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: inherit;
+  /* 跟着栏宽缩放，窄屏也不会挤成一团 */
+  font-size: clamp(26px, 8vw, 36px);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform .12s, border-color .15s, background .15s, box-shadow .15s;
+}
+/* 悬停泛蓝、微抬 —— 和 .tool-btn 同一套语汇 */
+.pt-num:hover {
+  border-color: var(--brand);
+  background: #f7faff;
+  transform: translateY(-2px);
+}
+.pt-num:active { transform: translateY(0); }
+.pt-num:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+.pt-tip {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ---------- 算式区 ---------- */
+.pt-row-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+/* 算式里符号多，给一点字距，读起来更像式子而不是一句话 */
+.pt-input > input { letter-spacing: .5px; }
+
+/* 运算符键盘：外形直接复用 .chip（和转换页的选项药丸一致），
+   只把尺寸收小、居中 */
+.pt-keys {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-top: 12px;
+}
+.pt-key {
+  min-width: 46px;
+  justify-content: center;
+  padding: 8px 13px;
+  font-size: 15px;
+}
+html[data-touch="1"] .pt-key { min-width: 52px; padding: 10px 15px; }
+
+/* ---------- 结果提示 ----------
+   成功时把输入框描成绿边、提示转绿 —— 和失败时的红框分开看 */
+.input-wrap.ok {
+  border-color: var(--ok);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, .12);
+}
+.hint.ok { color: var(--ok); }
+
+/* ---------- 验证按钮（复用 .sub-save，去掉它的上边距） ---------- */
+.pt-go { margin-top: 0; }
+
+/* 换一组 / 看答案：两个次要按钮并排居中 */
+.pt-acts {
+  display: flex; gap: 10px; justify-content: center;
+}
+.pt-acts .mini-btn { flex: 0 1 auto; min-width: 104px; }
+
+/* 参考答案 */
+.pt-note {
+  padding: 12px 14px;
+  border-radius: 9px;
+  background: #f8f9fb;
+  border: 1px solid var(--line);
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.pt-note b {
+  color: var(--text);
+  font-weight: 600;
+  /* 参考答案是一串式子，居中、等宽数字更清楚 */
+  margin-left: 6px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .5px;
+}
+
+.pt-foot {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ---------- 电脑 / 平板：整体放宽、放大 ---------- */
+html[data-viewport="lg"] .pt-wrap { max-width: 620px; }
+
+html[data-layout="tablet"] .pt-wrap { max-width: 660px; gap: 18px; }
+html[data-layout="tablet"] .pt-card { padding: 20px; border-radius: 16px; }
+html[data-layout="tablet"] .pt-round { font-size: 18px; }
+html[data-layout="tablet"] .pt-score { font-size: 15px; }
+html[data-layout="tablet"] .pt-cards { gap: 12px; }
+html[data-layout="tablet"] .pt-num { font-size: 46px; border-radius: 14px; }
+html[data-layout="tablet"] .pt-tip { font-size: 14px; }
+html[data-layout="tablet"] .pt-row-label { font-size: 16px; }
+html[data-layout="tablet"] .pt-key { font-size: 18px; min-width: 54px; padding: 10px 16px; }
+html[data-layout="tablet"] .pt-note { font-size: 16px; }
+html[data-layout="tablet"] .pt-foot { font-size: 14px; }
+
+/* ======================================================
+   五、函数图像（.gfx-* / .graph-* 见 js/graph.js）
+   两块：上面一张卡片管函数列表，下面一块是画布。
+   配色沿用全局变量，卡片样式对齐 .cv-card / .pt-card。
+   ====================================================== */
+.graph-wrap {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.graph-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* ---------- 一条函数的行 ---------- */
+.gfx-rows { display: flex; flex-direction: column; gap: 10px; }
+
+.gfx-row { display: flex; flex-direction: column; }
+/* 被隐藏的那条整行压暗，一眼看出它没在画 */
+.gfx-row.is-off .gfx-input,
+.gfx-row.is-off .gfx-dot { opacity: .4; }
+
+.gfx-line { display: flex; align-items: center; gap: 9px; }
+
+/* 颜色块：点一下换色 */
+.gfx-dot {
+  flex: 0 0 auto;
+  width: 14px; height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(16, 24, 40, .12) inset;
+  transition: transform .12s;
+}
+.gfx-dot:hover { transform: scale(1.15); }
+.gfx-dot:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+/* 输入框 + 报错提示：占满中间那一列。
+   包一层是必需的 —— setError() 要求 .hint 紧跟在 .input-wrap 之后。 */
+.gfx-field { flex: 1 1 auto; min-width: 0; }
+.gfx-input { padding: 0 10px; }
+.gfx-input > input {
+  font-size: 14.5px;
+  padding: 9px 0;
+  letter-spacing: .2px;
+}
+
+/* 显示 / 隐藏：复用全局的 .checkbox（方框 + 勾） */
+.gfx-eye {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  cursor: pointer;
+}
+.gfx-eye .checkbox { margin-top: 0; }
+
+.gfx-del {
+  flex: 0 0 auto;
+  width: 30px; height: 30px;
+  display: grid; place-items: center;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: inherit; font-size: 14px; line-height: 1;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.gfx-del:hover { background: #fdf2f3; color: var(--danger); }
+.gfx-del:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--brand-glow); }
+
+.gfx-rows-foot {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- 小节标题（自定义变量那一块） ---------- */
+.gfx-sec-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+}
+.gfx-sec-title { font-size: 15px; font-weight: 600; color: var(--text); }
+
+/* ---------- 变量行：名字 = 值  [删除] ---------- */
+/* 只在真有变量时才和上面那行按钮拉开距离 —— 空着的时候不留多余空白 */
+.gfx-vars { display: flex; flex-direction: column; gap: 10px; }
+.gfx-vars:not(:empty) { margin-top: 12px; }
+
+.gfx-var {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+/* 变量名窄一点，值占满剩下的 */
+.gfx-var-name-box { flex: 0 0 auto; width: 96px; padding: 0 10px; }
+.gfx-var-name-box > input {
+  font-size: 14.5px;
+  padding: 9px 0;
+  text-align: center;
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+.gfx-var-eq {
+  flex: 0 0 auto;
+  align-self: center;
+  color: var(--muted);
+  font-size: 15px;
+  padding: 0 1px;
+}
+/* 变量值：和函数输入框同一套外观 */
+.gfx-var .gfx-field { flex: 1 1 auto; min-width: 0; }
+/* 删除按钮和输入框首行对齐（顶端对齐那一行是 flex-start） */
+.gfx-var .gfx-del { margin-top: 1px; }
+
+.graph-tip {
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.75;
+}
+.graph-tip b { color: #5b6472; font-weight: 600; }
+
+/* ---------- 画布 ---------- */
+.graph-plot {
+  position: relative;
+  /* 高度给足：图要看得清；矮屏时也不会把页面撑出老长的滚动条 */
+  height: clamp(280px, 52vh, 520px);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+.graph-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* 关键：不写这条，手机上拖动会变成滚动页面，画布根本拖不动 */
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* 右上角那组缩放按钮：浮在画布上，半透明白底 */
+.graph-zoom {
+  position: absolute;
+  top: 10px; right: 10px;
+  display: flex;
+  gap: 6px;
+}
+.graph-zbtn {
+  min-width: 32px; height: 32px;
+  padding: 0 8px;
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit; font-size: 16px; line-height: 1;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.graph-zbtn:hover { background: #fff; border-color: #b9c0cb; }
+.graph-zbtn:focus-visible { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-glow); }
+.graph-zbtn.is-wide { font-size: 13px; }
+
+/* 左下角的坐标读数 */
+.graph-readout {
+  position: absolute;
+  left: 10px; bottom: 10px;
+  padding: 4px 9px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.graph-foot {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ---------- 左右分栏（.gfx-input-pane / .gfx-plot-pane） ----------
+   移动 / 平板（非分栏）下，左半屏用 display:contents 消散，两个卡片
+   直接回到 .graph-wrap 的纵向流里，顺序仍是「变量 → 函数 → 画布」。
+   桌面端（html[data-viewport="lg"][data-aspect="wide"]）才真正左右分栏。
+   软键盘是钉在屏幕底部的浮层（见下方 .gfx-pad），不占这两块的布局空间、
+   也不会被分栏拆开 —— 点输入框时它总是固定在视口最底下，盖住谁就把谁顶上去。 */
+.gfx-input-pane { display: contents; }
+.gfx-plot-pane  { order: 2; }
+
+html[data-viewport="lg"][data-aspect="wide"] #toolGraph .tool-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 20px 24px calc(20px + env(safe-area-inset-bottom));
+}
+html[data-viewport="lg"][data-aspect="wide"] #toolGraph .graph-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 20px;
+  max-width: none;
+  margin: 0;
+}
+html[data-viewport="lg"][data-aspect="wide"] #toolGraph .gfx-input-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 440px;
+  max-width: 460px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  padding-right: 4px;
+}
+html[data-viewport="lg"][data-aspect="wide"] #toolGraph .gfx-plot-pane {
+  order: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* 桌面端也照常弹出这个精简软键盘（fixed 浮层，不再撑长左栏、不再需要下滑） */
+html[data-viewport="lg"][data-aspect="wide"] #toolGraph .graph-plot {
+  flex: 1 1 auto;
+  min-height: 280px;
+  height: auto;
+}
+html[data-viewport="lg"][data-aspect="wide"] #toolGraph .graph-foot {
+  flex: 0 0 auto;
+}
+/* 桌面分栏时，软键盘只钉在左半屏（输入那一侧）底部，不再横跨整屏；
+   左偏移 / 宽度都对齐左边的输入栏。移动 / 平板（非分栏）维持底部全宽。 */
+html[data-viewport="lg"][data-aspect="wide"] #toolGraph .gfx-pad {
+  left: 24px;
+  right: auto;
+  width: 440px;
+  max-width: 460px;
+}
+
+/* ======================================================
+   六、软键盘（.gfx-pad / .gfx-key 见 js/graph.js，罗马数字、单位换算那两页
+   也在用同一个 #gfxPad 容器 —— 见 js/roman.js / js/units.js）
+   它是钉在屏幕底部的浮层（position: fixed; bottom: 0），不占布局空间；
+   盖住输入框时由 js/graph.js 的 gfxPadEnsureVisible 把那个框滚到键盘上沿之上。
+   ====================================================== */
+.gfx-pad {
+  --kgap: 6px;               /* 键间距，网格和字母键盘共用 */
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 60;
+  max-height: 52vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #fff;
+  border-top: 1px solid var(--line);
+  padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+  /* 顶部一条淡淡的投影，和内容区分开 */
+  box-shadow: 0 -6px 18px -12px rgba(16, 24, 40, .28);
+}
+.gfx-pad[hidden] { display: none; }
+
+.gfx-pad-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px;
+  padding: 2px 6px 8px;
+}
+.gfx-pad-title {
+  font-size: 12.5px;
+  color: var(--muted);
+  letter-spacing: .3px;
+}
+/* 抬头右侧那组（log / π / 完成） */
+.gfx-pad-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ---------- 符号键盘：5 列 × 5 行网格（函数图像） ---------- */
+.gfx-pad-keys.is-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--kgap);
+}
+/* ABC 是小一号的切换键 */
+.gfx-pad-keys.is-grid > .gfx-key.is-small { font-size: 12.5px; letter-spacing: .5px; }
+
+/* ---------- 罗马数字键盘：3 列网格 ----------
+   键位少（数字盘 12 个、罗马盘 12 个），5 列会挤成一小条，3 列刚好：
+     I V X / L C D / M V̄ X̄ / 切换 N 退格
+   见 js/roman.js。 */
+.gfx-pad-keys.is-3col {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--kgap);
+}
+
+/* ---------- 单位换算的数字盘：顶上多一行 ----------
+   16 个键排成 5 行：第一行 4 个（e+ / e- / / / π），下面 4 行还是
+   标准的 3 列数字盘。用 12 列网格做到"同宽不同份"：
+
+     顶行每键占 3 格 → 3 × 4 = 12，一行正好 4 个（每个 1/4 宽）
+     其余每键占 4 格 → 4 × 3 = 12，一行正好 3 个（每个 1/3 宽）
+
+   这样键盘高度和只有 3 列时**一模一样**（还是 5 行），不会因为多了一个
+   键就把输入区挤没。见 js/units.js 的 CVT_PAD_KEYS。 */
+.gfx-pad-keys.is-numpad {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--kgap);
+}
+.gfx-pad-keys.is-numpad > .gfx-key { grid-column: span 4; }
+.gfx-pad-keys.is-numpad > .gfx-key.is-op { grid-column: span 3; }
+
+/* ---------- 字母键盘：每行一个 flex 行 ----------
+   键宽按"10 列"算（(100% - 9 个间隙) / 10），所以每行里的键**一样宽**；
+   每行内容居中 → 只有 9 个键的那两行自然内缩，就是手机键盘的样子。 */
+.gfx-pad-keys.is-rows { display: block; }
+.gfx-pad-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--kgap);
+}
+.gfx-pad-row + .gfx-pad-row { margin-top: var(--kgap); }
+.gfx-pad-row .gfx-key {
+  flex: 0 0 auto;
+  width: calc((100% - 9 * var(--kgap)) / 10);
+}
+/* 「返回」跨几个键宽 */
+.gfx-pad-row .gfx-key.is-wide {
+  width: calc((100% - 9 * var(--kgap)) / 10 * 4 + 3 * var(--kgap));
+}
+/* 独占一整行（字母键盘最后一行的「返回」） */
+.gfx-pad-row .gfx-key.is-full { width: 100%; }
+
+.gfx-key {
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 9px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  /* 别让双击被当成缩放，也別长按选中文字 */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background .12s, border-color .12s;
+}
+.gfx-key:hover { background: #f8f9fb; border-color: #b9c0cb; }
+.gfx-key:active { background: #eef1f6; }
+.gfx-key:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+/* 函数键（sin / √ / |x| / 退格…）：蓝调，和数字键区分开 */
+.gfx-key.is-fn {
+  background: #f5f8ff;
+  border-color: #cdddf8;
+  color: var(--accent);
+  font-size: 14.5px;
+  font-weight: 500;
+}
+.gfx-key.is-fn:hover { background: #eaf1ff; border-color: #acc6f0; }
+.gfx-key.is-fn:active { background: #dfeaff; }
+
+/* 用不上的键（灰掉，但还占着格子）。
+   单位换算的软键盘上只有「π」会走到这里：它只在立体角的框里有意义，
+   光标在数值 / 面积框里时就该是灰的 —— 与其按下去没反应，不如一眼看出
+   现在这个键不顶用（见 js/units.js 的 cvtPadRender）。 */
+.gfx-key:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+.gfx-key:disabled:hover,
+.gfx-key:disabled:active { background: #f5f8ff; border-color: #cdddf8; }
+
+/* 大写处于打开状态：实心蓝，一眼看出现在是全大写 */
+.gfx-key.is-on,
+.gfx-key.is-on:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ---------- 触摸设备：键位再大一点，好点 ---------- */
+html[data-touch="1"] .gfx-key { height: 48px; font-size: 18px; }
+html[data-touch="1"] .gfx-key.is-fn { font-size: 15.5px; }
+
+/* 小屏：横向间隙收一点，五列才排得下 */
+html[data-viewport="xs"] .gfx-pad { padding-left: 6px; padding-right: 6px; --kgap: 5px; }
+
+/* ---------- 平板放大 ---------- */
+html[data-layout="tablet"] .gfx-key { height: 56px; font-size: 21px; border-radius: 11px; }
+html[data-layout="tablet"] .gfx-key.is-fn { font-size: 18px; }
+html[data-layout="tablet"] .gfx-pad { --kgap: 8px; }
+html[data-layout="tablet"] .gfx-pad-title { font-size: 14px; }
+
+/* ---------- 触摸设备：色块和按钮加大，好点 ---------- */
+html[data-touch="1"] .gfx-dot { width: 18px; height: 18px; }
+html[data-touch="1"] .gfx-del { width: 36px; height: 36px; }
+html[data-touch="1"] .graph-zbtn { min-width: 38px; height: 38px; }
+
+/* ---------- 电脑 / 平板 ---------- */
+html[data-viewport="lg"] .graph-wrap { max-width: 900px; }
+html[data-viewport="lg"] .graph-plot { height: clamp(360px, 56vh, 620px); }
+
+html[data-layout="tablet"] .graph-wrap { max-width: 720px; gap: 18px; }
+html[data-layout="tablet"] .graph-card { padding: 20px; border-radius: 16px; }
+html[data-layout="tablet"] .gfx-input > input { font-size: 17px; padding: 11px 0; }
+html[data-layout="tablet"] .gfx-var-name-box { width: 116px; }
+html[data-layout="tablet"] .gfx-var-name-box > input { font-size: 17px; padding: 11px 0; }
+html[data-layout="tablet"] .gfx-var-eq { font-size: 18px; }
+html[data-layout="tablet"] .gfx-sec-title { font-size: 17px; }
+html[data-layout="tablet"] .gfx-dot { width: 18px; height: 18px; border-radius: 5px; }
+html[data-layout="tablet"] .graph-tip { font-size: 14px; }
+html[data-layout="tablet"] .graph-foot { font-size: 14px; }
+html[data-layout="tablet"] .graph-zbtn { min-width: 42px; height: 42px; font-size: 18px; }
+html[data-layout="tablet"] .graph-readout { font-size: 14px; padding: 6px 11px; }
+
+/* ======================================================
+   七、单位换算（.unit-* / .cvt-* 见 js/units.js）
+   两块视图：先选类别，再进换算界面。
+   单位选择直接复用 app.css 那套 .picker-overlay + .chips，这里只管
+   换算界面自己的排布。
+   ====================================================== */
+
+/* ---------- 一：类别列表 ----------
+   类别多了（十来张），排一列会拖得很长，所以用网格：
+   每列至少 260px，装得下几列就几列。
+     · 手机（< ~552px）：只有一列 —— 和原来那张卡一模一样
+     · 电脑：两列
+   260 这个数不能太小：卡片里是「图标 + 类别名 + 箭头」，
+   再窄「体积＆容积」这类长名字就要折行了。 */
+.unit-cats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+/* display:grid 会盖掉 hidden 属性自带的 display:none，得显式写回来 */
+.unit-cats[hidden] { display: none; }
+
+/* 类别卡比首页那些卡片矮一点、紧凑一点：这里只是"选一个类别"，
+   不需要首页那种一行一卡的分量感 */
+.unit-cat {
+  padding: 12px 14px;
+  gap: 14px;
+
+  /* 图标统一**蓝底白画**，色号取首页那张「单位换算」卡的
+     （.tool-btn[data-tool="units"]，也是 #2A67F5）——
+     一眼认得出这一族是同一个功能。颜色不搞花样，各卡的区别全在形状上。
+     都一个色，所以写在这里一份就够，不放到 js/units.js 的数据里逐条重复。
+     ★ 改首页那张卡的颜色时，这里要跟着改，两处是同一个色号。 */
+  --tool-ico-bg: #2A67F5;
+  --tool-ico-fg: #FFFFFF;
+}
+
+/* ---------- 二：换算界面 ---------- */
+.unit-conv {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.unit-conv[hidden] { display: none; }
+
+.cvt-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+/* 两栏之间的留白交给中间的互换按钮，字段自己不留 margin */
+.cvt-card .field { margin-bottom: 0; }
+
+/* 一行 = 输入框 + 右侧的单位按钮。
+   flex-start 让两者的上边缘对齐 —— 输入框 45px、单位按钮 45px 上下，
+   下面那条报错文字出来时按钮也不会跟着被拉高。 */
+.cvt-row { display: flex; align-items: flex-start; gap: 8px; }
+/* 这一层是为了让 .hint 紧跟在 .input-wrap 后面（core.js 的 setError 靠这个找位置） */
+.cvt-field { flex: 1 1 auto; min-width: 0; }
+
+/* 结果框：只读，压一层浅灰底，一眼看出这是「算出来的」而不是填的 */
+.input-wrap.cvt-readonly { background: #f8f9fb; }
+.input-wrap.cvt-readonly > input { cursor: default; }
+
+/* 单位按钮：外观跟 .picker-trigger 一套（点开都是药丸弹窗），
+   只是宽度跟着字走，不铺满整行 */
+.cvt-unit {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 12px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.cvt-unit:hover { background: #f8f9fb; border-color: #b9c0cb; }
+.cvt-unit:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+/* 字段头：左边是「数值 / 换算结果」，右边挂一颗小「复制」。
+   它就是 .cvt-row 的上一行，按钮靠右 —— 于是正好落在下面那颗单位
+   按钮的正上方，上下两栏位置彼此对得上。 */
+.cvt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+/* label 现在嵌在 .cvt-head 里了，base.css / auth.css 里那一套
+   `.field > label`（14px / 500 / 正文色，平板上 19px）就**不再命中**，
+   所以在这儿照着补一遍 —— 和上面 `.cvt-aux-item > label` 一样的处理。
+   margin-bottom 由 .cvt-head 统一给，label 自己不带，否则按钮会被
+   那 7px 顶着、跟 label 对不齐。 */
+.cvt-head > label {
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* 「复制」：白底细框的小药丸。语汇跟 .chip / .rm-copy 一套（白底 + 细框），
+   但矮一号 —— 它和 label 处在同一个高度带，不该比输入框还抢眼。
+   颜色用 --muted（不是 --text）：它是"附属动作"，hover 时才亮起来。 */
+.cvt-copy {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.3;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, box-shadow .15s;
+}
+.cvt-copy:hover { background: #f8f9fb; border-color: #b9c0cb; color: var(--text); }
+.cvt-copy:active { background: #eef1f6; }
+.cvt-copy:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+/* ---------- 中间的互换按钮 ---------- */
+.cvt-swap { display: flex; justify-content: center; padding: 10px 0; }
+
+.cvt-swap-btn {
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, transform .25s;
+}
+.cvt-swap-btn:hover {
+  background: #f7faff;
+  border-color: var(--brand);
+  color: var(--text);
+  transform: rotate(180deg);      /* 转半圈，点下去会发生什么一眼就懂 */
+}
+.cvt-swap-btn:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+.cvt-swap-btn svg { width: 21px; height: 21px; stroke: currentColor; }
+
+/* 类别自己的一句注释（如能量那档的「注：大卡=千卡」）。
+   内容来自 js/units.js 的 UNITS[类别].note，没有的类别整块不显示。
+   做成一块浅底小方框，和底下那条通用的 cvt-foot 区分开 ——
+   这条是"这一类的补充说明"，不是全页通用的提示。 */
+.cvt-cat-note {
+  margin: 0;
+  padding: 10px 13px;
+  border-radius: 9px;
+  background: #f8f9fb;
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--muted);
+  text-align: center;
+  /* 注可以有多行（亮度那档四行、能量那档两行，都拿 \n 分行写）。
+     pre-line = 换行照落、但多余空格照旧折叠 —— 比 pre-wrap 稳，
+     不会因为源码里多打一个空格就跑偏。 */
+  white-space: pre-line;
+}
+.cvt-cat-note[hidden] { display: none; }
+
+/* ---------- 副输入框（立体角 / 面积，见 js/units.js 的 cvtAux 那一节） ----------
+   只有「亮度」那一档用得上：那一档的单位跨了四个量，光靠系数换不过去，
+   还得知道光摊在多宽的立体角、多大一片面积上。整块按当前上下单位动态显隐，
+   平时 hidden，所以别的类别一点变化都没有。
+
+   摆在换算卡**里面**、结果框下面，用一条虚线跟上面隔开 —— 它是"换算还缺的
+   一小步"，不是另一张卡；虚线比实线轻，看着不至于像被切成了两半。 */
+.cvt-aux {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line-strong);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.cvt-aux[hidden] { display: none; }
+
+/* 顶头那句「X 和 Y 之间还差立体角，填好才能换算」——说清为什么要多填这一项 */
+.cvt-aux-head {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+/* 一栏 = 标签 + （药丸）+ 输入框 + 提示。
+   .hint 必须紧跟在 [data-field] 后面（core.js 的 setError 靠这个找位置），
+   所以 .input-wrap 和 .hint 之间不能插别的东西。 */
+.cvt-aux-item { display: flex; flex-direction: column; gap: 8px; }
+.cvt-aux-item[hidden] { display: none; }
+.cvt-aux-item > label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* 常用立体角（4π / 2π / π）那排药丸：比选择弹窗里的紧凑一点，
+   这里是卡片里的一行辅助操作，不用那么大的块头 */
+.cvt-aux-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.cvt-aux-chips .chip { padding: 7px 13px; font-size: 13.5px; }
+
+/* 「还没填」的中性提示：core.js 的 .hint 默认是告警红，这里改回次要文字色 ——
+   空着是刚进来的正常状态，不该一上来就是一条红字（真填错了才用默认的红） */
+.hint.soft { color: var(--muted); }
+
+html[data-layout="tablet"] .cvt-aux-head { font-size: 14px; }
+html[data-layout="tablet"] .cvt-aux-item > label { font-size: 19px; }
+html[data-layout="tablet"] .cvt-aux-chips .chip { padding: 11px 18px; font-size: 16px; }
+
+.cvt-foot {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* 弹窗里单位分组的小标题（体积＆容积那种）。它占满一整行，所以
+   下一组药丸自然从新行开始 —— 单位多了以后不这样分开就全挤在一块。
+   .chips-full 来自 app.css（星座那个弹窗用它让「保密」独占一行）。 */
+.chips-group {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--muted);
+  letter-spacing: .2px;
+}
+.chips-group:first-child { margin-top: 0; }
+html[data-layout="tablet"] .chips-group { font-size: 14px; }
+
+/* 弹窗必须盖在功能页之上：.tool-page 是 260，而 app.css 里
+   .picker-overlay 只有 245（那个是给设置页 / 个人主页用的），不抬层级
+   的话弹窗会藏在功能页后面，只看得见一层暗色。 */
+#unitPicker { z-index: 320; }
+
+/* ---------- 单位弹窗：从「滚动的抽屉」改成「按内容铺开」 ----------
+   单位补齐以后（面积 / 体积各有二十多项），app.css 那套
+   「底抽屉 + max-height:72vh + 内部滚动」就不够用了：手机上要反复往下滑，
+   电脑上又被 420px 的窄框挤成一长条。这里整体改成**按内容定高、不滑动**：
+     手机  贴着底边、向上长 —— 内容多少就多高，一屏内不再被压扁
+     电脑  放宽到 680px，药丸横向铺开，一屏看全
+   顺带把药丸排紧一点（字号 14.5→14、内边距 / 内间距各收一点、四周留白收窄）：
+   最长的「体积」在 360px 宽的小屏上约 600px 高，360×640 这种小屏也放得下，
+   不用滑。只动单位弹窗（#unitPicker）—— 设置页 / 个人主页那个选择弹窗
+   选项很少，维持 app.css 原来的样式不变。
+   保留一条兜底：内容真的高过一屏时（横屏手机这类）才允许内部滚动，
+   否则会被裁掉 —— 正常竖屏根本用不到滚动条。 */
+#unitPicker .picker-sheet {
+  max-height: 100%;      /* 原来 72vh：一屏内不再压扁 */
+  animation: none;       /* 不要「从底部滑入」那一下，直接向上展开 */
+}
+/* 药丸排紧一档（撑得下更多行，小屏才放得进一屏） */
+#unitPicker .picker-body { padding: 14px 16px 16px; }
+#unitPicker .chips { gap: 7px; }
+#unitPicker .chip { padding: 8px 12px; font-size: 14px; }
+#unitPicker .chips-group { margin-top: 3px; font-size: 12px; }
+
+html[data-viewport="lg"][data-aspect="wide"] #unitPicker .picker-sheet {
+  max-width: 680px;                    /* 原来 420px：药丸横向多铺几列 */
+  max-height: calc(100vh - 48px);      /* 原来继承 .picker-sheet 的 72vh（上下各留 24px 边距） */
+}
+html[data-viewport="lg"][data-aspect="wide"] #unitPicker .picker-sheet {
+  max-width: 680px;                    /* 原来 420px：药丸横向多铺几列 */
+  max-height: calc(100vh - 48px);      /* 原来继承 .picker-sheet 的 72vh（上下各留 24px 边距） */
+}
+
+/* ---------- 触摸设备：按钮做大一点，好点 ---------- */
+html[data-touch="1"] .cvt-unit { padding: 14px; }
+html[data-touch="1"] .cvt-swap-btn { width: 50px; height: 50px; }
+/* 手指比鼠标粗：小药丸撑开一点才点得准（触屏上 24px 高太险了） */
+html[data-touch="1"] .cvt-copy { padding: 8px 14px; font-size: 13.5px; }
+
+/* ---------- 电脑 / 平板：整体放宽、字放大 ---------- */
+/* 电脑端：类别卡排**三列**（屏宽绰绰有余，两列的话要滚好几屏）。
+   只改这一档 —— 手机仍是一列、平板两列，见上面那两条注释。
+   880 = 3 × 285 左右，够放「体积＆容积」这种长名字。
+   列轨道写 minmax(0, 1fr)：不加 0 下限时，长内容会把列撑宽、顶破容器。 */
+html[data-viewport="lg"] .unit-cats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  max-width: 880px;
+}
+
+/* 换算界面仍是一张窄卡：内容是「上框 / 互换 / 下框」一竖列，
+   拉宽只是把输入框拉长，并不好看 */
+html[data-viewport="lg"] .unit-conv { max-width: 560px; }
+
+html[data-layout="tablet"] .unit-cats,
+html[data-layout="tablet"] .unit-conv { max-width: 660px; gap: 18px; }
+html[data-layout="tablet"] .cvt-card { padding: 22px; border-radius: 16px; }
+html[data-layout="tablet"] .cvt-swap { padding: 12px 0; }
+html[data-layout="tablet"] .cvt-swap-btn { width: 54px; height: 54px; }
+html[data-layout="tablet"] .cvt-swap-btn svg { width: 26px; height: 26px; }
+html[data-layout="tablet"] .cvt-foot { font-size: 14px; }
+html[data-layout="tablet"] .cvt-cat-note { font-size: 14px; padding: 12px 15px; }
+/* 输入框在平板上被放大到 19px 字号 / 17px 内边距（见 auth.css），
+   单位按钮跟着撑到差不多高，两者上边缘才对得齐。
+   这条写在上面那条触摸规则之后：同一优先级，靠顺序压过它的 padding。
+   （不是只有真平板才进这一档 —— 桌面窗口缩到 744–1023 也会带上
+   data-layout="tablet"，那时没有触摸，所以这里不能带 [data-touch="1"]。） */
+html[data-layout="tablet"] .cvt-unit {
+  font-size: 19px;
+  gap: 9px;
+  padding: 18px 15px;
+}
+/* label 在这一档也被放大到 15px，跟着把「复制」提一档，两者才在一个重量级 */
+html[data-layout="tablet"] .cvt-copy {
+  font-size: 14px;
+  padding: 8px 15px;
+}
+/* 平板上 label 走 auth.css 那一档的 19px，字段头里那颗 label 也照同一档 */
+html[data-layout="tablet"] .cvt-head > label { font-size: 19px; }
+
+/* ======================================================
+   八、罗马数字（.rm-* 见 js/roman.js）
+   两块：上面一张卡管互转（两栏 + 拆解），下面一张卡讲规律。
+   卡片、配色都沿用前面的语汇（等同 .cv-card / .cvt-card），
+   软键盘那一块直接复用第六节的 .gfx-*，这里只管自己的排布。
+   ====================================================== */
+.rm-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.rm-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* 两栏之间不留 .field 自带的 17px 空白：那一档留白这里自己给，
+   两栏挨得近一点，一眼看出是"一进一出"的关系 */
+.rm-card .field { margin-bottom: 0; }
+.rm-card .field + .field { margin-top: 14px; }
+
+/* 一行 = 输入框（+报错文字）+ 右侧的「复制」。
+   flex-start 让按钮的上边缘和输入框对齐 —— 下面那条报错文字出来时
+   按钮也不会跟着被拉下去（同 .cvt-row）。 */
+.rm-row { display: flex; align-items: flex-start; gap: 8px; }
+/* 这一层是为了让 .hint 紧跟在 .input-wrap 后面（core.js 的 setError 靠这个找位置） */
+.rm-field { flex: 1 1 auto; min-width: 0; }
+
+/* 两栏的输入框。罗马数字是一串字母，给点字距才像"数字"而不像一个单词；
+   数字那栏用等宽数字，位数变化时不跳。 */
+/* 等宽数字：位数一变（999 → 1000）字宽不跳。罗马那侧是字母，不受影响 */
+.rm-input > input {
+  font-size: 17px;
+  padding: 11px 0;
+  letter-spacing: .6px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 结果框：只读，压一层浅灰底，一眼看出这是「算出来的」而不是填的 */
+.input-wrap.rm-readonly { background: #f8f9fb; }
+.input-wrap.rm-readonly > input { cursor: default; }
+
+/* 翻译 / 单位换算 的输入框、结果框改成可换行的多行框（原 <input> 单行会横滚）。
+   满宽、随内容长高（field-sizing: content），长串无空格也用 break-all 折行。
+   ★ textarea 必须自己清零浏览器默认的 padding / border / background ——
+     否则单行内容也会被撑高，看起来"莫名其妙占了 1.5 行"。
+   ★ min-height 用 1.5em（= line-height 1.5 的一行），不要写死 42px。 */
+.rm-input.is-area, .unit-conv .input-wrap.is-area {
+  align-items: stretch;
+  padding-top: 8px; padding-bottom: 8px;
+}
+.rm-input.is-area > textarea,
+.unit-conv .input-wrap.is-area > textarea {
+  flex: 1 1 auto;
+  width: 100%; min-width: 0;
+  margin: 0; padding: 0; border: 0; outline: 0; background: none;
+  font-family: inherit; line-height: 1.5;
+  resize: none; overflow-y: auto;
+  field-sizing: content;
+  min-height: 1.5em; max-height: 200px;
+  overflow-wrap: anywhere; word-break: break-all; white-space: pre-wrap;
+}
+.rm-input.is-area > textarea {
+  font-size: 17px; letter-spacing: .6px;
+  font-variant-numeric: tabular-nums;
+}
+.unit-conv .input-wrap.is-area > textarea { font-size: 16px; }
+html[data-touch="1"] .rm-input.is-area > textarea { font-size: 19px; }
+html[data-touch="1"] .unit-conv .input-wrap.is-area > textarea { font-size: 17px; }
+
+/* 「复制」：外观跟 .cvt-unit 一套（白底细框），高度也对得上输入框 */
+.rm-copy {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 13px 14px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.rm-copy:hover { background: #f8f9fb; border-color: #b9c0cb; }
+.rm-copy:active { background: #eef1f6; }
+.rm-copy:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+
+/* 两栏之间那条说明已经去掉了：输入栏的 label 写清了两种都能填，
+   结果栏是只读的灰底，不需要再解释一遍 */
+
+/* ---------- 拆解式：M + CM + XC + IX = 1000 + 900 + 90 + 9 ---------- */
+.rm-break {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 8px;
+  margin-top: 14px;
+  padding: 11px 13px;
+  border-radius: 9px;
+  background: #f8f9fb;
+  border: 1px solid var(--line);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.rm-break[hidden] { display: none; }
+.rm-break-k { flex: 0 0 auto; color: var(--muted); }
+.rm-break-v {
+  color: var(--text);
+  letter-spacing: .5px;
+  font-variant-numeric: tabular-nums;
+}
+.rm-break-eq { color: var(--muted); }
+
+/* ---------- 符号表：I V X L C D M N ---------- */
+.rm-sec-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+
+/* 一格一个符号，格子多宽由容器分。minmax(0,1fr) 的下限写 0：
+   窄屏上宁可把格子压扁，也不让八个格子顶破卡片。 */
+.rm-syms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 7px;
+}
+.rm-sym {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 2px;
+  border-radius: 9px;
+  /* 蓝底浅框：和软键盘上的罗马盘是同一个色号（.gfx-key.is-fn），
+     一眼看出"这些就是键上那七个符号" */
+  background: #f5f8ff;
+  border: 1px solid #cdddf8;
+}
+/* 符号用衬线体：罗马数字本来就是石刻上的字，衬线比无衬线像样得多 */
+.rm-sym b {
+  font-family: Georgia, 'Times New Roman', 'Songti SC', serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.1;
+  color: var(--accent);
+}
+.rm-sym i { font-style: normal; font-size: 12px; color: var(--muted); }
+/* N 是"补"出来的那个 0，和七个真符号区分开 */
+.rm-sym.is-zero { background: #f8f9fb; border-color: var(--line); }
+.rm-sym.is-zero b { color: var(--muted); }
+
+/* ---------- 规律：一条一条列出来 ---------- */
+.rm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.rm-list li { position: relative; padding-left: 14px; }
+/* 小圆点自己做：默认的 • 在这个字号下偏大，位置也不对 */
+.rm-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: .62em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+.rm-list b {
+  color: var(--text);
+  font-weight: 600;
+  letter-spacing: .3px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rm-foot {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ---------- 触摸设备：输入框放大一点，好点也好看 ---------- */
+html[data-touch="1"] .rm-input > input { font-size: 19px; padding: 13px 0; }
+html[data-touch="1"] .rm-copy { padding: 15px; }
+
+/* ---------- 电脑 / 平板 ---------- */
+html[data-viewport="lg"] .rm-wrap { max-width: 620px; }
+
+html[data-layout="tablet"] .rm-wrap { max-width: 660px; gap: 18px; }
+html[data-layout="tablet"] .rm-card { padding: 20px; border-radius: 16px; }
+/* 输入框在平板上被 auth.css 放大到 19px 字号 / 17px 内边距，这里跟上去，
+   「复制」也跟着撑到差不多高，两者上边缘才对得齐 */
+html[data-layout="tablet"] .rm-input > input { font-size: 21px; padding: 14px 0; }
+html[data-layout="tablet"] .rm-copy { font-size: 17px; padding: 16px; }
+html[data-layout="tablet"] .rm-break { font-size: 15px; }
+html[data-layout="tablet"] .rm-sec-title { font-size: 17px; }
+html[data-layout="tablet"] .rm-sym { padding: 10px 2px; }
+html[data-layout="tablet"] .rm-sym b { font-size: 22px; }
+html[data-layout="tablet"] .rm-sym i { font-size: 14px; }
+html[data-layout="tablet"] .rm-list { font-size: 14.5px; }
+html[data-layout="tablet"] .rm-foot { font-size: 14px; }
+
+/* ======================================================
+   九、九宫幻方（.mg-* 见 js/magic.js）
+   一张"选阶数 / 难度"的卡 + 一张棋盘卡 + 一排操作按钮 + 一张说明卡。
+   卡片、按钮、圆角都沿用上面的 .pt-* / .mini-btn / .sub-save，
+   配色继续走全局变量（--brand / --line / --text …）。
+   ====================================================== */
+.mg-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+/* hidden 属性要压过下面这些 display 改写，否则藏不住 */
+.mg-wrap [hidden] { display: none !important; }
+
+.mg-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* ---------- 选阶数 / 选难度 ---------- */
+/* 头一行：当前选择摘要（收起后只剩它）+ 收起/展开 */
+.mg-set-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+}
+.mg-set-sum {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.mg-set-toggle { flex: 0 0 auto; }
+/* 收起时整块藏掉（hidden 优先），外层卡片留着显示摘要 */
+.mg-set-body { margin-top: 14px; }
+.mg-set-body[hidden] { display: none !important; }
+
+.mg-row { display: flex; align-items: center; gap: 12px; }
+.mg-row + .mg-row { margin-top: 12px; }
+.mg-label {
+  flex: 0 0 auto;
+  width: 34px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+.mg-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+/* 药丸外形复用全局 .chip，只把尺寸收小、文字居中 */
+.mg-chips .chip {
+  min-width: 48px;
+  justify-content: center;
+  padding: 8px 13px;
+  font-size: 14px;
+}
+
+/* 触摸屏上点击会留下"粘住的" :hover —— 鼠标移开就没了，手指点完却不会。
+   全局那条 .chip[aria-checked="true"]:hover 用的是 --brand-hover（比常态的
+   --brand 略深），于是"刚点的那一个"偏深、"另一行选中的"是常态蓝，
+   两行的高亮看着就不是一个颜色。
+   这里只在"主输入根本没法 hover"的设备上，把选中态压回常态 ——
+   粘住的 hover 就看不出来了，两行高亮重新一致。 */
+@media (hover: none) {
+  .mg-chips .chip[aria-checked="true"]:hover {
+    background: var(--brand);
+    border-color: var(--brand);
+  }
+}
+
+/* ---------- 棋盘卡的顶行 ---------- */
+.mg-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.mg-round { font-size: 15px; font-weight: 600; color: var(--text); }
+.mg-score {
+  font-size: 13px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mg-boardwrap { display: flex; justify-content: center; }
+
+/* ---------- 棋盘 ----------
+
+   列 = n 个格子 + 最右边一列"当前和"（窄一些，0.66 个格宽）。
+   行 = n 行格子 + 最下面一行"当前和"。
+   格子用 aspect-ratio 撑成正方形，字号跟着 --mg-cw 缩放 ——
+   那个变量由 js/magic.js 量出实际格宽后写进来（见 mgFit）。 */
+.mg-board {
+  --mg-cw: 40px;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr)) minmax(0, .66fr);
+  gap: 4px;
+  width: 100%;
+  /* 小阶数别把格子拉成巨无霸，按 n 给个上限 */
+  max-width: min(560px, calc(var(--n) * 78px));
+}
+
+.mg-cell {
+  position: relative;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  transition: background .12s, border-color .12s, box-shadow .12s;
+}
+
+/* 已知数：淡灰底 + 常规字重 —— 和玩家填进去的粗黑字一眼分得开 */
+.mg-cell.is-clue {
+  background: #f8f9fb;
+  border-color: var(--line);
+}
+
+/* 聚焦高亮：同行同列淡蓝、两条对角线淡蓝、当前这一格蓝圈。
+   幻方是"线上求和"的游戏，把整条线一起点亮才好推。 */
+.mg-cell.is-hl { background: #fffbeb; border-color: #f2e5b8; }
+.mg-cell.is-clue.is-hl { background: #fdf7e0; }
+.mg-cell.is-diag { background: #eff5ff; border-color: #cfdff8; }
+.mg-cell.is-clue.is-diag { background: #e8f0fd; }
+.mg-cell.is-sel {
+  background: #fff;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+  z-index: 1;
+}
+
+.mg-val {
+  font-size: clamp(11px, calc(var(--mg-cw) * .42), 30px);
+  font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.mg-in {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  outline: 0;
+  text-align: center;
+  font-family: inherit;
+  font-size: clamp(11px, calc(var(--mg-cw) * .42), 30px);
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  caret-color: var(--accent);
+}
+.mg-in::placeholder { color: #c3c9d4; }
+/* 重复的数字 / 越界的数：红字，和"还差得远"的提示一起看 */
+.mg-in.is-dup, .mg-in.is-bad { color: var(--danger); }
+/* 提示填的（绿）和看答案填的（蓝）各一色，好知道自己动过哪儿 */
+.mg-in.is-hint { color: var(--ok); }
+.mg-in.is-given { color: var(--accent); }
+
+/* ---------- 那圈"当前和" ----------
+   实时显示每行 / 每列 / 两条对角线眼下加到多少：
+   没填满只报和（灰），填满了并且正好等于 M 转绿、不等于转红。 */
+.mg-sum {
+  display: grid;
+  place-items: center;
+  min-height: calc(var(--mg-cw, 40px) * .46);
+  border-radius: 8px;
+  font-size: clamp(10px, calc(var(--mg-cw) * .3), 20px);
+  font-weight: 600;
+  color: #9aa1ac;
+  font-variant-numeric: tabular-nums;
+  transition: color .12s, background .12s;
+}
+.mg-sum.ok { color: var(--ok); }
+.mg-sum.bad { color: var(--danger); }
+/* 当前聚焦那格所在的行 / 列，和格子一起点亮 */
+.mg-sum.is-on { background: #fffbeb; }
+
+/* 两条对角线的和：横跨盘面的一整行（grid-column: 1 / -1）。
+   用 space-between 把 ↙ 顶到左下角、↘ 顶到右下角 —— 两个读数各贴在
+   自己那条对角线走到底的那一头，和右边那列行和、下面那排行和同一个规矩。 */
+.mg-diags {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+  padding: 0 2px;
+  font-size: clamp(10px, calc(var(--mg-cw) * .3), 20px);
+}
+.mg-diag { display: inline-flex; align-items: center; gap: 4px; }
+.mg-diag b { font-weight: 500; color: #c3c9d4; }
+.mg-diag i {
+  font-style: normal;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #9aa1ac;
+}
+.mg-diag.ok i { color: var(--ok); }
+.mg-diag.bad i { color: var(--danger); }
+
+/* 过关：整盘描一圈淡绿，一眼看出"这局成了" */
+.mg-board.is-done .mg-cell { border-color: rgba(22, 163, 74, .45); }
+.mg-board.is-done .mg-cell.is-sel { border-color: var(--brand); }
+
+.mg-tip {
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ---------- 操作区 ---------- */
+/* 校验按钮复用 .sub-save，去掉它的上边距（间距由 .mg-wrap 的 gap 给） */
+.mg-go { margin-top: 0; }
+
+.mg-acts {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+}
+.mg-acts .mini-btn { flex: 1 1 auto; min-width: 82px; }
+
+/* 触摸设备：收起/展开按钮加大，好点 */
+html[data-touch="1"] .mg-set-toggle { padding: 10px 18px; }
+
+/* ---------- 说明卡 ---------- */
+.mg-sec-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.mg-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.85;
+  color: var(--muted);
+}
+.mg-list li + li { margin-top: 4px; }
+.mg-list b { color: var(--text); font-weight: 600; }
+.mg-list code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .95em;
+  background: #f2f4f7;
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--text);
+}
+
+.mg-foot {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+}
+
+/* ---------- 电脑 / 平板：整体放宽、放大 ---------- */
+html[data-viewport="lg"] .mg-wrap { max-width: 620px; }
+html[data-viewport="lg"] .mg-board { max-width: min(600px, calc(var(--n) * 84px)); }
+
+html[data-layout="tablet"] .mg-wrap { max-width: 660px; gap: 18px; }
+html[data-layout="tablet"] .mg-card { padding: 20px; border-radius: 16px; }
+html[data-layout="tablet"] .mg-label { font-size: 16px; width: 40px; }
+html[data-layout="tablet"] .mg-set-sum { font-size: 16px; }
+html[data-layout="tablet"] .mg-set-toggle { padding: 10px 18px; font-size: 15px; }
+html[data-layout="tablet"] .mg-chips .chip { min-width: 56px; padding: 10px 16px; font-size: 16px; }
+html[data-layout="tablet"] .mg-round { font-size: 18px; }
+html[data-layout="tablet"] .mg-score { font-size: 15px; }
+html[data-layout="tablet"] .mg-board { max-width: min(680px, calc(var(--n) * 96px)); }
+html[data-layout="tablet"] .mg-tip { font-size: 14px; }
+html[data-layout="tablet"] .mg-sec-title { font-size: 17px; }
+html[data-layout="tablet"] .mg-list { font-size: 15px; }
+html[data-layout="tablet"] .mg-foot { font-size: 14px; }
+
+/* ======================================================
+   十、异或法则（.xo-* 见 js/xor.js）
+   ------------------------------------------------------
+   一块网格（.xo-stage）里放三样东西：两张小图（目标 / 实时）、
+   一个操作盘、一排序号。两套排版只差 grid-template-areas：
+
+     手机： 目标 实时 / 操作盘 / 序号（横排在最下面）
+     PC  ： 左列 目标+实时 · 中间 操作盘 · 右侧 序号（竖着排）
+
+   DOM 只有一份，靠 html[data-viewport] / html[data-layout] 切。
+   两张小图外面包了个 .xo-left：手机上它是 display:contents（等于不存在），
+   电脑上它才成为"左列"这个整体，好和右边的操作盘隔开。
+
+   配色是设计指定的：
+     · 目标图 / 实时图的亮格统一 #0FAEFF
+     · 操作盘里三个方块依次 #C44127 / #F4CE49 / #6ECDD1
+       （盘内三块互不重叠，所以这三色永远同时出现在同一个盘上；
+         不靠颜色区分"这是第几个盘"，盘由序号和当前显示决定）
+   ====================================================== */
+.xo-wrap {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+/* hidden 属性要压得住下面的 display 改写，否则藏不住 */
+.xo-wrap [hidden] { display: none !important; }
+
+.xo-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* ---------- 1) 开局：选操作盘数 + 玩法说明 ---------- */
+.xo-setup { display: flex; flex-direction: column; gap: 12px; }
+.xo-setup-title { font-size: 15px; font-weight: 600; }
+.xo-setup-note { font-size: 12.5px; color: var(--muted); text-align: center; }
+
+/* 玩法说明：就是条普通列表，条目之间留点空，粗体标关键词 */
+.xo-rules {
+  background: #f8f9fb;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.xo-rules-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.xo-rules-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.xo-rules-list li + li { margin-top: 6px; }
+.xo-rules-list b { color: var(--text); font-weight: 600; }
+
+.xo-counts { display: flex; flex-wrap: wrap; gap: 8px; }
+.xo-count {
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.xo-count:hover { background: #f8f9fb; }
+.xo-count.on {
+  border-color: var(--accent);
+  background: #eff4ff;
+  color: var(--accent);
+  font-weight: 600;
+}
+.xo-start { margin-top: 2px; }
+
+/* ---------- 2) 对局：头一行 ---------- */
+.xo-game { display: flex; flex-direction: column; gap: 12px; }
+.xo-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.xo-round { font-size: 14px; font-weight: 600; }
+.xo-meta { font-size: 12.5px; color: var(--muted); }
+.xo-head-acts { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+
+.xo-tool, .xo-quit {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.xo-tool { color: var(--text); }
+.xo-tool:hover { background: #f8f9fb; }
+/* 「放弃」在角落上：默认低调，悬停才提醒这是不可逆的那一个 */
+.xo-quit { color: var(--muted); }
+.xo-quit:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
+
+/* ---------- 3) 盘面网格：手机 / PC 两套 areas ---------- */
+.xo-stage {
+  --xo-cell: 30px;      /* 操作盘一格 */
+  --xo-gap: 2px;        /* 格子间距 */
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "tgt   live"
+    "board board"
+    "nums  nums";
+  align-items: start;
+}
+
+/* 两张小图：格子随容器宽度自己缩，不写死像素 */
+/* .xo-left 只是"左列"的一个壳：
+   手机上用 display:contents 让它消失，两张小图照旧各占一个网格区域
+   （grid-area 写在它们自己身上，display:contents 的父元素不参与布局）。 */
+.xo-left { display: contents; }
+.xo-pane { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.xo-tgt  { grid-area: tgt; }
+.xo-live { grid-area: live; }
+.xo-pane-label { font-size: 12px; color: var(--muted); }
+
+.xo-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  padding: 2px;
+  background: #f7f8fa;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.xo-grid .xo-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px #e9ecf1;
+  transition: background .12s;
+}
+.xo-grid .xo-cell.lit { background: #0FAEFF; box-shadow: inset 0 0 0 1px #0FAEFF; }
+
+/* ---------- 4) 操作盘 ---------- */
+.xo-boardcard {
+  grid-area: board;
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+.xo-rotrow { display: flex; align-items: center; gap: 8px; }
+.xo-boardname { font-size: 13px; font-weight: 600; }
+/* 旋转按钮：两个都推到右边，压在盘外面不碍事 */
+.xo-rotrow .xo-rot:first-of-type { margin-left: auto; }
+.xo-rot {
+  width: 34px; height: 34px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .15s;
+}
+.xo-rot:hover { background: #f8f9fb; }
+.xo-rot:active { background: #eef1f5; }
+
+.xo-board {
+  position: relative;
+  width: fit-content;          /* 底板跟着格子走，右边不要留一条空的灰 */
+  margin-inline: auto;         /* 底板在卡片里居中：卡片的宽度被下面那行说明
+                                  撑得比盘宽，不居中的话盘会靠左，看着偏 */
+  padding: var(--xo-gap);
+  border-radius: 12px;
+  background: #f7f8fa;
+  border: 1px solid var(--line);
+  /* 拖动时别把方块当成文字选起来（电脑上按住拖很容易带出蓝色选区） */
+  user-select: none;
+  -webkit-user-select: none;
+}
+.xo-cells {
+  display: grid;
+  grid-template-columns: repeat(8, var(--xo-cell));
+  grid-auto-rows: var(--xo-cell);
+  gap: var(--xo-gap);
+}
+.xo-cells .xo-cell {
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px #e9ecf1;
+}
+
+/* 方块那一层：左上角对齐 (0,0) 格，尺寸为 0，靠子元素绝对定位铺出去。
+   方块可以拖到盘外（松手才判断合法与否），所以这一层不能裁。 */
+.xo-pieces {
+  position: absolute;
+  left: var(--xo-gap);
+  top: var(--xo-gap);
+  width: 0;
+  height: 0;
+}
+.xo-piece, .xo-piece-inner { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+/* 外层 .xo-piece 管"落在第几格"，内层 .xo-piece-inner 管"拖动中的像素偏移" */
+.xo-pcell {
+  position: absolute;
+  width: var(--xo-cell);
+  height: var(--xo-cell);
+  border-radius: 5px;
+  background: var(--xo-piece-color, #9aa4b2);
+  box-shadow: 0 2px 6px -2px rgba(16, 24, 40, .4);
+  cursor: grab;
+  touch-action: none;        /* 拖着方块时别让整页跟着滚 */
+}
+.xo-piece.sel .xo-pcell {
+  box-shadow: inset 0 0 0 2px #1f2430, 0 2px 6px -2px rgba(16, 24, 40, .4);
+}
+.xo-piece.dragging { z-index: 6; }
+/* 拖动中这一层要跟着指针每帧变位置，提前告诉浏览器它会被合成，
+   免得一路重绘（电脑上格子大、鼠标快，这点差别看得出来） */
+.xo-piece.dragging .xo-piece-inner { will-change: transform; }
+.xo-piece.dragging .xo-pcell {
+  cursor: grabbing;
+  opacity: .95;
+  box-shadow: 0 6px 14px -4px rgba(16, 24, 40, .45);
+}
+
+.xo-tip { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+
+/* ---------- 5) 序号（手机横排居中 / PC 竖排） ---------- */
+.xo-nums {
+  grid-area: nums;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  /* 手机上这一格是整行宽，按钮得居中 —— 靠左的话和上面的盘不对齐，看着偏 */
+  justify-content: center;
+}
+.xo-num {
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.xo-num:hover { background: #f8f9fb; }
+.xo-num.on { border-color: var(--accent); background: #eff4ff; color: var(--accent); }
+
+/* ---------- 6) 过关 / 放弃的小浮层 ---------- */
+.xo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5;                 /* 在 .tool-page 这层里压住内容，但仍低于 .toasts */
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, .45);
+}
+.xo-overlay-box {
+  width: 100%;
+  max-width: 340px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px;
+  text-align: center;
+  box-shadow: 0 20px 48px -12px rgba(16, 24, 40, .3);
+  animation: sheetUp .2s ease both;
+}
+.xo-overlay-box h4 { font-size: 18px; font-weight: 600; }
+.xo-overlay-box p { font-size: 14px; color: #4b5563; line-height: 1.7; margin-top: 8px; }
+.xo-overlay-acts { display: flex; gap: 10px; margin-top: 18px; }
+.xo-overlay-acts .sub-save { flex: 1 1 auto; margin-top: 0; }
+.xo-overlay-acts .mini-btn { flex: 0 0 auto; }
+/* 过关时的「确认」：单独一行摆在两个按钮上面（见 index.html 的 #xoOverlayOk）。
+   它顶着 .sub-save 默认的 20px 上边距，下面的动作行自己还有 18px，
+   两段加起来太空，这里收一收。 */
+.xo-overlay-box > .sub-save { margin-top: 16px; }
+/* 「查看答案」单独占一行，摆在上面那两个按钮下面 */
+.xo-answer-btn { width: 100%; margin-top: 10px; }
+
+/* 看答案状态：方块全部锁定，旋转按钮没意义，藏掉。
+   顶栏那一排则由 js/xor.js 在两组按钮之间切。 */
+.xo-game.answer .xo-rot { display: none; }
+
+/* ---------- 7) 小屏手机：盘再缩一点，别顶破屏幕 ---------- */
+html[data-viewport="xs"] .xo-stage { --xo-cell: 26px; gap: 10px; }
+html[data-viewport="xs"] .xo-num { width: 38px; height: 38px; font-size: 14px; }
+
+/* ---------- 8) 电脑：左列两块小图 · 中间操作盘 · 右侧序号竖排 ---------- */
+html[data-viewport="lg"] .xo-wrap { max-width: 820px; }
+html[data-viewport="lg"] .xo-stage {
+  --xo-cell: 40px;
+  grid-template-columns: 232px auto auto;
+  grid-template-areas: "left board nums";
+  column-gap: 20px;            /* 左列与操作盘之间多留一点，中间再拉一条竖线 */
+  row-gap: 16px;
+  align-items: start;
+}
+/* 左列：两张小图竖着摞成一组，右边拉一条细分界线，
+   一眼能看出"左边是参照、右边是我在动的盘" */
+html[data-viewport="lg"] .xo-left {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  grid-area: left;
+  padding-right: 20px;
+  border-right: 1px solid var(--line);
+}
+html[data-viewport="lg"] .xo-pane { width: 100%; }
+html[data-viewport="lg"] .xo-boardcard { justify-self: start; }
+html[data-viewport="lg"] .xo-nums { flex-direction: column; }
+
+/* ---------- 9) 平板：跟随手机那套排版，整体放大 ---------- */
+html[data-layout="tablet"] .xo-wrap { max-width: 640px; gap: 18px; }
+html[data-layout="tablet"] .xo-card { padding: 20px; border-radius: 16px; }
+html[data-layout="tablet"] .xo-setup-title { font-size: 17px; }
+html[data-layout="tablet"] .xo-rules-list { font-size: 14.5px; }
+html[data-layout="tablet"] .xo-count { padding: 11px 18px; font-size: 15px; }
+html[data-layout="tablet"] .xo-stage { --xo-cell: 38px; gap: 16px; }
+html[data-layout="tablet"] .xo-boardcard { padding: 16px; border-radius: 16px; }
+html[data-layout="tablet"] .xo-rot { width: 42px; height: 42px; font-size: 21px; }
+html[data-layout="tablet"] .xo-num { width: 48px; height: 48px; font-size: 16px; }
+html[data-layout="tablet"] .xo-pane-label { font-size: 13.5px; }
+html[data-layout="tablet"] .xo-tip { font-size: 13.5px; }
+html[data-layout="tablet"] .xo-round { font-size: 16px; }
+html[data-layout="tablet"] .xo-meta { font-size: 14px; }
+html[data-layout="tablet"] .xo-tool,
+html[data-layout="tablet"] .xo-quit { padding: 9px 15px; font-size: 14.5px; }
+
+/* ======================================================
+   十一、二零四八（.g48-* 见 js/game2048.js）
+   ------------------------------------------------------
+   四块：分数条 → 棋盘 → 操作（十字方向盘 + 撤销 / 重开）→ 说明。
+   卡片、按钮、圆角沿用上面的 .cv-* / .pt-* / .mini-btn / .sub-save，
+   配色继续走全局变量（--brand / --line / --text …）。
+
+   ★ 方块的定位方式（这一节最要紧的一段）
+     每个方块是**绝对定位**的，位置由三个东西算出来：
+         --g  格子间距（也等于棋盘内边距，一格宽 = (棋盘宽 - 5×--g) / 4）
+         --r  行（0–3）   --c  列（0–3）
+     外层 .g48-tile 先落在第一格（left/top = --g），再用 transform 平移
+     r / c 格：
+         translate(c × 100%, r × 100%)   ← 100% 是方块自己的宽（= 一格）
+         translate(c × --g,  r × --g)    ← 补上中间那几道缝
+     两个 translate 都是**长度百分比**，只跟方块自身尺寸有关，
+     所以换个屏、转个向，位置全自动跟着变，不用 JS 量一次像素。
+
+     为什么用 transform 而不是 left/top：改 transform 只重绘不重排，
+     十几块同时滑的时候明显更顺。滑动动画就是它的 transition。
+
+   ★ 方块分两层（.g48-tile 管位置 / .g48-face 管长相）
+     位置动画（滑动）和缩放动画（落下来、合并弹一下）都要占 transform，
+     套在同一个元素上会互相覆盖；拆成父子两层就各演各的、互不打架。
+
+   配色阶梯：米白 → 明黄 → 琥珀 → 橙 → 深棕（牌面自己的色阶，不跟品牌色走），
+   2048 那一档翻成**深底 + 品牌蓝字**，一眼就是最高档。
+   阶梯只到 8192 —— 再往上（理论上打完要几千下）落回基础色，
+   反正也看不到。
+   ====================================================== */
+.g48-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+/* hidden 属性要压得住下面的 display 改写，否则藏不住 */
+.g48-wrap [hidden] { display: none !important; }
+
+.g48-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* ---------- 1) 分数条 ----------
+   两块数字并排，玩法摘要占满第二行居中 */
+.g48-hud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.g48-stat {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  background: #f8f9fb;
+  border: 1px solid var(--line);
+}
+.g48-stat-label { font-size: 12px; color: var(--muted); }
+.g48-stat-val {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+/* 数字跳一下（得分涨了 / 破了纪录）。
+   它在 flex 列里，本来就被块级化了，所以 transform 直接生效。 */
+@keyframes g48Bump {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.g48-bump { animation: g48Bump .3s ease-out; }
+
+.g48-note {
+  flex: 1 1 100%;
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.6;
+  transition: color .2s;
+}
+/* 撤销 / 满了 / 结束时临时改成的一句话，比常态摘要更实一点 */
+.g48-note.is-event { color: var(--text); font-weight: 600; }
+
+/* ---------- 2) 棋盘 ---------- */
+/* 内边距比别的卡小一号：这块地盘尽量留给盘面 */
+.g48-boardcard { padding: 12px; }
+
+.g48-board {
+  /* 格子间距（也等于棋盘内边距）；右边五档字号按"位数"给 */
+  --g: 10px;
+  --f1: 32px;   /* 一位：2 4 8 */
+  --f2: 28px;   /* 两位：16 32 */
+  --f3: 23px;   /* 三位：128 */
+  --f4: 19px;   /* 四位：1024 2048 */
+  --f5: 16px;   /* 五位及以上：65536 */
+
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  aspect-ratio: 1 / 1;
+  background: #eceef3;
+  border-radius: 16px;
+  /* 飘分飞到边上时收在里面，不冒到卡片外面去 */
+  overflow: hidden;
+  /* 手指在盘上怎么划都不带动页面；长按也不会选中文字、连带弹出菜单 */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 底格：16 个不动的空格子，铺在一次定位满棋盘的网格里。
+   和方块的宽高算法同源 —— inset 是 --g，网格里三缝两沿合起来也是五道 --g */
+.g48-cells {
+  position: absolute;
+  inset: var(--g);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: var(--g);
+}
+.g48-cell {
+  background: rgba(255, 255, 255, .66);
+  border-radius: 10px;
+}
+
+/* 方块外层：只管位置 */
+.g48-tile {
+  position: absolute;
+  left: var(--g);
+  top: var(--g);
+  width: calc((100% - 5 * var(--g)) / 4);
+  height: calc((100% - 5 * var(--g)) / 4);
+  --r: 0;
+  --c: 0;
+  transform: translate(calc(var(--c) * 100%), calc(var(--r) * 100%))
+             translate(calc(var(--c) * var(--g)), calc(var(--r) * var(--g)));
+  /* 时长要略短于 js/game2048.js 的 G48_SLIDE(130ms)，
+     保证"翻倍 / 落新块"发生在方块真的停稳之后 */
+  transition: transform .12s cubic-bezier(.3, .8, .36, 1);
+  will-change: transform;
+  z-index: 2;
+}
+
+/* 方块内层：只管长相（配色 / 字号 / 动画） */
+.g48-face {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -.5px;
+  font-variant-numeric: tabular-nums;
+  /* 顶上压一层淡淡的高光、底下一条暗边 —— 让方块看着有点厚度，
+     不是一块死色。用 background-image 而不是 background：
+     配色那一堆规则只改 background-color，不会把它冲掉。 */
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .3), rgba(255, 255, 255, 0) 52%);
+  box-shadow: inset 0 -2px 0 rgba(16, 24, 40, .07);
+}
+
+/* 字号按位数分档（data-len 由 js/game2048.js 写，已夹到 1–5） */
+.g48-face { font-size: var(--f1); }
+.g48-face[data-len="2"] { font-size: var(--f2); }
+.g48-face[data-len="3"] { font-size: var(--f3); }
+.g48-face[data-len="4"] { font-size: var(--f4); }
+.g48-face[data-len="5"] { font-size: var(--f5); }
+
+/* 配色阶梯。只改 background-color / color，字号那几条不受影响。 */
+.g48-face[data-v="2"]    { background-color: #eef0f4; color: #1f2430; }
+.g48-face[data-v="4"]    { background-color: #e1e7ef; color: #1f2430; }
+.g48-face[data-v="8"]    { background-color: #ffe486; color: #1f2430; }
+.g48-face[data-v="16"]   { background-color: #ffd400; color: #1f2430; }
+.g48-face[data-v="32"]   { background-color: #f9b400; color: #ffffff; }
+.g48-face[data-v="64"]   { background-color: #f09100; color: #ffffff; }
+.g48-face[data-v="128"]  { background-color: #e37100; color: #ffffff; }
+.g48-face[data-v="256"]  { background-color: #cd5400; color: #ffffff; }
+.g48-face[data-v="512"]  { background-color: #b23f05; color: #ffffff; }
+.g48-face[data-v="1024"] { background-color: #8f2f0a; color: #ffffff; }
+/* 2048 往上翻成深底 + 品牌蓝字：整盘最高的一档，一眼认得出来 */
+.g48-face[data-v="2048"] { background-color: #262b36; color: var(--brand); }
+.g48-face[data-v="4096"] { background-color: #1b1f28; color: var(--brand); }
+.g48-face[data-v="8192"] { background-color: #11141a; color: var(--brand); }
+
+/* 新块落下来：缩放淡入。
+   落子发生在滑动**之后**（见 js/game2048.js），所以这里不用再等，直接放。 */
+@keyframes g48Appear {
+  from { opacity: 0; transform: scale(.42); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.g48-tile.is-new .g48-face { animation: g48Appear .16s ease-out both; }
+
+/* 合并弹一下：先胀过一点再收回来。
+   ★ 这条必须写在 is-new 那条**后面** —— 两个选择器权重一样，
+     同时挂着时靠"谁在后面"来定，合并那一刻要播的是这一条。 */
+@keyframes g48Pop {
+  0%   { transform: scale(1); }
+  42%  { transform: scale(1.17); }
+  100% { transform: scale(1); }
+}
+.g48-tile.is-pop .g48-face { animation: g48Pop .26s cubic-bezier(.34, 1.4, .64, 1); }
+
+/* 合并处飘出来的「+N」。
+   它不滑动，所以位置直接用 left/top 算（公式和 .g48-tile 那段同源），
+   把 transform 整个留给下面这条上升动画。 */
+.g48-float {
+  position: absolute;
+  left: calc(var(--g) + var(--c) * ((100% - 5 * var(--g)) / 4 + var(--g)));
+  top:  calc(var(--g) + var(--r) * ((100% - 5 * var(--g)) / 4 + var(--g)));
+  width: calc((100% - 5 * var(--g)) / 4);
+  height: calc((100% - 5 * var(--g)) / 4);
+  display: grid;
+  place-items: center;
+  z-index: 5;
+  pointer-events: none;
+  font-size: var(--f3);
+  font-weight: 800;
+  letter-spacing: -.5px;
+  color: #a35700;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .8);
+  animation: g48FloatUp .56s cubic-bezier(.2, .7, .3, 1) both;
+}
+@keyframes g48FloatUp {
+  0%   { opacity: 0; transform: translateY(8px)  scale(.75); }
+  22%  { opacity: 1; transform: translateY(0)    scale(1); }
+  100% { opacity: 0; transform: translateY(-22px) scale(1.06); }
+}
+
+/* ---------- 3) 操作区 ---------- */
+.g48-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 十字方向盘：3×3 的网格，四个键各占一边，中间那格留一颗装饰点 ——
+   有它整块才读得出"一个盘"，不然四个孤零零的按钮。 */
+.g48-pad {
+  --key: 58px;
+  display: grid;
+  grid-template-columns: repeat(3, var(--key));
+  grid-template-rows: repeat(3, var(--key));
+  gap: 7px;
+  justify-content: center;
+}
+.g48-pad::before {
+  content: "";
+  grid-area: 2 / 2 / 3 / 3;
+  align-self: center;
+  justify-self: center;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--line-strong);
+  opacity: .65;
+}
+
+.g48-key {
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s, box-shadow .15s;
+}
+.g48-key svg { width: 22px; height: 22px; stroke: currentColor; }
+/* 悬停泛蓝、按下压一下 —— 和 .pt-num / .tool-btn 同一套语汇 */
+.g48-key:hover { background: #f7faff; border-color: var(--brand); }
+.g48-key:active { transform: scale(.94); background: #fff6cc; }
+.g48-key:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow);
+}
+.g48-key-up    { grid-area: 1 / 2 / 2 / 3; }
+.g48-key-left  { grid-area: 2 / 1 / 3 / 2; }
+.g48-key-right { grid-area: 2 / 3 / 3 / 4; }
+.g48-key-down  { grid-area: 3 / 2 / 4 / 3; }
+
+/* 撤销 / 重开：并排等宽。
+   把 .mini-btn 的上下留白和字号补到和 .sub-save 一样，
+   两个按钮才是同一个高度（不然并排一看就是差一截）。 */
+.g48-acts { display: flex; gap: 10px; width: 100%; }
+.g48-acts .mini-btn { flex: 1 1 0; min-width: 0; padding: 14px; font-size: 15.5px; }
+.g48-acts .g48-new {
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
+  margin-top: 0;
+}
+
+.g48-foot {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.85;
+}
+.g48-foot b { color: var(--text); font-weight: 600; }
+
+/* ---------- 4) 结束 / 胜利浮层 ----------
+   它是 .tool-page 的子元素，所以在那一层的层叠上下文里比内容区高。
+   （.tool-page 是 fixed + z-index: 260，这里写 252 就压得住它下面所有内容） */
+.g48-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 252;
+  background: rgba(17, 24, 39, .45);
+  place-items: center;
+  padding: 24px;
+}
+.g48-overlay.show { display: grid; }
+.g48-overlay-acts [hidden] { display: none !important; }
+
+.g48-overlay-box {
+  width: 100%;
+  max-width: 340px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 24px 56px -16px rgba(16, 24, 40, .34);
+  animation: sheetUp .2s ease both;
+}
+.g48-overlay-box h4 { font-size: 19px; font-weight: 600; }
+.g48-overlay-box p { font-size: 14px; color: #4b5563; line-height: 1.7; margin-top: 9px; }
+.g48-overlay-acts { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.g48-overlay-acts .sub-save { margin-top: 0; }
+
+/* ---------- 5) 小屏手机：格子挤一点、字小一号 ---------- */
+html[data-viewport="xs"] .g48-board {
+  --g: 8px;
+  --f1: 27px; --f2: 23px; --f3: 19px; --f4: 16px; --f5: 13.5px;
+  border-radius: 13px;
+}
+html[data-viewport="xs"] .g48-cell,
+html[data-viewport="xs"] .g48-face { border-radius: 8px; }
+html[data-viewport="xs"] .g48-pad { --key: 50px; gap: 6px; }
+
+/* ---------- 6) 电脑：盘放宽一点、字大一号；方向盘收小
+   （电脑上键盘才是主力，方向盘只当"按钮"这条要求的入口） ---------- */
+html[data-viewport="lg"] .g48-wrap { max-width: 620px; }
+html[data-viewport="lg"] .g48-board {
+  max-width: 420px;
+  --f1: 38px; --f2: 33px; --f3: 27px; --f4: 22px; --f5: 18px;
+}
+html[data-viewport="lg"] .g48-pad { --key: 50px; }
+
+/* 横过来的矮窗口（比如手机横屏 / 笔记本电脑的小窗）：
+   整块按视口高度收一收，别让棋盘顶破屏幕 */
+html[data-short="1"] .g48-board { max-width: min(360px, 62vh); }
+
+/* ---------- 7) 平板：跟随手机那套排版，整体放大 ---------- */
+html[data-layout="tablet"] .g48-wrap { max-width: 660px; gap: 18px; }
+html[data-layout="tablet"] .g48-card { padding: 20px; border-radius: 16px; }
+html[data-layout="tablet"] .g48-boardcard { padding: 14px; }
+html[data-layout="tablet"] .g48-board {
+  max-width: 460px;
+  --g: 12px;
+  --f1: 42px; --f2: 36px; --f3: 29px; --f4: 24px; --f5: 20px;
+}
+html[data-layout="tablet"] .g48-cell,
+html[data-layout="tablet"] .g48-face { border-radius: 12px; }
+html[data-layout="tablet"] .g48-stat-val { font-size: 26px; }
+html[data-layout="tablet"] .g48-stat-label { font-size: 13.5px; }
+html[data-layout="tablet"] .g48-note { font-size: 14px; }
+html[data-layout="tablet"] .g48-pad { --key: 64px; gap: 8px; }
+html[data-layout="tablet"] .g48-key svg { width: 26px; height: 26px; }
+html[data-layout="tablet"] .g48-acts .mini-btn { padding: 16px; font-size: 17px; }
+html[data-layout="tablet"] .g48-acts .g48-new { padding: 16px; font-size: 17px; }
+html[data-layout="tablet"] .g48-foot { font-size: 14px; }
+html[data-layout="tablet"] .g48-overlay-box h4 { font-size: 21px; }
+html[data-layout="tablet"] .g48-overlay-box p { font-size: 15.5px; }
+
+
+/* ======================================================
+   十二、数字桥屿（.br-* 见 js/bridge.js）
+   ------------------------------------------------------
+   两页跟异或法则同构：第一页「怎么玩 + 选尺寸 + 开始」，
+   第二页「用时步数 → 盘面 → 操作」，靠 hidden 切，DOM 只有一份。
+
+   ★ 盘面是一张 SVG（#brSvg）
+     一格 = 100 个**用户单位**，viewBox 跟着盘面尺寸走
+     （(n-1)×100 + 2×55，见 js/bridge.js 的 BR_UNIT / BR_PAD）。
+     所以这一节里的 stroke-width / font-size 写的都是用户单位，不是像素：
+     换屏幕、转个向，整张盘由浏览器自己缩放，JS 一次像素都不用量。
+
+   ★ 配色
+     岛和桥走墨色 --text；「选中」和「连够数字」用品牌蓝 --brand；
+     「超数」「交叉的红结」用 --danger。不引紫色 —— 紫色只是首页那张
+     卡片的图标底色，盘面上用会显得不是同一个 App。
+   ====================================================== */
+.br-wrap {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+/* hidden 属性要压得住下面的 display 改写，否则藏不住 */
+.br-wrap [hidden] { display: none !important; }
+
+.br-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* ---------- 1) 第一页：玩法说明 + 选尺寸 ---------- */
+.br-setup { display: flex; flex-direction: column; gap: 12px; }
+.br-setup-title { font-size: 15px; font-weight: 600; }
+.br-setup-note { font-size: 12.5px; color: var(--muted); text-align: center; }
+
+/* 玩法说明：就是条普通列表，条目之间留点空，粗体标关键词 */
+.br-rules {
+  background: #f8f9fb;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.br-rules-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.br-rules-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.br-rules-list li + li { margin-top: 6px; }
+.br-rules-list b { color: var(--text); font-weight: 600; }
+
+/* 选尺寸：一格占三分之一宽，五个档位排成「三 + 二」，两行都居中 */
+.br-sizes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.br-size {
+  flex: 0 1 calc((100% - 16px) / 3);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.br-size span { font-size: 12px; color: var(--muted); }
+.br-size:hover { background: #f8f9fb; }
+.br-size.on {
+  border-color: var(--accent);
+  background: #eff4ff;
+  color: var(--accent);
+}
+.br-size.on span { color: var(--accent); }
+.br-start { margin-top: 2px; }
+
+/* ---------- 2) 第二页：对局 ---------- */
+.br-game { display: flex; flex-direction: column; gap: 12px; }
+
+.br-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.br-round { font-size: 14px; font-weight: 600; }
+.br-meta { font-size: 12.5px; color: var(--muted); }
+.br-head-acts { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* 通关 / 放弃之后盘面已经锁了：「撤销 / 重开 / 放弃」留着只会点空，藏掉，
+   顶栏就剩「换一题 / 改尺寸」两个出口（见 index.html 的 #brOverlay）。
+   类名由 js/bridge.js 的 brEnterSolvedView / brEnterAnswerView / brNewRound 挂上和摘掉。 */
+.br-game.is-done #brUndo,
+.br-game.is-done #brReset,
+.br-game.is-done #brGiveUp { display: none; }
+.br-tool {
+  padding: 7px 11px;
+  border-radius: 9px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.br-tool:hover { background: #f8f9fb; }
+.br-tool:disabled { opacity: .45; cursor: default; background: #fff; }
+/* 「放弃」= 破坏性动作，平时素着、指到才变红（和异或法则的 .xo-quit 一路） */
+.br-quit { color: var(--muted); }
+.br-quit:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
+
+/* 用时 / 步数：和二零四八那两块同样的长相 */
+.br-hud { display: flex; gap: 10px; }
+.br-stat {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 12px;
+  border-radius: 11px;
+  background: #f8f9fb;
+  border: 1px solid var(--line);
+}
+.br-stat-label { font-size: 12px; color: var(--muted); }
+.br-stat-val {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 盘面 ---------- */
+.br-boardcard { padding: 12px; }
+.br-board {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border-radius: 16px;
+  background: #f2f5f9;              /* 海面，让白岛浮起来 */
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.br-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* 文字别被长按选中、长按也别弹系统菜单；空了的地方照样能滚页面 */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+/* 岛上这一圈才接管手势（touch-action: none）——
+   空地方保持 auto，手指在盘面上划还是滚页面 */
+.br-hit {
+  fill: transparent;
+  pointer-events: all;
+  touch-action: none;
+}
+
+/* 桥：单桥一条粗线，双桥两条细线 */
+.br-bridge {
+  stroke: var(--text);
+  stroke-width: 10;
+  stroke-linecap: round;
+  fill: none;
+}
+.br-bridge2 { stroke-width: 7; }
+/* 桥的点击区：透明但拿得到指针（点桥身 = 拆掉这条桥） */
+.br-bhit {
+  stroke: transparent;
+  stroke-width: 30;
+  fill: none;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+/* 选中岛的虚线提示：还能往哪几个方向架桥 */
+.br-ghost {
+  stroke: var(--muted);
+  stroke-width: 6;
+  stroke-dasharray: 14 12;
+  stroke-linecap: round;
+  fill: none;
+  opacity: .55;
+}
+
+/* 岛：圆 + 数字。三态 —— 还差（白底墨圈）/ 连够（墨底蓝字）/ 超数（红圈红字） */
+.br-dot { fill: #fff; stroke: var(--text); stroke-width: 4; }
+.br-num {
+  font-size: 40px;
+  font-weight: 600;
+  fill: var(--text);
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+.br-ring-sel, .br-ring-bad { fill: none; display: none; }
+.br-ring-sel { stroke: var(--brand); stroke-width: 7; }
+.br-ring-bad { stroke: var(--danger); stroke-width: 6; opacity: .85; }
+
+.br-island.is-sel .br-ring-sel { display: block; }
+.br-island.is-sel .br-dot { stroke-width: 6; }
+.br-island.is-ok .br-dot { fill: var(--text); }
+.br-island.is-ok .br-num { fill: var(--brand); }
+.br-island.is-bad .br-dot { stroke: var(--danger); }
+.br-island.is-bad .br-num { fill: var(--danger); }
+.br-island.is-bad .br-ring-bad { display: block; }
+/* 拖动时指到的那座岛（松手就架桥） */
+.br-island.is-target .br-ring-sel { display: block; stroke: var(--accent); }
+.br-island.is-target .br-dot { stroke: var(--accent); }
+
+/* 扣不住的那一下：岛屿抖一抖 */
+@keyframes brJiggle {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-7px); }
+  75%      { transform: translateX(7px); }
+}
+.br-jiggle.is-jiggle { animation: brJiggle .3s ease-in-out; }
+
+/* 红结：两条桥交叉的地方 */
+.br-knot-ring { fill: #fff; stroke: var(--danger); stroke-width: 7; }
+.br-knot-core { fill: var(--danger); }
+
+.br-tip {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.6;
+  margin-top: 10px;
+  transition: color .2s;
+}
+.br-tip.is-warn { color: var(--danger); font-weight: 600; }
+
+/* ---------- 过关浮层（跟 g48 / xo 那两块一个写法） ----------
+   它是 .tool-page 的子元素，所以在那一层的层叠上下文里比内容区高 */
+.br-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 252;
+  display: none;
+  place-items: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, .45);
+}
+.br-overlay.show { display: grid; }
+.br-overlay-box {
+  width: 100%;
+  max-width: 340px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 24px 56px -16px rgba(16, 24, 40, .34);
+  animation: sheetUp .2s ease both;
+}
+.br-overlay-box h4 { font-size: 19px; font-weight: 600; }
+.br-overlay-box p { font-size: 14px; color: #4b5563; line-height: 1.7; margin-top: 9px; }
+.br-overlay-acts { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.br-overlay-acts .sub-save { margin-top: 0; }
+/* 「再来一题 / 改尺寸」并排放在「确认」下面那一行（见 index.html）。
+   主按钮单独占一行，这两颗平分剩下的宽度。 */
+.br-overlay-row { display: flex; gap: 10px; }
+.br-overlay-row > * { flex: 1 1 0; min-width: 0; }
+/* 「查看答案」单独占一行，摆在上面那几颗按钮下面（只有放弃之后才露出来） */
+.br-answer-btn { width: 100%; margin-top: 10px; }
+/* 浮层里的主按钮靠 hidden 属性切换；.sub-save / .mini-btn 自带 display，
+   会盖掉 UA 那条 [hidden]{display:none}，所以这里补一条 !important（同 g48 那处） */
+.br-overlay-box [hidden] { display: none !important; }
+
+/* ---------- 小屏手机：盘面内边距收一收 ---------- */
+html[data-viewport="xs"] .br-boardcard { padding: 10px; }
+html[data-viewport="xs"] .br-board { border-radius: 13px; }
+html[data-viewport="xs"] .br-size { padding: 9px 6px; font-size: 14px; }
+html[data-viewport="xs"] .br-size span { font-size: 11.5px; }
+html[data-viewport="xs"] .br-tool { padding: 7px 9px; font-size: 12.5px; }
+
+/* ---------- 电脑：版心放宽一点，盘面顶到 460 ---------- */
+html[data-viewport="lg"] .br-wrap { max-width: 620px; }
+html[data-viewport="lg"] .br-board { max-width: 460px; }
+
+/* 横过来的矮窗口（手机横屏 / 笔记本小窗）：按视口高度收一收 */
+html[data-short="1"] .br-board { max-width: min(420px, 58vh); }
+
+/* ---------- 平板：跟随手机那套排版，整体放大 ---------- */
+html[data-layout="tablet"] .br-wrap { max-width: 640px; gap: 18px; }
+html[data-layout="tablet"] .br-card { padding: 20px; border-radius: 16px; }
+html[data-layout="tablet"] .br-setup-title { font-size: 17px; }
+html[data-layout="tablet"] .br-rules-list { font-size: 14.5px; }
+html[data-layout="tablet"] .br-size { padding: 12px 10px; font-size: 16px; }
+html[data-layout="tablet"] .br-size span { font-size: 13px; }
+html[data-layout="tablet"] .br-board { max-width: 520px; }
+html[data-layout="tablet"] .br-stat-val { font-size: 24px; }
+html[data-layout="tablet"] .br-stat-label { font-size: 13.5px; }
+html[data-layout="tablet"] .br-tool { padding: 9px 14px; font-size: 14.5px; }
+html[data-layout="tablet"] .br-round { font-size: 16px; }
+html[data-layout="tablet"] .br-meta { font-size: 14px; }
+html[data-layout="tablet"] .br-tip { font-size: 13.5px; }
+html[data-layout="tablet"] .br-overlay-box { max-width: 400px; padding: 28px 26px; }
+html[data-layout="tablet"] .br-overlay-box h4 { font-size: 21px; }
+html[data-layout="tablet"] .br-overlay-box p { font-size: 15.5px; }
+
+/* ======================================================
+   十三、梵天汉诺（.bh-* 见 js/brahma.js）
+
+   一块设置卡（选阶数 / 玩法规则 / 梵天塔）+ 对局（盘面）。
+   盘面是这一节唯一要动脑的地方，先说清楚：
+
+   ★ 只有一份 DOM：.bh-pegs 里三个 .bh-peg，每个里头一根 .bh-pole，
+     底座由伪元素画。手机 / 电脑就靠 flex-direction 切两套：
+        手机        column —— 三根柱子从上到下摞成三行
+        电脑 / 横屏  row    —— 三根柱子并排，底座连成一条
+     "并排"的时机有三种（电脑端 / 屏幕本身就是横的 / 手机按了「横屏」），
+     统一由 js 的 bhWantRow 判断，结果写在 .bh-board 的 .is-flat 上。
+
+   ★ 柱子本身永远是竖的（汉诺塔的柱子不能躺下），变的是"三根怎么摆"。
+     每个 .bh-peg 的高度 = 整摞盘 + 柱尖 + 底座，由 --bh-pole / --bh-base
+     撑开，谁也不用写死像素。
+
+   ★ 盘在 .bh-disks 这一层里绝对定位，位置由 js 量完柱子算出来写进
+     transform —— 所以盘的移动是一次纯 CSS transition，和布局无关，
+     切排版 / 缩放窗口都不会跳。
+     .bh-board 的 padding-top 特意留成"盘厚 + 4px"：盘抬起来飞过去的时候
+     就是从这一条空当里过的，不留就会被板子边缘切掉。
+
+   配色：一盘一色，1 号盘起依次
+       红 · 橙 · 黄 · 绿 · 青 · 蓝 · 紫 · 粉 · 棕（见 js 的 BH_COLORS）。
+   —— 本来打算只做同色系明暗渐变，9 个盘摞一起相邻两块几乎分不出来，
+      所以改成九色；一盘一色之后大小关系另由宽度和编号兜底。
+      编号的颜色不写死：白字落在黄/橙/绿/青/粉上会糊，由 js 的 bhInkOn
+      按底色亮度现算，浅底换近黑 —— 所以下面 .bh-disk 那个白色只是默认值。
+   ====================================================== */
+
+.bh-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+/* .sub-save / .mini-btn 自带 display，会盖掉 UA 的 [hidden]，兜一下 */
+.bh-wrap [hidden] { display: none !important; }
+
+.bh-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* ---------- 1) 设置：选阶数 / 规则 / 典故 ---------- */
+.bh-setup { display: flex; flex-direction: column; gap: 12px; }
+.bh-setup-title { font-size: 15px; font-weight: 600; }
+.bh-setup-note { font-size: 12.5px; color: var(--muted); text-align: center; }
+
+/* 3–9 七个格子：定宽均分，一行排满（手机上 7 个 40px + 6 个 6px 缝正好） */
+.bh-orders { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.bh-order {
+  padding: 10px 0;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.bh-order:hover { background: #f8f9fb; }
+/* 选中态用这张卡片的砖红，不跟别页的蓝走 */
+.bh-order.on {
+  border-color: #E25539;
+  background: #fdf2ef;
+  color: #C44127;
+}
+.bh-start { margin-top: 2px; }
+
+/* 玩法说明：浅底一块，条目之间留点空，粗体标关键词 */
+.bh-rules {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.bh-rules-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.bh-rules-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.bh-rules-list li + li { margin-top: 6px; }
+.bh-rules-list b { color: var(--text); font-weight: 600; }
+
+/* 梵天塔那段传说，和规则之间再来一条细线隔开 */
+.bh-lore {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.bh-lore p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.bh-lore p + p { margin-top: 8px; }
+.bh-lore b { color: var(--text); font-weight: 600; }
+
+/* ---------- 2) 对局：顶栏 ---------- */
+.bh-game { display: flex; flex-direction: column; gap: 12px; }
+.bh-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bh-round { font-size: 14px; font-weight: 600; }
+.bh-meta { font-size: 12.5px; color: var(--muted); }
+/* 步数超过最优：只是把数字染红提醒一下，不弹框也不拦人 */
+.bh-meta.over { color: #C44127; font-weight: 600; }
+.bh-head-acts { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.bh-tool, .bh-quit {
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.bh-tool:hover { background: #f8f9fb; }
+/* 「放弃」= 破坏性动作，平时素着、指到才变红（和异或法则的 .xo-quit 一路） */
+.bh-quit { color: var(--muted); }
+.bh-quit:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
+
+/* ---------- 3) 盘面 ---------- */
+.bh-board {
+  position: relative;
+  padding: calc(var(--bh-dh) + 4px) 12px 16px;   /* 上面那条空当是给"抬起来的盘"留的 */
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  --bh-dh: 22px;        /* 一个盘的厚，开新局时由 js 按阶数改写 */
+  --bh-dgap: 4px;       /* 盘与盘之间的缝 */
+  --bh-pole: 120px;     /* 柱子高 */
+  --bh-base: 10px;      /* 底座厚 */
+  touch-action: pan-y;  /* 盘面本身可以上下滚（盘上不行，见 .bh-disk） */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.bh-pegs { display: flex; flex-direction: column; gap: 12px; }
+
+/* 手机：一根柱子占一行，浅底 + 圆角，一眼能看出这是"一个位置" */
+.bh-peg {
+  position: relative;
+  height: calc(var(--bh-pole) + var(--bh-base));
+  background: #f7f8fa;
+  border-radius: 12px;
+  cursor: pointer;           /* 整根柱子都是可点的一格（搬盘只有点选一条路） */
+  transition: background .15s, box-shadow .15s;
+}
+.bh-pole {
+  position: absolute;
+  left: 50%;
+  bottom: var(--bh-base);
+  width: 7px;
+  margin-left: -3.5px;
+  height: var(--bh-pole);
+  border-radius: 4px;
+  background: #cdd3dd;
+}
+/* 底座：手机上每根柱子各有一块（row 模式下换成 .bh-pegs::after 画一条长的） */
+.bh-peg::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: var(--bh-base);
+  border-radius: 6px;
+  background: #e3e7ee;
+}
+
+/* 电脑 / 按了横屏：三根并排，共用一条底座 */
+html[data-viewport="lg"] .bh-pegs,
+.bh-board.is-flat .bh-pegs { position: relative; flex-direction: row; gap: 0; }
+html[data-viewport="lg"] .bh-peg,
+.bh-board.is-flat .bh-peg {
+  flex: 1 1 0;
+  min-width: 0;
+  background: none;
+  border-radius: 0;
+}
+html[data-viewport="lg"] .bh-peg::after,
+.bh-board.is-flat .bh-peg::after { display: none; }
+html[data-viewport="lg"] .bh-pegs::after,
+.bh-board.is-flat .bh-pegs::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: var(--bh-base);
+  border-radius: 6px;
+  background: #e3e7ee;
+}
+
+/* 手上举着盘时，能放上去的柱子淡淡描一圈（落点提示，见 js 的 bhSyncOver） */
+.bh-peg.is-over {
+  background: rgba(226, 85, 57, .07);
+  box-shadow: inset 0 0 0 2px rgba(226, 85, 57, .38);
+}
+/* 放不下 / 空柱子：抖一下，别弹框打断 */
+.bh-peg.is-shake { animation: bhShake .34s ease; }
+@keyframes bhShake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-5px); }
+  40%      { transform: translateX(5px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(3px); }
+}
+
+/* ---------- 4) 盘 ---------- */
+.bh-disks { position: absolute; inset: 0; pointer-events: none; }
+.bh-disk {
+  position: absolute;
+  left: 0; top: 0;
+  height: var(--bh-dh);
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: clamp(9px, calc(var(--bh-dh) * 0.6), 18px);
+  font-weight: 600;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .18);   /* 浅一点的几档颜色上，白字更立得住 */
+  cursor: pointer;
+  pointer-events: auto;      /* 盘层本身不挡事件，只有盘挡 */
+  touch-action: none;        /* 盘上起手就是"点这一格"，别让页面跟着滚 */
+  will-change: transform;
+  /* ★ 只过渡 transform 和 box-shadow —— 这两样走合成层，不掉帧。
+     盘宽（width）不进来：改宽度要重排，而它只在换排版时变一次，
+     跟着一起过渡纯属给动画添堵。filter 同理（亮度每帧都要重绘）。 */
+  transition:
+    transform .28s cubic-bezier(.22, .72, .3, 1),
+    box-shadow .18s;
+}
+/* 拎在手上 / 正在飞：抬一点阴影出来，看着像"离了纸面" */
+.bh-disk.is-hold {
+  box-shadow: 0 10px 18px -6px rgba(15, 23, 42, .38), 0 2px 6px -2px rgba(15, 23, 42, .22);
+}
+
+.bh-tip { font-size: 12.5px; color: var(--muted); line-height: 1.6; text-align: center; }
+
+/* ---------- 4.5) 对局中不滚（手机端最要紧的一条） ----------
+   ★ 为什么要有这条：对局里盘面本来就该放得下一屏（装不下时 js 的
+     bhFitBoard 会把盘压薄）。既然没得滚，那就干脆别让它滚 ——
+     手指划过去只会点到柱子，不会顺手把页面拖走、也不会有橡皮筋回弹。
+     ★ 只锁对局（选阶数那屏有规则和典故，要能滚），由 js 的 bhSyncScrollLock
+       在"内容确实放得下"时才挂这个类 —— 放不下就照旧能滚，宁滚不能看不全。 */
+html.bh-lock #toolBrahmaBody {
+  overflow-y: hidden;
+  overscroll-behavior: none;    /* 连带把 iOS 的橡皮筋和省力回弹一起关掉 */
+}
+/* ★ 反过来：万一真的没锁住（小屏 + 高阶，盘压到下限还装不下），那就得让
+   "竖着滑"能翻页 —— 否则盘会把翻页的手势吞掉，又回到了老毛病。
+   这时候交给浏览器判：它一旦认定这是翻页就会发 pointercancel，
+   我们把刚举起来的盘放回原处（见 js 挂在 .bh-board 上的 pointercancel）。
+   只有没锁的时候才这样，锁住时盘仍是 touch-action:none —— 一次点击不让它
+   被当成滚动的起手，点到的就一定是柱子。 */
+html:not(.bh-lock) #toolBrahma .bh-disk { touch-action: pan-y; }
+
+/* ---------- 5) 过关 / 放弃 / 看答案的小浮层 ---------- */
+.bh-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5;                 /* 压住 .tool-page 里的内容，但仍低于 .toasts */
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, .45);
+}
+.bh-overlay-box {
+  width: 100%;
+  max-width: 340px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 22px;
+  text-align: center;
+  box-shadow: 0 20px 48px -12px rgba(16, 24, 40, .3);
+  animation: sheetUp .2s ease both;
+}
+.bh-overlay-box h4 { font-size: 18px; font-weight: 600; }
+.bh-overlay-box p { font-size: 14px; color: #4b5563; line-height: 1.7; margin-top: 8px; }
+.bh-overlay-acts { display: flex; gap: 10px; margin-top: 16px; }
+/* 两个按钮等宽：flex-basis 给 0，不然「从当前接着走」比「从头演示」窄一截，
+   六个字就被挤成两行了 */
+.bh-overlay-acts .sub-save,
+.bh-overlay-acts .mini-btn { flex: 1 1 0; margin-top: 0; }
+/* 换局那一行（再来一局 / 重选阶数）摆在"看答案"两个下面，收一收上边距 */
+.bh-overlay-acts + .bh-overlay-acts { margin-top: 10px; }
+/* 过关时的「确认」：顶着 .sub-save 默认的那 20px 上边距，收一点 */
+.bh-overlay-box > .sub-save { margin-top: 16px; }
+
+/* ---------- 6) 手机端的「横屏」按钮（在工具页顶栏上） ---------- */
+.bh-rotbtn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--on-brand);
+  background: rgba(255, 255, 255, .18);
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.bh-rotbtn:hover { background: rgba(255, 255, 255, .26); }
+.bh-rotbtn:active { background: rgba(255, 255, 255, .34); }
+.bh-rotbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255, 255, 255, .4); }
+.bh-rotbtn svg {
+  width: 17px; height: 17px;
+  stroke: currentColor;
+  transition: transform .18s ease;
+}
+/* 已经是横屏了，箭头镜像一下，意思从"转过去"变成"转回来" */
+html.bh-land .bh-rotbtn svg { transform: scaleX(-1); }
+/* 这个按钮自带 display，[hidden] 得自己兜 */
+.bh-rotbtn[hidden] { display: none !important; }
+/* 电脑端本来就是三柱并排，这个按钮没有意义，整个藏掉 */
+html[data-viewport="lg"] .bh-rotbtn { display: none !important; }
+
+/* ---------- 7) 小屏手机：盘面留白再收一点 ---------- */
+html[data-viewport="xs"] .bh-board { padding-left: 8px; padding-right: 8px; }
+html[data-viewport="xs"] .bh-order { padding: 9px 0; font-size: 14px; }
+html[data-viewport="xs"] .bh-tool,
+html[data-viewport="xs"] .bh-quit { padding: 7px 9px; font-size: 12.5px; }
+
+/* ---------- 8) 电脑：版心放宽，盘面更大 ---------- */
+html[data-viewport="lg"] .bh-wrap { max-width: 820px; }
+html[data-viewport="lg"] .bh-board { padding-left: 20px; padding-right: 20px; }
+
+/* ---------- 9) 平板：跟随手机那套排版，整体放大 ---------- */
+html[data-layout="tablet"] .bh-wrap { max-width: 640px; gap: 18px; }
+html[data-layout="tablet"] .bh-card { padding: 20px; border-radius: 16px; }
+html[data-layout="tablet"] .bh-setup-title { font-size: 17px; }
+html[data-layout="tablet"] .bh-rules-list,
+html[data-layout="tablet"] .bh-lore p { font-size: 14.5px; }
+html[data-layout="tablet"] .bh-order { padding: 12px 0; font-size: 16px; }
+html[data-layout="tablet"] .bh-round { font-size: 16px; }
+html[data-layout="tablet"] .bh-meta { font-size: 14px; }
+html[data-layout="tablet"] .bh-tool,
+html[data-layout="tablet"] .bh-quit { padding: 9px 15px; font-size: 14.5px; }
+html[data-layout="tablet"] .bh-tip { font-size: 13.5px; }
+html[data-layout="tablet"] .bh-overlay-box { max-width: 400px; padding: 28px 26px; }
+html[data-layout="tablet"] .bh-overlay-box h4 { font-size: 21px; }
+html[data-layout="tablet"] .bh-overlay-box p { font-size: 15.5px; }
+html[data-layout="tablet"] .bh-rotbtn { padding: 10px 15px; font-size: 15px; }
+html[data-layout="tablet"] .bh-rotbtn svg { width: 20px; height: 20px; }
+
+/* ---------- 10) 手机端「横屏」：整个界面顺时针转 90° ----------
+   ★ 横屏 = 把屏幕横过来，不是把横排塞进竖屏。
+     按一下：给 <html> 挂 .bh-land，整个工具页连着顶栏一起转 90°，
+     用户再把手机横过来看就成了（跟手机自己转屏一个观感）。
+
+   ★ 尺寸是这里唯一的门道。转 90° 之后：
+        转之前的「宽」→ 落到屏幕的「高」上
+        转之前的「高」→ 落到屏幕的「宽」上
+     所以想正好铺满整屏，盒子得按 **高 × 宽**（长短边对调）来排。
+     这两个数由 js 的 bhSyncLandVars 现算，写在 <html> 的
+     --bh-land-w / --bh-land-h 上（#toasts 是兄弟节点，得共用同一组数）。
+     于是竖屏 390×844 的手机上，界面按 844 宽来排 —— 整个界面被
+     **等比例放大到长边**上，而不是缩在 390 里摆一排小柱子。
+
+   ★ 位移那一下：transform-origin 留在左上角，
+        rotate(90deg) 让局部 x 轴指向屏幕下方、局部 y 轴指向屏幕左方，
+        元素于是落到屏幕的 x ∈ [-H, 0]、y ∈ [0, W]；
+        再 translateY(-100%)（-100% = 元素自己的高 H）把它整体推回屏幕里。
+     转过来之后：局部 x = 用户眼里的"从左到右"，局部 y = "从上到下"，
+     元素的左边缘在上、上边缘在右 —— 所以顶栏会跑到屏幕的右边缘上，
+     手机横过来它正好在顶上。
+
+   ★ 盘面里的坐标轴同样跟着转，盘位置的换算见 js 的 bhMeasure。 */
+html.bh-land #toolBrahma {
+  inset: auto;
+  top: 0; left: 0;
+  width: var(--bh-land-w, 100vh);
+  height: var(--bh-land-h, 100vw);
+  transform-origin: 0 0;
+  transform: rotate(90deg) translateY(-100%);
+}
+/* 界面宽了，版心放开（只有对局里会开着横屏，选阶数那张卡看不到，不受影响） */
+html.bh-land .bh-wrap { max-width: 780px; }
+
+/* 横屏下**纵向**只有"竖屏时的宽度"（390），顶栏和四周的留白都得瘦一圈 ——
+   9 阶那摞盘整整 230px，按竖屏的留白算下来要滚一点点才看得全，
+   下面这几刀正好把它收进一屏（合计省下约 48px）。
+   ★ 只在 .bh-land 下生效，竖屏和电脑端一个像素都不动。 */
+html.bh-land .tool-bar { padding-top: 8px; padding-bottom: 8px; }
+html.bh-land .tool-back { width: 40px; height: 40px; }   /* 压掉 [data-touch] 的 46 */
+html.bh-land .tool-body { padding-top: 10px; padding-bottom: 12px; }
+html.bh-land .bh-game { gap: 8px; }
+html.bh-land .bh-board {
+  padding-top: calc(var(--bh-dh) + 2px);
+  padding-bottom: 8px;
+}
+
+/* 横屏下盘面底下那行说明就不留了：纵向本来就只剩"竖屏时的宽度"390，
+   它白占一条；而且这会儿"点柱子搬盘"已经不用再教一遍（规则在选阶数那屏）。
+   ★ 顺带把这一页的滚动关死 —— 转过 90° 的盒子再能滚，用户横过来之后
+     滑到的方向是错的。高度真不够时由 js 的 bhFitBoard 把盘压薄兜住，
+     所以这里敢直接 hidden。 */
+html.bh-land .bh-tip { display: none; }
+html.bh-land #toolBrahmaBody {
+  overflow-y: hidden;
+  overscroll-behavior: none;
+}
+
+/* 提示层也跟着转 —— 它是 <body> 下的兄弟节点，不跟着转的话，
+   用户把手机横过来之后，提示是横在自己眼前的（歪的）。
+   ★ core.js 的 applyToastPlacement 会往它身上写行内 top / bottom，
+     所以这两个必须 !important 才压得住；反正横屏时那套避让逻辑也用不上
+     （它量的是竖屏的常驻栏，横屏下没意义）。 */
+html.bh-land #toasts {
+  top: 0 !important;
+  bottom: auto !important;
+  left: 0; right: auto;
+  box-sizing: border-box;
+  width: var(--bh-land-w, 100vh);
+  height: var(--bh-land-h, 100vw);
+  padding: 14px 16px;
+  transform-origin: 0 0;
+  transform: rotate(90deg) translateY(-100%);
+  /* 转过来之后"靠右"就是用户眼里的靠右，和手机版默认的右对齐一致 */
+  align-items: flex-end;
+}
+
+/* ======================================================
+   十四、四色谜题（.fc-* 见 js/fourcolor.js）
+   ------------------------------------------------------
+   选档 / 对局 / 浮层都对齐「数字桥屿 / 梵天汉诺 / 异或法则」那三家的写法：
+     · 第一页先选难度（分级卡片：块数 + 档名），规则垫在下面；
+     · 第二页顶栏放 撤销 / 重来 / 换一题 / 重选难度 / 放弃，
+       过关或放弃之后（#fcGame 挂上 is-done）前三个藏掉，只剩后两个；
+     · 过关 / 放弃浮层、二次确认复用同一套交互。
+   配色取主页另四张卡片（巴什博弈黄 / 函数图像青绿 / 罗马数字橙 / 异或法则天蓝）。
+   ====================================================== */
+.fc-wrap {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+/* hidden 属性要压得住下面的 display 改写，否则藏不住 */
+.fc-wrap [hidden] { display: none !important; }
+
+.fc-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* ---------- 1) 开局：选难度 + 玩法说明 ---------- */
+.fc-setup { display: flex; flex-direction: column; gap: 12px; }
+.fc-setup-title { font-size: 15px; font-weight: 600; }
+.fc-setup-note { font-size: 12.5px; color: var(--muted); text-align: center; }
+
+/* 玩法说明：浅底一块，条目留空，粗体标关键词（和 xo / br 一路） */
+.fc-rules {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.fc-rules-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.fc-rules-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.fc-rules-list li + li { margin-top: 6px; }
+.fc-rules-list b { color: var(--text); font-weight: 600; }
+
+/* 选难度：两张一格，四档排成 2 × 2，居中（和数字桥屿那套同级卡片同构） */
+.fc-tiers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.fc-tier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border-radius: 11px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.fc-tier span { font-size: 12px; color: var(--muted); }
+.fc-tier:hover { background: #f8f9fb; }
+.fc-tier.on {
+  border-color: var(--accent);
+  background: #eff4ff;
+  color: var(--accent);
+}
+.fc-tier.on span { color: var(--accent); }
+.fc-start { margin-top: 2px; }
+
+/* ---------- 2) 对局：顶栏 ---------- */
+.fc-game { display: flex; flex-direction: column; gap: 12px; }
+.fc-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fc-round { font-size: 14px; font-weight: 600; }
+.fc-meta { font-size: 12.5px; color: var(--muted); }
+.fc-head-acts { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.fc-tool, .fc-quit {
+  padding: 7px 11px;
+  border-radius: 9px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.fc-tool:hover { background: #f8f9fb; }
+/* 过关 / 放弃之后盘面已锁：撤销 / 重来 / 放弃留着只会点空，藏掉，
+   顶栏只剩 换一题 / 重选难度 两个出口（见 js/fourcolor.js 的 fcWin / fcEnterAnswer）。 */
+.fc-game.is-done #fcUndo,
+.fc-game.is-done #fcReset,
+.fc-game.is-done #fcGiveUp { display: none; }
+/* 「放弃」= 破坏性动作，平时素着、指到才变红（和异或法则的 .xo-quit 一路） */
+.fc-quit { color: var(--muted); }
+.fc-quit:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
+
+/* ---------- 3) 盘面 ---------- */
+.fc-boardcard { padding: 12px; }
+.fc-board {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  border-radius: 16px;
+  background: #f2f5f9;            /* 海面，让白块浮起来 */
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.fc-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;      /* 点块是点击，别把轻点当成滚动起手 */
+}
+/* 每块：白底墨边；上色后填对应色。fill 走合成层友好的属性，不加会重排的过渡。 */
+.fc-cell {
+  fill: #ffffff;
+  stroke: #2b3340;
+  stroke-width: 0.7;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: fill .12s;
+}
+.fc-cell:not(.filled):hover { fill: #eef1f5; }
+.fc-cell.is-shake { animation: fcShake .34s ease; }
+/* 冲突的公共边：描红（这层在 #fcCells 之上，但 pointer-events:none 不挡点击） */
+.fc-redline {
+  stroke: #E2483D;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+@keyframes fcShake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-1.3px); }
+  40%      { transform: translateX(1.3px); }
+  60%      { transform: translateX(-0.9px); }
+  80%      { transform: translateX(0.9px); }
+}
+
+.fc-tip {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.6;
+  margin-top: 2px;
+  transition: color .2s;
+}
+.fc-tip.is-warn { color: var(--danger); font-weight: 600; }
+
+/* ---------- 4) 调色板（四色 + 橡皮） ---------- */
+.fc-palette {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.fc-swatch, .fc-erase {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, .12);
+  background: var(--fc-c, #fff);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform .12s, box-shadow .12s;
+}
+.fc-swatch.on, .fc-erase.on {
+  transform: translateY(-2px);
+  /* 选中：白环 + 深色描边环，一眼能看出当前选的是哪个 */
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(26, 26, 26, .5);
+}
+.fc-erase { background: #fff; }
+.fc-erase svg { width: 22px; height: 22px; display: block; }
+
+/* ---------- 5) 过关 / 放弃浮层（跟 xo / bh / br 那三块一个写法） ---------- */
+.fc-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 252;
+  display: none;
+  place-items: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, .45);
+}
+.fc-overlay.show { display: grid; }
+.fc-overlay-box {
+  width: 100%;
+  max-width: 340px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 24px 56px -16px rgba(16, 24, 40, .34);
+  animation: sheetUp .2s ease both;
+}
+.fc-overlay-box h4 { font-size: 19px; font-weight: 600; }
+.fc-overlay-box p { font-size: 14px; color: #4b5563; line-height: 1.7; margin-top: 9px; }
+.fc-overlay-acts { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.fc-overlay-acts .sub-save { margin-top: 0; }
+/* 「换一题 / 重选难度」并排，放在「确认」下面那一行 */
+.fc-overlay-row { display: flex; gap: 10px; }
+.fc-overlay-row > * { flex: 1 1 0; min-width: 0; }
+/* 「查看答案」单独占一行，只在放弃之后露出来 */
+.fc-answer-btn { width: 100%; margin-top: 10px; }
+/* 浮层里的主按钮靠 hidden 属性切换；.sub-save / .mini-btn 自带 display 会盖掉
+   UA 的 [hidden]，这里补一条 !important（同 xo / bh / br 那处） */
+.fc-overlay-box [hidden] { display: none !important; }
+
+/* ---------- 6) 电脑 / 平板：整体放宽、放大 ---------- */
+@media (min-width: 768px) {
+  .fc-tiers { grid-template-columns: repeat(4, 1fr); }
+  .fc-swatch, .fc-erase { width: 46px; height: 46px; }
+}
+
+/* ---------- 7) 电脑端：调色板竖排，挂到盘面右侧 ---------- */
+html[data-viewport="lg"] .fc-game {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "head head"
+    "board pal";
+  column-gap: 22px;
+  align-items: start;
+}
+html[data-viewport="lg"] .fc-head      { grid-area: head; }
+html[data-viewport="lg"] .fc-boardcard { grid-area: board; }
+html[data-viewport="lg"] .fc-palette {
+  grid-area: pal;
+  flex-direction: column;
+  padding-top: 4px;
+}
+
+/* ======================================================
+   十五、巴什博弈（.bs-* 见 js/bash.js）
+   ------------------------------------------------------
+   一套「选难度 → 对局 → 结算」三段式，对齐「四色谜题 / 数字桥屿」：
+     · 第一页选难度 + 玩法说明（规则垫在下面）
+     · 第二页：剩余数 + 石堆 + m+1 刻度尺 + 取子按钮 + 回合记录
+     · 结算浮层复用同一套交互（.bs-overlay 跟 .fc-overlay 一个写法）
+   主色走品牌蓝 --brand；石子、刻度、取完高亮都用它，
+   不拿品牌蓝当大块文字底（大块蓝底上的字走 --on-brand）。
+   ====================================================== */
+.bs-wrap { width: 100%; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+/* hidden 属性要压得住下面的 display 改写，否则藏不住 */
+.bs-wrap [hidden] { display: none !important; }
+
+.bs-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+.bs-setup { display: flex; flex-direction: column; gap: 12px; }
+.bs-setup-title { font-size: 15px; font-weight: 600; }
+.bs-setup-note { font-size: 12.5px; color: var(--muted); text-align: center; }
+.bs-rules { margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--line); }
+.bs-rules-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.bs-rules-list { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.75; color: var(--muted); }
+.bs-rules-list li + li { margin-top: 6px; }
+.bs-rules-list b { color: var(--text); font-weight: 600; }
+
+/* 选难度：三档一排，居中（和其它功能页同级卡片同构） */
+.bs-tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bs-tier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 8px;
+  border-radius: 11px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.bs-tier span { font-size: 11.5px; color: var(--muted); }
+.bs-tier:hover { background: #f8f9fb; }
+.bs-tier.on { border-color: var(--accent); background: #eff4ff; color: var(--accent); }
+.bs-tier.on span { color: var(--accent); }
+.bs-start { margin-top: 2px; }
+
+/* ---------- 2) 对局 ---------- */
+.bs-game { display: flex; flex-direction: column; gap: 12px; }
+.bs-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bs-round { font-size: 14px; font-weight: 600; }
+.bs-meta { font-size: 12.5px; color: var(--muted); }
+.bs-head-acts { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.bs-tool {
+  padding: 7px 11px;
+  border-radius: 9px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.bs-tool:hover { background: #f8f9fb; }
+
+/* 剩余数 + 石堆 */
+.bs-pilecard {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+.bs-remain { display: flex; align-items: baseline; gap: 8px; justify-content: center; margin-bottom: 12px; }
+.bs-remain-num { font-size: 42px; font-weight: 800; color: var(--text); line-height: 1; transition: transform .18s; }
+.bs-remain-num.is-pop { transform: scale(1.12); }
+.bs-remain-label { font-size: 13px; color: var(--muted); }
+.bs-stones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 22px);
+  justify-content: center;
+  gap: 7px;
+}
+.bs-stone {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: inset 0 -2px 0 rgba(26, 26, 26, .12);
+  transition: transform .22s ease, opacity .22s ease;
+}
+/* 取走：缩没 + 淡出，但保留占位（grid 不重排） */
+.bs-stone.is-gone { transform: scale(0); opacity: 0; }
+
+/* ---------- m+1 刻度尺：标出「对手的必败线」 ---------- */
+.bs-ruler { margin-top: 2px; }
+.bs-ruler-bar {
+  position: relative;
+  height: 10px;
+  border-radius: 6px;
+  background: #eef1f5;
+  overflow: hidden;
+}
+.bs-ruler-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--brand);
+  border-radius: 6px;
+  transition: width .25s ease;
+}
+.bs-ruler-ticks { position: relative; height: 20px; margin-top: 2px; }
+.bs-ruler-tick { position: absolute; top: 0; transform: translateX(-50%); text-align: center; }
+.bs-ruler-tick i { display: block; width: 2px; height: 8px; margin: 0 auto; background: var(--line-strong); }
+.bs-ruler-tick b { display: block; font-size: 10.5px; color: var(--muted); font-weight: 500; margin-top: 1px; }
+
+.bs-tip { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.6; }
+.bs-tip.is-warn { color: var(--danger); font-weight: 600; }
+
+/* 取子按钮 */
+.bs-takes { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.bs-take {
+  min-width: 54px;
+  height: 52px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, transform .1s;
+}
+.bs-take:not(:disabled):hover { background: #f8f9fb; }
+.bs-take:not(:disabled):active { transform: scale(.96); }
+.bs-take:disabled { opacity: .4; cursor: not-allowed; }
+/* 取完即赢的那颗：换主色（蓝底白字，和主按钮同一套语汇） */
+.bs-take.is-win { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+.bs-take.is-win:not(:disabled):hover { background: var(--brand-hover); }
+
+/* 回合记录 */
+.bs-log { display: flex; flex-direction: column; gap: 4px; }
+.bs-log-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #f6f8fb;
+  font-size: 13px;
+  color: var(--muted);
+}
+.bs-log-row b { color: var(--text); font-weight: 600; }
+
+/* ---------- 4) 结算浮层（跟 xo / bh / br / fc 那块一个写法） ---------- */
+.bs-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 252;
+  display: none;
+  place-items: center;
+  padding: 24px;
+  background: rgba(17, 24, 39, .45);
+}
+.bs-overlay.show { display: grid; }
+.bs-overlay-box {
+  width: 100%;
+  max-width: 340px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 24px 56px -16px rgba(16, 24, 40, .34);
+  animation: sheetUp .2s ease both;
+}
+.bs-overlay-box h4 { font-size: 19px; font-weight: 600; }
+.bs-overlay-box p { font-size: 14px; color: #4b5563; line-height: 1.7; margin-top: 9px; }
+.bs-overlay-acts { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.bs-overlay-acts .sub-save { margin-top: 0; }
+.bs-overlay-row { display: flex; gap: 10px; }
+.bs-overlay-row > * { flex: 1 1 0; min-width: 0; }
+/* 浮层里的主按钮靠 hidden 切换；.sub-save / .mini-btn 自带 display 会盖掉
+   UA 的 [hidden]，这里补一条 !important（同 xo / bh / br / fc 那处） */
+.bs-overlay-box [hidden] { display: none !important; }
+
+/* 二次确认弹窗：复用 base.css 的 .confirm-overlay，但层级提到结算浮层(252)之上 */
+#bsAskConfirm { z-index: 360; }
+
+/* ======================================================
+   十六、异语道破（.ms-* 见 js/morse.js）
+   二级模式选择（翻译 / 译电）→ 各自三级；翻译双输入框照罗马数字
+   成式（复用 .rm-row / .rm-copy / .input-wrap），软键盘复用第六节
+   .gfx-pad（键面自绘）。主题色：天蓝 #0369a1，只做小面积强调。
+   ====================================================== */
+.ms-wrap { width: 100%; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.ms-wrap [hidden] { display: none !important; }
+
+.ms-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+.ms-choose { display: flex; flex-direction: column; gap: 12px; }
+.ms-choose-title { font-size: 15px; font-weight: 600; }
+.ms-backrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+.ms-dir-tag {
+  font-size: 12.5px; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px;
+}
+.ms-note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 2px; line-height: 1.6; }
+
+/* ---------- 电码对照表（0–9 / A–Z / 常用标点） ---------- */
+.ms-chart-group + .ms-chart-group { margin-top: 18px; }
+.ms-chart-title {
+  font-size: 13px; font-weight: 600; color: var(--muted);
+  letter-spacing: .4px; margin-bottom: 8px;
+}
+.ms-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+}
+.ms-chart-item {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 2px; min-width: 0;
+  padding: 8px 6px;
+  background: #fff; border: 1px solid var(--line); border-radius: 8px;
+}
+.ms-chart-ch { font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.2; }
+.ms-chart-code {
+  font-size: 12px; letter-spacing: 1px; color: var(--accent);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+html[data-touch="1"] .ms-chart-grid { grid-template-columns: repeat(auto-fill, minmax(68px, 1fr)); }
+html[data-touch="1"] .ms-chart-item { padding: 9px 6px; }
+html[data-touch="1"] .ms-chart-ch { font-size: 16px; }
+html[data-touch="1"] .ms-chart-code { font-size: 12.5px; }
+
+/* 模式 / 方向大卡：竖排两张，一眼可选 */
+.ms-modes { display: grid; gap: 10px; }
+.ms-mode {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+  padding: 14px 16px; border-radius: 12px;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--text);
+  font-family: inherit; text-align: left; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.ms-mode b { font-size: 15px; font-weight: 600; }
+.ms-mode span { font-size: 12.5px; color: var(--muted); }
+.ms-mode:hover { background: #f0f9ff; border-color: #7dd3fc; }
+.ms-mode:hover b { color: #0369a1; }
+
+.ms-rules { margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--line); }
+.ms-rules-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.ms-rules-list { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.75; color: var(--muted); }
+.ms-rules-list li + li { margin-top: 6px; }
+.ms-rules-list b { color: var(--text); font-weight: 600; }
+
+/* 难度三档（照 .bs-tier，天蓝高亮） */
+.ms-tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ms-tier {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 12px 8px; border-radius: 11px;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--text);
+  font-family: inherit; font-size: 15px; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.ms-tier span { font-size: 11.5px; color: var(--muted); }
+.ms-tier:hover { background: #f8f9fb; }
+.ms-tier.on { border-color: #0369a1; background: #f0f9ff; color: #0369a1; }
+.ms-tier.on span { color: #0369a1; }
+.ms-start { margin-top: 2px; }
+
+/* ---------- 译电对局 ---------- */
+.ms-game { display: flex; flex-direction: column; gap: 12px; }
+.ms-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ms-round { font-size: 14px; font-weight: 600; }
+.ms-meta { font-size: 12.5px; color: var(--muted); }
+.ms-head-acts { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ms-tool {
+  padding: 7px 11px; border-radius: 9px;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--text);
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.ms-tool:hover { background: #f8f9fb; }
+.ms-tool.is-on { border-color: #0369a1; background: #f0f9ff; color: #0369a1; }
+
+.ms-stat { display: flex; justify-content: center; gap: 18px; font-size: 13px; color: var(--muted); }
+.ms-stat b { color: var(--text); font-weight: 600; }
+
+/* 电报纸带：米色 + 两端齿孔；中间的格子横向滚 */
+.ms-tape-wrap {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 16px;
+}
+.ms-tape-wrap::before,
+.ms-tape-wrap::after {
+  content: '';
+  position: absolute;
+  top: 10px; bottom: 10px; width: 8px;
+  background-image: radial-gradient(circle, #dccfa8 2.4px, transparent 2.9px);
+  background-size: 8px 13px;
+  background-repeat: repeat-y;
+  pointer-events: none;
+}
+.ms-tape-wrap::before { left: 4px; }
+.ms-tape-wrap::after { right: 4px; }
+.ms-tape {
+  display: flex; gap: 8px;
+  padding: 8px 6px 2px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+}
+.ms-tape::-webkit-scrollbar { height: 6px; }
+.ms-cell {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 62px; padding: 9px 4px 8px;
+  border-radius: 10px;
+  border: 1px solid #d8e4fa; background: #f7faff;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.ms-cell.is-cur { border-color: var(--brand); background: #eef4ff; box-shadow: 0 0 0 2px rgba(60, 131, 245, .28); }
+.ms-cell.is-ok { border-color: #86efac; background: #f0fdf4; }
+.ms-cell.is-shake { animation: msShake .3s; }
+@keyframes msShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.ms-code { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; min-height: 12px; }
+.ms-sym.is-dot { width: 6px; height: 6px; border-radius: 50%; background: #57534e; }
+.ms-sym.is-dash { width: 16px; height: 6px; border-radius: 3px; background: #57534e; }
+.ms-sym.is-on { background: #0369a1; box-shadow: 0 0 0 2px #bae6fd; }
+.ms-cell.is-ok .ms-sym { background: #16a34a; }
+.ms-letter {
+  width: 34px; height: 38px;
+  display: grid; place-items: center;
+  border: 1.5px dashed #d6c9a3; border-radius: 8px;
+  background: #fff;
+  font-size: 18px; font-weight: 700; color: var(--text);
+}
+.ms-cell.is-ok .ms-letter { border: 1.5px solid #16a34a; background: #f0fdf4; color: #15803d; }
+
+.ms-playrow { display: flex; justify-content: center; gap: 10px; }
+
+/* 电码对照表 */
+.ms-table {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 6px;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px;
+}
+.ms-ti {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 4px 8px; border-radius: 6px; background: #f8fafc; font-size: 12.5px;
+}
+.ms-ti b { font-weight: 700; }
+.ms-ti span { color: var(--muted); font-family: ui-monospace, Menlo, Consolas, monospace; letter-spacing: 1px; }
+
+/* 作答键盘：手机 7 列，PC 9 列放大 */
+.ms-keys { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 7px; }
+.ms-key {
+  height: 46px;
+  display: grid; place-items: center;
+  border: 1px solid var(--line-strong); border-radius: 10px; background: #fff;
+  color: var(--text); font-family: inherit; font-size: 16px; font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation; user-select: none; -webkit-user-select: none;
+  transition: background .12s, border-color .12s;
+}
+.ms-key:hover { background: #f0f9ff; border-color: #7dd3fc; }
+.ms-key:active { background: #e0f2fe; }
+html[data-viewport="lg"] .ms-keys { grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 8px; }
+html[data-viewport="lg"] .ms-key { height: 50px; font-size: 17px; }
+
+/* 结算浮层（照 .bs-overlay） */
+.ms-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 252;
+  background: rgba(17, 24, 39, .45);
+  place-items: center;
+  padding: 24px;
+}
+.ms-overlay.show { display: grid; }
+.ms-overlay-box {
+  width: 100%; max-width: 400px;
+  background: #fff; border-radius: 16px; padding: 24px;
+  box-shadow: 0 20px 48px -12px rgba(16, 24, 40, .3);
+}
+.ms-overlay-box h4 { font-size: 19px; font-weight: 600; }
+.ms-overlay-box p { font-size: 14px; color: #4b5563; line-height: 1.7; margin-top: 9px; }
+.ms-overlay-acts { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.ms-overlay-row { display: flex; gap: 10px; }
+.ms-overlay-row > * { flex: 1 1 0; min-width: 0; }
+.ms-overlay-box [hidden] { display: none !important; }
+
+/* 二次确认：压过结算浮层 */
+#msAskConfirm { z-index: 360; }
+
+/* ---------- 摩斯软键盘（复用 .gfx-pad 外观，键位照设计图） ----------
+   键高照用户设计图（图二）比例：大键（· / —）≈ 键盘宽 23%，
+   小键（/ \ ⌫）≈ 键盘宽 19.5%。手机端用 vw 随屏宽缩放，桌面按 480 宽折算成固定高。
+   ⚠ 必须带 #msPad 前缀抢权重：否则会被 tools.css:1264 的
+      html[data-touch="1"] .gfx-key { height:48px } 压掉（0,2,1 > 0,2,0）。 */
+#msPad .ms-pad-row-big .gfx-key { width: calc((100% - var(--kgap)) / 2); height: 110px; }
+#msPad .ms-pad-row-sep .gfx-key { width: calc((100% - 2 * var(--kgap)) / 3); height: 94px; }
+@media (max-width: 767px) {
+  #msPad .ms-pad-row-big .gfx-key { height: 23vw; max-height: 110px; }
+  #msPad .ms-pad-row-sep .gfx-key { height: 19.5vw; max-height: 94px; }
+}
+.gfx-key.is-stack { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; }
+.gfx-key.is-stack b { font-size: 24px; font-weight: 700; color: var(--accent); line-height: 1; }
+.gfx-key.is-stack small { font-size: 11px; color: var(--muted); }
+.ms-bigdot { width: 18px; height: 18px; border-radius: 50%; background: #1a1a1a; }
+.ms-bigdash { width: 44px; height: 10px; border-radius: 5px; background: #1a1a1a; }
+
+/* 输出大小写折叠栏（仅 电码 → 文字 显示，插在输入框和结果框之间） */
+.ms-case { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 2px 0 10px; }
+.ms-case-toggle {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border: 0; background: #fafbfc; cursor: pointer;
+  font-family: inherit; font-size: 13.5px; color: var(--text);
+}
+.ms-case-toggle span { font-weight: 600; }
+.ms-case-toggle em { font-style: normal; margin-left: auto; font-size: 12.5px; color: var(--muted); }
+.ms-case-arrow { font-style: normal; font-size: 11px; color: var(--muted); }
+.ms-case-opts { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.ms-case-opt {
+  padding: 7px 12px; border-radius: 9px;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--text);
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.ms-case-opt.is-on { border-color: #0369a1; background: #f0f9ff; color: #0369a1; font-weight: 600; }
+
+/* PC 端：软键盘不全宽，居中一块（用户要求电脑端适配大小） */
+html[data-viewport="lg"] #msPad {
+  max-width: 480px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 16px 16px 0 0;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+/* ---------- 5) 电脑 / 平板：整体放宽、放大 ---------- */
+@media (min-width: 768px) {
+  .bs-stone { width: 24px; height: 24px; }
+}
