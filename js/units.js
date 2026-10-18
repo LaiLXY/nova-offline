@@ -1739,6 +1739,18 @@ document.addEventListener('click', e => {
   cvtShowCats();
 }, true);
 
+/* ---- 返回键（js/backnav.js）：换算界面里先退回类别列表 ----
+   顺序和上面那条顶栏返回一致；软键盘 / 单位选择器那两层由 backnav 按层处理，
+   走到这里时只剩「换算界面 vs 类别列表」这一级。 */
+if (typeof NovaBack !== 'undefined') {
+  NovaBack.inner(top => {
+    if (top !== UNIT_PAGE) return false;    // 上面还压着单位选择器时，那层先关
+    if (unitConvEl.hidden) return false;
+    cvtShowCats();
+    return true;
+  });
+}
+
 /* ---- Esc：一次只退一层（先收键盘，再关弹窗，再退类别列表） ----
    挂在 window 的捕获阶段（见文件头那段说明），才能抢在 tools.js 前面。 */
 window.addEventListener('keydown', e => {

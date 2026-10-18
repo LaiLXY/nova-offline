@@ -122,6 +122,21 @@
     msShow(back.dataset.msBack === 'transHome' ? msTransHome : msHome);
   });
 
+  /* 返回键（js/backnav.js）：先退内部视图 —— 编码 / 解码、游戏、码表都回到
+     各自的上一级，别一下把整个异语道破关掉。真退到底了才 return false，
+     让 backnav 去关功能页。
+     top 必须就是本页：上面还压着通关浮层时，那层该先关，不归这里管。 */
+  if (typeof NovaBack !== 'undefined') {
+    NovaBack.inner(top => {
+      if (top !== PAGE) return false;
+      if (!msTrans.hidden)   { msStopAudio(); msPadHide(); msShow(msTransHome); return true; }
+      if (!msChart.hidden)   { msShow(msHome); return true; }
+      if (!msGame.hidden)    { msStopAudio(); msPadHide(); msShow(msGameHome); return true; }
+      if (!msGameHome.hidden || !msTransHome.hidden) { msShow(msHome); return true; }
+      return false;
+    });
+  }
+
   /* ==========================================================
      二、翻译
      ========================================================== */
@@ -439,8 +454,9 @@
     msCur = 0; msErr = 0; msHints = 0; msDone = false;
     msStopAudio();
 
-    msGameHome.hidden = true;
-    msGame.hidden = false;
+    /* 只认这一个口子进游戏：别的分节一律收掉（早先只翻 msGameHome/msGame
+       两格，万一从模式选择直接开局，模式选择会跟游戏页叠着一起显示） */
+    msShow(msGame);
     msOverlay.classList.remove('show');
     msSetDoneUI(false);                /* 回到常规按钮组（msSetupTable 会再校正对照表键） */
 

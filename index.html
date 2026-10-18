@@ -2219,7 +2219,7 @@
           <div class="rm-row">
             <div class="rm-field">
               <div class="input-wrap rm-input is-area" data-field>
-                <textarea id="msIn" rows="1" placeholder="点击输入…" maxlength="120"
+                <textarea id="msIn" rows="1" placeholder="点击输入…" maxlength="800"
                           autocomplete="off" autocapitalize="off" autocorrect="off"
                           spellcheck="false" aria-label="输入原文"></textarea>
               </div>
@@ -2615,6 +2615,9 @@
   之后是各功能页自己的逻辑
 -->
 <script src="js/core.js"></script>
+<!-- 返回键层级栈：手机返回键一级一级退（功能页 → 弹窗 → 主页），
+     而不是一路退到桌面。细节见 js/backnav.js 头部。 -->
+<script src="js/backnav.js"></script>
 <script src="js/home.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/tools.js"></script>

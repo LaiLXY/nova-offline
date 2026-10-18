@@ -77,11 +77,15 @@ document.addEventListener('click', e => {
   openTool(btn.dataset.tool);
 });
 
-/* ---------- 返回按钮 ---------- */
+/* ---------- 返回按钮 ----------
+   有页内二级视图的（异语道破的编码 / 游戏 / 码表、单位换算的换算界面）
+   先退一级，别一下把整个功能页关掉 —— 和手机返回键一个口径。 */
 document.addEventListener('click', e => {
   const back = e.target.closest('[data-tool-back]');
   if (!back) return;
-  closeTool(back.closest('.tool-page'));
+  const page = back.closest('.tool-page');
+  if (typeof NovaBack !== 'undefined' && NovaBack.backOnce(page)) return;
+  closeTool(page);
 });
 
 /* ---------- Esc 返回 ----------
@@ -93,5 +97,7 @@ document.addEventListener('keydown', e => {
   const page = currentToolPage();
   if (!page) return;
   e.stopPropagation();
+  /* 和返回箭头一个口径：页内还有上级视图就先退一级 */
+  if (typeof NovaBack !== 'undefined' && NovaBack.backOnce(page)) return;
   closeTool(page);
 }, true);

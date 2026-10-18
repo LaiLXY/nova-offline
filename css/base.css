@@ -431,6 +431,8 @@ html[data-viewport="lg"] .toasts {
 }
 .toast.ok .ic { background: var(--ok); }
 .toast.err .ic { background: var(--danger); }
+/* 中性提示（「再按一次退出」这类）：品牌蓝底白字 */
+.toast.info .ic { background: var(--brand); }
 /* 「开发中」这类中性提示：琥珀色，不用错误红 —— 它不是失败，只是还没做 */
 .toast.info .ic { background: var(--warn); }
 
