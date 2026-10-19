@@ -9,10 +9,7 @@
 
 /* 功能登记表：data-tool 的值 → 对应页面的 id
    加一张卡片只要两处对齐：这里的 key = 卡片的 data-tool = 页面 id。
-   （卡片维护那边不用管，js/cards.js 是从 DOM 现读 [data-tool] 的）
-
-   ★ 囚徒困境**故意不在这里**：正式版这一页也还没做完，离线版把它
-     写死成「下线卡片」（见下面的 WIP_TOOLS）—— 没有页面，也就没有入口。 */
+   （卡片维护那边不用管，这个文件是从 DOM 现读 [data-tool] 的） */
 const TOOLS = {
   convert:  'toolConvert',
   points24: 'toolPoints24',
@@ -27,6 +24,8 @@ const TOOLS = {
   game2048: 'toolGame2048',
   morse:    'toolMorse',
   bridge:   'toolBridge',
+  sl:       'toolSl',
+  queen:    'toolQueen',
 };
 
 /* ---------- 开发中、点不进去的卡片 ----------
@@ -34,8 +33,16 @@ const TOOLS = {
    （.tool-btn.is-maintenance + 名字后面挂「开发中」），
    点它只弹一句提示：既没有页面，也没有任何放行的路子。
    放**捕获阶段**并 stopPropagation：把下面那个入口点击挡在外面 ——
-   就算哪天 TOOLS 里又把它加回去，这层也拦得住。 */
-const WIP_TOOLS = { prisoner: '囚徒困境' };
+   就算哪天 TOOLS 里又把它加回去，这层也拦得住。
+   （囚徒困境 / 方格生灭 / 三门之惑 / 位移之秘 / 一位之差 / 关灯游戏） */
+const WIP_TOOLS = {
+  prisoner: '囚徒困境',
+  life:     '方格生灭',
+  monty:    '三门之惑',
+  caesar:   '位移之秘',
+  hamming:  '一位之差',
+  lights:   '关灯游戏',
+};
 
 document.addEventListener('click', e => {
   const btn = e.target.closest('[data-tool]');

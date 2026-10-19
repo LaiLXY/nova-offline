@@ -436,7 +436,8 @@
   }
 
   function fcReset() {
-    if (!fcHasProgress()) { fcReallyReset(); return; }
+    /* 空盘不用问；这一局已经收尾（过关 / 放弃 / 看答案）也不用问 —— 没什么可丢的 */
+    if (!fcHasProgress() || fcOver) { fcReallyReset(); return; }
     fcAsk('重来这一局？', '所有颜色都会清空，重新来过。', '重来', fcReallyReset);
   }
 

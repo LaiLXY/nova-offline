@@ -999,9 +999,9 @@ brOvBack.addEventListener('click', brToSetup);
 
 /* ---------- 二次确认（重开 / 换一题 / 改尺寸 / 放弃 共用一个壳） ----------
    四处只差"问什么、点了干什么"，所以壳只有一个、文案现填。
-   ★ 换一题 / 改尺寸 / 放弃**一律问一句**，不管盘上有没有桥 —— 这三下都会把
-     眼下这一局丢掉，空盘误点也是白丢一局。
-     只有「重开」例外：一条桥都没有时给一句提示、不弹框（没什么可拆的）。 */
+   ★ 还在下的时候：换一题 / 改尺寸 / 放弃一律问一句（都会把眼下这局丢掉，
+     空盘误点也是白丢一局）；只有「重开」例外 —— 一条桥都没有时给一句提示、不弹框。
+   ★ 已经收尾（brOver：过关 / 放弃 / 看答案）：换一题 / 改尺寸直接走，不再问。 */
 const BR_ASK = {
   reset: {
     title: '重开这一局？',
@@ -1059,10 +1059,17 @@ brResetBtn.addEventListener('click', () => {
   brAskOpen('reset');
 });
 
-/* 换一题 / 改尺寸 / 放弃：一律先问一句（这三下都会把眼下这局丢掉）。
-   ★ 通关之后顶栏只剩「换一题 / 改尺寸」，它们照样会问 —— brOver 为真也不跳过。 */
-brAgainBtn.addEventListener('click', () => brAskOpen('next'));
-brBackBtn.addEventListener('click',  () => brAskOpen('size'));
+/* 换一题 / 改尺寸 / 放弃：还在下的时候先问一句（这三下都会把眼下这局丢掉）。
+   ★ 已经收尾（过关 / 放弃 / 看答案）时不再问 —— 盘面已锁、没什么可丢的，
+     顶栏那会儿也只剩「换一题 / 改尺寸」两个出口，多问一句纯属添堵。 */
+brAgainBtn.addEventListener('click', () => {
+  if (brOver) { brNewRound(brSize); return; }
+  brAskOpen('next');
+});
+brBackBtn.addEventListener('click', () => {
+  if (brOver) { brToSetup(); return; }
+  brAskOpen('size');
+});
 brGiveBtn.addEventListener('click',  () => {
   if (brOver) return;
   brAskOpen('giveup');

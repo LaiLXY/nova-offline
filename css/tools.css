@@ -162,6 +162,44 @@
   --tool-ico-fg: #FFFFFF;
 }
 
+/* ===== 新增 7 张卡片：配色严格承接「黄·红·蓝·绿·橙·青·紫」循环第 15–21 位 ===== */
+
+/* 点阵连线（数回 / Slitherlink）：黄底 + 深色描线（承接「格式转换 / 巴什博弈」位） */
+.tool-btn[data-tool="sl"] {
+  --tool-ico-bg: var(--icon-tile-bg);
+  --tool-ico-fg: var(--icon-tile-fg);
+}
+/* 互不相犯（八皇后）：砖红底 + 白图（承接「二十四点 / 梵天汉诺」位） */
+.tool-btn[data-tool="queen"] {
+  --tool-ico-bg: #E25539;
+  --tool-ico-fg: #FFFFFF;
+}
+/* 方格生灭（生命游戏）：蓝紫底 + 白图（承接「单位换算 / 四色谜题」位） */
+.tool-btn[data-tool="life"] {
+  --tool-ico-bg: #2A67F5;
+  --tool-ico-fg: #FFFFFF;
+}
+/* 三门之惑（蒙提霍尔）：绿底 + 白图（承接「函数图像 / 囚徒困境」位） */
+.tool-btn[data-tool="monty"] {
+  --tool-ico-bg: #1DB994;
+  --tool-ico-fg: #FFFFFF;
+}
+/* 位移之秘（凯撒）：橙底 + 白图（承接「罗马数字 / 二零四八」位） */
+.tool-btn[data-tool="caesar"] {
+  --tool-ico-bg: #F66A00;
+  --tool-ico-fg: #FFFFFF;
+}
+/* 一位之差（汉明）：天蓝底 + 白图（承接「异或法则 / 异语道破」位） */
+.tool-btn[data-tool="hamming"] {
+  --tool-ico-bg: #0CBAEF;
+  --tool-ico-fg: #FFFFFF;
+}
+/* 关灯游戏（Lights Out）：紫底 + 白图（承接「九宫幻方 / 数字桥屿」位） */
+.tool-btn[data-tool="lights"] {
+  --tool-ico-bg: #6947F5;
+  --tool-ico-fg: #FFFFFF;
+}
+
 /* 中间文字：标题 + 说明，占满剩余宽度 */
 .tool-btn-text {
   flex: 1 1 auto;
@@ -1346,6 +1384,19 @@ html[data-layout="tablet"] .graph-readout { font-size: 14px; padding: 6px 11px; 
 }
 .unit-conv[hidden] { display: none; }
 
+/* ---------- 二之二：体积 ⇄ 质量（密度作桥，见 index.html 的 #unitBridge） ----------
+   和 .unit-conv 一个尺寸、一个节奏 —— 用户从类别卡进来，换的只是"填几个数"，
+   页面的骨架不该跟着变。所以只有容器这一条，里面的东西全复用上面那套。 */
+.unit-bridge {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.unit-bridge[hidden] { display: none; }
+
 .cvt-card {
   background: #fff;
   border: 1px solid var(--line);
@@ -1490,6 +1541,52 @@ html[data-layout="tablet"] .graph-readout { font-size: 14px; padding: 6px 11px; 
 }
 .cvt-cat-note[hidden] { display: none; }
 
+/* 「体积 / 质量」这两档下面那颗跳转（体积 → 质量 / 质量 → 体积）。
+   浅蓝 + 虚线边：它不是换算结果，是"另一件事的入口"，用这套配色跟上面
+   那张实心换算卡拉距离。它也是这一层视图**唯一**的入口（类别列表里不再摆卡）。 */
+.cvt-bridge {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  margin: 0;
+  padding: 11px 14px;
+  border: 1px dashed #c5d5f5;
+  border-radius: 12px;
+  background: #fbfcff;
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.cvt-bridge[hidden] { display: none; }
+.cvt-bridge:hover { background: #f3f7ff; border-color: #9fb9ef; }
+.cvt-bridge:focus-visible {
+  outline: none;
+  border-color: #2A67F5;
+  box-shadow: 0 0 0 3px rgba(42, 103, 245, .18);
+}
+.cvt-bridge-ico {
+  flex: 0 0 auto;
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: #E8EFFF;
+  display: grid;
+  place-items: center;
+}
+.cvt-bridge-ico svg { width: 21px; height: 21px; stroke: #2A67F5; }
+.cvt-bridge-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cvt-bridge-name { font-size: 14.5px; font-weight: 600; }
+.cvt-bridge-sub { font-size: 12.5px; color: var(--muted); }
+/* 复用弹窗那颗小箭头，但这里是"往右走"而不是"往下拉" */
+.cvt-bridge .picker-arrow {
+  margin-left: auto;
+  margin-top: 0;
+  transform: rotate(-45deg);
+}
+
+
 /* ---------- 副输入框（立体角 / 面积，见 js/units.js 的 cvtAux 那一节） ----------
    只有「亮度」那一档用得上：那一档的单位跨了四个量，光靠系数换不过去，
    还得知道光摊在多宽的立体角、多大一片面积上。整块按当前上下单位动态显隐，
@@ -1529,7 +1626,17 @@ html[data-layout="tablet"] .graph-readout { font-size: 14px; padding: 6px 11px; 
 /* 常用立体角（4π / 2π / π）那排药丸：比选择弹窗里的紧凑一点，
    这里是卡片里的一行辅助操作，不用那么大的块头 */
 .cvt-aux-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.cvt-aux-chips .chip { padding: 7px 13px; font-size: 13.5px; }
+.cvt-aux-chips .chip {
+  padding: 7px 13px;
+  font-size: 13.5px;
+  justify-content: center;
+  /* 单字药丸（水、π）别缩成一个圆球 —— 给个下限，一排看着才是同一排 */
+  min-width: 56px;
+}
+/* 密度那排快捷键是**两组二选一**（体积→金属 / 容积→水），用 hidden 切。
+   .chip 自带 display:inline-flex，会把浏览器默认的 [hidden]{display:none}
+   压掉，所以必须在这里补一条 —— 和游戏卡片里那些 [hidden]!important 同一个坑。 */
+.cvt-aux-chips .chip[hidden] { display: none; }
 
 /* 「还没填」的中性提示：core.js 的 .hint 默认是告警红，这里改回次要文字色 ——
    空着是刚进来的正常状态，不该一上来就是一条红字（真填错了才用默认的红） */
@@ -1614,9 +1721,11 @@ html[data-viewport="lg"] .unit-cats {
 /* 换算界面仍是一张窄卡：内容是「上框 / 互换 / 下框」一竖列，
    拉宽只是把输入框拉长，并不好看 */
 html[data-viewport="lg"] .unit-conv { max-width: 560px; }
+html[data-viewport="lg"] .unit-bridge { max-width: 560px; }
 
 html[data-layout="tablet"] .unit-cats,
 html[data-layout="tablet"] .unit-conv { max-width: 660px; gap: 18px; }
+html[data-layout="tablet"] .unit-bridge { max-width: 660px; gap: 18px; }
 html[data-layout="tablet"] .cvt-card { padding: 22px; border-radius: 16px; }
 html[data-layout="tablet"] .cvt-swap { padding: 12px 0; }
 html[data-layout="tablet"] .cvt-swap-btn { width: 54px; height: 54px; }
@@ -1695,12 +1804,14 @@ html[data-layout="tablet"] .cvt-head > label { font-size: 19px; }
    ★ textarea 必须自己清零浏览器默认的 padding / border / background ——
      否则单行内容也会被撑高，看起来"莫名其妙占了 1.5 行"。
    ★ min-height 用 1.5em（= line-height 1.5 的一行），不要写死 42px。 */
-.rm-input.is-area, .unit-conv .input-wrap.is-area {
+.rm-input.is-area, .unit-conv .input-wrap.is-area,
+.unit-bridge .input-wrap.is-area {
   align-items: stretch;
   padding-top: 8px; padding-bottom: 8px;
 }
 .rm-input.is-area > textarea,
-.unit-conv .input-wrap.is-area > textarea {
+.unit-conv .input-wrap.is-area > textarea,
+.unit-bridge .input-wrap.is-area > textarea {
   flex: 1 1 auto;
   width: 100%; min-width: 0;
   margin: 0; padding: 0; border: 0; outline: 0; background: none;
@@ -1714,9 +1825,11 @@ html[data-layout="tablet"] .cvt-head > label { font-size: 19px; }
   font-size: 17px; letter-spacing: .6px;
   font-variant-numeric: tabular-nums;
 }
-.unit-conv .input-wrap.is-area > textarea { font-size: 16px; }
+.unit-conv .input-wrap.is-area > textarea,
+.unit-bridge .input-wrap.is-area > textarea { font-size: 16px; }
 html[data-touch="1"] .rm-input.is-area > textarea { font-size: 19px; }
-html[data-touch="1"] .unit-conv .input-wrap.is-area > textarea { font-size: 17px; }
+html[data-touch="1"] .unit-conv .input-wrap.is-area > textarea,
+html[data-touch="1"] .unit-bridge .input-wrap.is-area > textarea { font-size: 17px; }
 
 /* 「复制」：外观跟 .cvt-unit 一套（白底细框），高度也对得上输入框 */
 .rm-copy {
@@ -4354,3 +4467,379 @@ html[data-viewport="lg"] #msPad {
 @media (min-width: 768px) {
   .bs-stone { width: 24px; height: 24px; }
 }
+
+/* ======================================================
+    数回（点阵连线 / Slitherlink，玩法为单一自闭环）
+    结构对齐「数字桥屿」，类名 .sl-*；盘面用浅灰底让白格浮起。
+   ====================================================== */
+.sl-wrap {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.sl-wrap [hidden] { display: none !important; }
+
+.sl-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* ---------- 1) 第一页：选尺寸 + 规则 ---------- */
+.sl-setup { display: flex; flex-direction: column; gap: 12px; }
+.sl-setup-title { font-size: 15px; font-weight: 600; }
+.sl-setup-note { font-size: 12.5px; color: var(--muted); text-align: center; }
+
+.sl-rules {
+  background: #f8f9fb;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.sl-rules-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.sl-rules-list {
+  margin: 0; padding-left: 18px;
+  font-size: 13px; line-height: 1.75; color: var(--muted);
+}
+.sl-rules-list li + li { margin-top: 6px; }
+.sl-rules-list b { color: var(--text); font-weight: 600; }
+
+.sl-sizes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.sl-size {
+  flex: 0 1 calc((100% - 16px) / 3);
+  min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 8px; border-radius: 10px;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--text);
+  font-family: inherit; font-size: 15px; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.sl-size span { font-size: 12px; color: var(--muted); }
+.sl-size:hover { background: #f8f9fb; }
+.sl-size.on { border-color: var(--accent); background: #eff4ff; color: var(--accent); }
+.sl-size.on span { color: var(--accent); }
+.sl-start { margin-top: 2px; }
+
+/* ---------- 2) 第二页：对局 ---------- */
+.sl-game { display: flex; flex-direction: column; gap: 12px; }
+
+.sl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sl-round { font-size: 14px; font-weight: 600; }
+.sl-meta { font-size: 12.5px; color: var(--muted); }
+.sl-head-acts { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* 通关 / 放弃后盘面锁住：隐藏 撤销 / 重开 / 放弃，只剩 换一题 / 改尺寸 */
+.sl-game.is-done #slUndo,
+.sl-game.is-done #slReset,
+.sl-game.is-done #slGiveUp { display: none; }
+.sl-tool {
+  padding: 7px 11px; border-radius: 9px;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--text);
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.sl-tool:hover { background: #f8f9fb; }
+.sl-tool:disabled { opacity: .45; cursor: default; background: #fff; }
+.sl-quit { color: var(--muted); }
+.sl-quit:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
+
+.sl-hud { display: flex; gap: 10px; }
+.sl-stat {
+  flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 9px 12px; border-radius: 11px;
+  background: #f8f9fb; border: 1px solid var(--line);
+}
+.sl-stat-label { font-size: 12px; color: var(--muted); }
+.sl-stat-val {
+  font-size: 20px; font-weight: 700; line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 盘面 ---------- */
+.sl-boardcard { padding: 12px; }
+.sl-board {
+  width: 100%; max-width: 460px; margin: 0 auto;
+  border-radius: 16px; background: #f2f5f9;
+  border: 1px solid var(--line); overflow: hidden;
+}
+.sl-svg {
+  display: block; width: 100%; height: auto;
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 顶点（格点）：浅色小圆 */
+.sl-dot { fill: #aab4c2; }
+
+/* 数字格背景：默认透明；满足态上色 */
+.sl-cell { fill: transparent; }
+.sl-cell.is-ok    { fill: #e6f6ec; }
+.sl-cell.is-bad   { fill: #fdeaea; }
+.sl-cell.is-stuck { fill: #fff4d6; }
+
+/* 数字文本：默认深字，满足态绿 / 超红 / 卡死黄 */
+.sl-num {
+  font-size: 23px; font-weight: 600; fill: var(--text);
+  text-anchor: middle; dominant-baseline: central;
+  font-variant-numeric: tabular-nums;
+}
+.sl-num.is-ok    { fill: #137a3c; }
+.sl-num.is-bad   { fill: #c0392b; }
+.sl-num.is-stuck { fill: #9a6b00; }
+
+/* 引导线（空边的浅灰细线，提示哪里可点） */
+.sl-hint { stroke: #dde3ec; stroke-width: 3; stroke-linecap: round; fill: none; }
+/* 实线（环经过的边） */
+.sl-line { stroke: var(--text); stroke-width: 8; stroke-linecap: round; fill: none; }
+/* 叉（确定不经过的边）：灰色 X */
+.sl-cross { stroke: #b6bfcc; stroke-width: 6; stroke-linecap: round; }
+/* 点击热区：透明粗线，拿到指针 */
+.sl-hit { stroke: transparent; stroke-width: 30; fill: none; pointer-events: stroke; cursor: pointer; }
+
+.sl-tip {
+  font-size: 12.5px; color: var(--muted); text-align: center;
+  line-height: 1.6; margin-top: 10px; transition: color .2s;
+}
+.sl-tip.is-warn { color: var(--danger); font-weight: 600; }
+
+/* ---------- 过关浮层 ---------- */
+.sl-overlay {
+  position: fixed; inset: 0; z-index: 252;
+  display: none; place-items: center; padding: 24px;
+  background: rgba(17, 24, 39, .45);
+}
+.sl-overlay.show { display: grid; }
+.sl-overlay-box {
+  width: 100%; max-width: 340px; background: #fff;
+  border-radius: 16px; padding: 24px; text-align: center;
+  box-shadow: 0 24px 56px -16px rgba(16, 24, 40, .34);
+  animation: sheetUp .2s ease both;
+}
+.sl-overlay-box h4 { font-size: 19px; font-weight: 600; }
+.sl-overlay-box p { font-size: 14px; color: #4b5563; line-height: 1.7; margin-top: 9px; }
+.sl-overlay-acts { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.sl-overlay-acts .sub-save { margin-top: 0; }
+.sl-overlay-row { display: flex; gap: 10px; }
+.sl-overlay-row > * { flex: 1 1 0; min-width: 0; }
+.sl-answer-btn { width: 100%; margin-top: 10px; }
+.sl-overlay-box [hidden] { display: none !important; }
+
+/* ---------- 小屏手机 ---------- */
+html[data-viewport="xs"] .sl-boardcard { padding: 10px; }
+html[data-viewport="xs"] .sl-board { border-radius: 13px; }
+html[data-viewport="xs"] .sl-size { padding: 9px 6px; font-size: 14px; }
+html[data-viewport="xs"] .sl-size span { font-size: 11.5px; }
+html[data-viewport="xs"] .sl-tool { padding: 7px 9px; font-size: 12.5px; }
+
+/* ---------- 电脑 ---------- */
+html[data-viewport="lg"] .sl-wrap { max-width: 620px; }
+html[data-viewport="lg"] .sl-board { max-width: 460px; }
+
+/* ---------- 平板 ---------- */
+html[data-layout="tablet"] .sl-wrap { max-width: 640px; gap: 18px; }
+html[data-layout="tablet"] .sl-card { padding: 20px; border-radius: 16px; }
+html[data-layout="tablet"] .sl-setup-title { font-size: 17px; }
+html[data-layout="tablet"] .sl-rules-list { font-size: 14.5px; }
+html[data-layout="tablet"] .sl-size { padding: 12px 10px; font-size: 16px; }
+html[data-layout="tablet"] .sl-size span { font-size: 13px; }
+html[data-layout="tablet"] .sl-board { max-width: 520px; }
+html[data-layout="tablet"] .sl-stat-val { font-size: 24px; }
+html[data-layout="tablet"] .sl-stat-label { font-size: 13.5px; }
+html[data-layout="tablet"] .sl-tool { padding: 9px 14px; font-size: 14.5px; }
+html[data-layout="tablet"] .sl-round { font-size: 16px; }
+html[data-layout="tablet"] .sl-meta { font-size: 14px; }
+html[data-layout="tablet"] .sl-tip { font-size: 13.5px; }
+html[data-layout="tablet"] .sl-overlay-box { max-width: 400px; padding: 28px 26px; }
+html[data-layout="tablet"] .sl-overlay-box h4 { font-size: 21px; }
+html[data-layout="tablet"] .sl-overlay-box p { font-size: 15.5px; }
+
+/* ======================================================
+   互不相犯（N 皇后，见 js/queen.js）
+   结构对齐「点阵连线」，类名 .qn-*；棋盘浅色格 + 浅红受攻格，
+   深灰皇后 = 开局预设（固定），蓝色 = 自己摆的，红色 = 正在互相攻击。
+   ====================================================== */
+.qn-wrap {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.qn-wrap [hidden] { display: none !important; }
+
+.qn-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* ---------- 1) 第一页：选棋盘 + 规则 ---------- */
+.qn-setup { display: flex; flex-direction: column; gap: 12px; }
+.qn-setup-title { font-size: 15px; font-weight: 600; }
+.qn-setup-note { font-size: 12.5px; color: var(--muted); text-align: center; }
+
+.qn-rules {
+  background: #f8f9fb;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.qn-rules-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.qn-rules-list {
+  margin: 0; padding-left: 18px;
+  font-size: 13px; line-height: 1.75; color: var(--muted);
+}
+.qn-rules-list li + li { margin-top: 6px; }
+.qn-rules-list b { color: var(--text); font-weight: 600; }
+
+.qn-sizes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.qn-size {
+  flex: 0 1 calc((100% - 24px) / 4);
+  min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 6px; border-radius: 10px;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--text);
+  font-family: inherit; font-size: 14.5px; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.qn-size span { font-size: 12px; color: var(--muted); }
+.qn-size:hover { background: #f8f9fb; }
+.qn-size.on { border-color: var(--accent); background: #eff4ff; color: var(--accent); }
+.qn-size.on span { color: var(--accent); }
+.qn-start { margin-top: 2px; }
+
+/* ---------- 2) 第二页：对局 ---------- */
+.qn-game { display: flex; flex-direction: column; gap: 12px; }
+
+.qn-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.qn-round { font-size: 14px; font-weight: 600; }
+.qn-meta { font-size: 12.5px; color: var(--muted); }
+.qn-head-acts { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* 过关 / 放弃后盘面锁住：隐藏 撤销 / 重开 / 放弃，只剩 换一题 / 改尺寸 */
+.qn-game.is-done #qnUndo,
+.qn-game.is-done #qnReset,
+.qn-game.is-done #qnGiveUp { display: none; }
+.qn-tool {
+  padding: 7px 11px; border-radius: 9px;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--text);
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.qn-tool:hover { background: #f8f9fb; }
+.qn-tool:disabled { opacity: .45; cursor: default; background: #fff; }
+.qn-quit { color: var(--muted); }
+.qn-quit:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
+
+.qn-hud { display: flex; gap: 10px; }
+.qn-stat {
+  flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 9px 12px; border-radius: 11px;
+  background: #f8f9fb; border: 1px solid var(--line);
+}
+.qn-stat-label { font-size: 12px; color: var(--muted); }
+.qn-stat-val {
+  font-size: 20px; font-weight: 700; line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 盘面 ---------- */
+.qn-boardcard { padding: 12px; }
+.qn-board {
+  width: 100%; max-width: 460px; margin: 0 auto;
+  border-radius: 16px; background: #fff;
+  border: 1px solid var(--line-strong); overflow: hidden;
+}
+.qn-svg {
+  display: block; width: 100%; height: auto;
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 棋盘底 + 深色格：两档要一眼分得开（白 vs 冷灰蓝） */
+.qn-bg { fill: #fff; }
+.qn-dark { fill: #e4ebf6; }
+/* 被某枚皇后攻击到的格子（浅红，压在深浅格上都认得出） */
+.qn-attack { fill: #fbdbd7; }
+/* 预设皇后的格子（灰蓝方片 + 白描边，表示「动不了」） */
+.qn-fixed-cell { fill: #cfd9e8; stroke: #fff; stroke-width: 2.5; }
+
+/* 皇后：自己摆的 → 品牌蓝；预设的 → 深灰；互相攻击 → 红 */
+.qn-q { fill: #2563eb; }
+.qn-q.is-fixed { fill: #3f4a5a; }
+.qn-q.is-bad { fill: #dc2626; }
+
+/* 点击热区：铺满整格，透明 */
+.qn-hit { fill: transparent; cursor: pointer; }
+.qn-hit:hover { fill: rgba(37, 99, 235, .08); }
+.qn-game.is-done .qn-hit { cursor: default; }
+.qn-game.is-done .qn-hit:hover { fill: transparent; }
+
+.qn-tip {
+  font-size: 12.5px; color: var(--muted); text-align: center;
+  line-height: 1.6; margin-top: 10px; transition: color .2s;
+}
+.qn-tip.is-warn { color: var(--danger); font-weight: 600; }
+
+/* ---------- 过关浮层 ---------- */
+.qn-overlay {
+  position: fixed; inset: 0; z-index: 252;
+  display: none; place-items: center; padding: 24px;
+  background: rgba(17, 24, 39, .45);
+}
+.qn-overlay.show { display: grid; }
+.qn-overlay-box {
+  width: 100%; max-width: 340px; background: #fff;
+  border-radius: 16px; padding: 24px; text-align: center;
+  box-shadow: 0 24px 56px -16px rgba(16, 24, 40, .34);
+  animation: sheetUp .2s ease both;
+}
+.qn-overlay-box h4 { font-size: 19px; font-weight: 600; }
+.qn-overlay-box p { font-size: 14px; color: #4b5563; line-height: 1.7; margin-top: 9px; }
+.qn-overlay-acts { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.qn-overlay-acts .sub-save { margin-top: 0; }
+.qn-overlay-row { display: flex; gap: 10px; }
+.qn-overlay-row > * { flex: 1 1 0; min-width: 0; }
+.qn-answer-btn { width: 100%; margin-top: 10px; }
+.qn-overlay-box [hidden] { display: none !important; }
+
+/* ---------- 小屏手机 ---------- */
+html[data-viewport="xs"] .qn-boardcard { padding: 10px; }
+html[data-viewport="xs"] .qn-board { border-radius: 13px; }
+html[data-viewport="xs"] .qn-size { padding: 9px 4px; font-size: 13.5px; }
+html[data-viewport="xs"] .qn-size span { font-size: 11.5px; }
+html[data-viewport="xs"] .qn-tool { padding: 7px 9px; font-size: 12.5px; }
+
+/* ---------- 电脑 ---------- */
+html[data-viewport="lg"] .qn-wrap { max-width: 620px; }
+html[data-viewport="lg"] .qn-board { max-width: 460px; }
+
+/* ---------- 平板 ---------- */
+html[data-layout="tablet"] .qn-wrap { max-width: 640px; gap: 18px; }
+html[data-layout="tablet"] .qn-card { padding: 20px; border-radius: 16px; }
+html[data-layout="tablet"] .qn-setup-title { font-size: 17px; }
+html[data-layout="tablet"] .qn-rules-list { font-size: 14.5px; }
+html[data-layout="tablet"] .qn-size { padding: 12px 8px; font-size: 17px; }
+html[data-layout="tablet"] .qn-size span { font-size: 13px; }
+html[data-layout="tablet"] .qn-board { max-width: 520px; }
+html[data-layout="tablet"] .qn-stat-val { font-size: 24px; }
+html[data-layout="tablet"] .qn-stat-label { font-size: 13.5px; }
+html[data-layout="tablet"] .qn-tool { padding: 9px 14px; font-size: 14.5px; }
+html[data-layout="tablet"] .qn-round { font-size: 16px; }
+html[data-layout="tablet"] .qn-meta { font-size: 14px; }
+html[data-layout="tablet"] .qn-tip { font-size: 13.5px; }
+html[data-layout="tablet"] .qn-overlay-box { max-width: 400px; padding: 28px 26px; }
+html[data-layout="tablet"] .qn-overlay-box h4 { font-size: 21px; }
+html[data-layout="tablet"] .qn-overlay-box p { font-size: 15.5px; }

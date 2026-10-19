@@ -488,6 +488,7 @@ function g48NewGame(quiet) {
  *  一进来就按（什么都还没损失）直接重开，不必多问。 */
 function g48AskNewGame() {
   if (g48Busy) return;
+  if (g48Over) { g48NewGame(); return; }
   if (g48Moved || g48Score > 0) { g48Confirm.classList.add('show'); return; }
   g48NewGame();
 }

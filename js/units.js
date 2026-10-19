@@ -1,10 +1,17 @@
 /* ==========================================================================
    units.js —— 功能页：单位换算
 
-   两层视图，都在 #toolUnits 这一个 .tool-page 里（用 hidden 切）：
+   三层视图，都在 #toolUnits 这一个 .tool-page 里（用 hidden 切）：
      1. #unitCats  选类别（一张卡一个类别，现在是「长度」）
      2. #unitConv  换算界面：上框输数值 → 下框同步显示结果；
                    单位按钮点开是药丸弹窗（复用 app.css 那套 picker 外观）
+     3. #unitBridge 体积 ⇄ 质量：上下两栏**是两个量**（不是同一个量的两种
+                   单位），中间靠用户填的密度接起来 —— 质量 = 体积 × 密度。
+                   入口只有一处：体积 / 质量那两张换算页底下的虚线跳转
+                   （见下面「九之二、」）—— 给算到一半才想起来要换量的人，
+                   顺手把当前数值和单位带过去。
+                   ★ 它**不进类别列表**：跨量换算不是"又一类单位"，
+                     摆一张卡在那儿反而让人以为点进去是单位表。
 
    ★ 顶栏返回 / Esc 都是「先退一层」：
        换算界面 → 类别列表 → 才关掉整个功能页。
@@ -20,8 +27,10 @@
      带**偏移**的类别（温度：℉ = ℃ × 1.8 + 32）不能只靠一个 k，
      所以按类别分叉：UNITS 里挂一对 toBase / fromBase 钩子，
      没有钩子就走现在的纯系数那条路。
+     密度那一档里还混着**非线性刻度**（API 度、波美度、特威德尔度、
+     柏拉图度），同一对钩子，但单位上多挂一个 sg（见 UNITS.density）。
 
-   ★ 还有一类连一对钩子都不够 ——「亮度」那一档跨了四个量
+   ★ 还有一类连一对钩子都不够 ——「光学」那一档跨了四个量
      （光通量 / 发光强度 / 光照度 / 亮度），单位之间还差着**立体角**和
      **面积**，得让用户另外补两个数。于是有了**副输入框**（cvtAux 那一节）：
        哪些副量用得着 = 上下单位的指数差（cvtAuxNeed），现算不写死
@@ -75,13 +84,15 @@ const cvtSwapBtn = $('#cvtSwap');
 const cvtCopyFromBtn = $('#cvtCopyFrom');    // 「数值」那栏的复制
 const cvtCopyToBtn   = $('#cvtCopyTo');      // 「换算结果」那栏的复制
 const cvtCatNoteEl = $('#cvtCatNote');       // 类别自己的注释（可选）
+const cvtBridgeBtn = $('#cvtBridge');        // 「体积 / 质量」两档下面的跨量跳转（可选）
+const cvtBridgeNameEl = $('#cvtBridgeName');
 
 const unitPicker      = $('#unitPicker');
 const unitPickerTitle = $('#unitPickerTitle');
 const unitPickerChips = $('#unitPickerChips');
 const unitPickerClose = $('#unitPickerClose');
 
-/* 副输入块（只有「亮度」那一档用得上，见 UNITS.luminance 和下面 cvtAux* 那节） */
+/* 副输入块（只有「光学」那一档用得上，见 UNITS.optics 和下面 cvtAux* 那节） */
 const cvtAuxEl        = $('#cvtAux');
 const cvtAuxHeadEl    = $('#cvtAuxHead');
 const cvtAuxOmegaItem = $('#cvtAuxOmegaItem');
@@ -95,6 +106,24 @@ const cvtAuxOmegaChips = $('#cvtAuxOmegaChips');
 /* 软键盘（数值输入用，键位和取舍见下面 cvtPad 那一节） */
 const cvtPad     = $('#cvtPad');
 const cvtPadKeys = $('#cvtPadKeys');
+
+/* 体积 ⇄ 质量那一层（第三层视图，见下面「九之二、」）。
+   它不是类别 —— 上下两栏是两个量，中间靠密度接起来。 */
+const unitBridgeEl   = $('#unitBridge');
+const bdFromEl       = $('#bdFrom');
+const bdToEl         = $('#bdTo');
+const bdDensityEl    = $('#bdDensity');
+const bdFromUnitBtn  = $('#bdFromUnit');
+const bdToUnitBtn    = $('#bdToUnit');
+const bdDensityBtn   = $('#bdDensityUnit');
+const bdSwapBtn      = $('#bdSwap');
+const bdFromLabelEl  = $('#bdFromLabel');
+const bdToLabelEl    = $('#bdToLabel');
+const bdRhoHeadEl    = $('#bdRhoHead');
+const bdNoteEl       = $('#bdNote');
+const bdRhoChipsEl   = $('#bdRhoChips');     // 密度快捷键那排药丸
+const bdCopyFromBtn  = $('#bdCopyFrom');
+const bdCopyToBtn    = $('#bdCopyTo');
 
 /* ==========================================================
    一、数据：每个类别一份单位表
@@ -111,15 +140,18 @@ const cvtPadKeys = $('#cvtPadKeys');
                       并标出组名。用下面的 cvtGroup() 包一层最省事。
      note   可选。这一类想额外说明一句时写在这里（如能量那档的
             「注：大卡=千卡」），会显示在换算界面卡片下面；不写就不显示。
-     toBase / fromBase（可选）带**偏移**的类别用它，见下面温度那条
+     toBase / fromBase（可选）带**偏移**的类别用它，见下面温度那条；
+            密度那一档的**比重刻度**也走这两个钩子（单位上挂 sg）
 
-   （图标配色不在这里 —— 13 张卡都是同一个蓝底白画，见 css/tools.css
+   （图标配色不在这里 —— 18 张卡都是同一个蓝底白画，见 css/tools.css
      的 .unit-cat；本文件只管数据和换算。）
 
    基准单位每类各挑一个顺手的：
      长度 米      面积 平方米   体积 升       质量 千克
      时间 秒      速度 米/秒    温度 摄氏度   数据 字节
      压力 帕斯卡  功率 瓦       频率 赫兹     能量 焦耳
+     力 牛顿      力矩 牛·米    动量 千克·米/秒   加速度 米/秒²
+     密度 千克/立方米
 
    加一个类别要动两处（和首页加功能卡片一个套路，两边靠 id 对齐）：
      · index.html 的 #unitCats 里复制一张类别卡，改 data-unit-cat / 图标 / 名字
@@ -457,29 +489,41 @@ const UNITS = {
     ],
   },
 
-  /* ---------- 压力（基准：帕斯卡） ----------
-     1 标准大气压 = 101325 Pa（精确定义）。
+  /* ---------- 压力＆压强（基准：帕斯卡） ----------
+     压力和压强是同一个量（力 ÷ 受力面积），中文里两套叫法都有人用，
+     卡片名就把两个都写上。1 标准大气压 = 101325 Pa（精确定义）。
      毫米汞柱和托不是一回事，别混：托的定义是**精确的** 1 atm/760
      = 133.322368421… Pa；毫米汞柱按汞的密度和标准重力算出来是
      133.322387415 Pa，两者差在小数点后第 5 位。两个都留，各自按定义写。
-     英寸汞柱 = 25.4 毫米汞柱（同族的英制写法）。 */
+     英寸汞柱 = 25.4 毫米汞柱（同族的英制写法）。
+
+     另外几支：
+       皮兹 pz —— MTS 制（米·吨·秒）的压强单位，1 pz = 1 sn/m² = 1000 Pa
+       工程大气压 at —— 1 kgf/cm² = 98066.5 Pa（精确，别和 atm 混）
+       磅每平方英尺 psf —— psi ÷ 144
+       英寸水柱 inH₂O —— 25.4 毫米水柱，和上面那支同一个基准（4 ℃ 的水） */
   pressure: {
-    name: '压力',
+    name: '压力＆压强',
+    note: '注：压力 = 压强（力 ÷ 面积），这里两套叫法通吃',
     from: 'atm', to: 'kpa',
     units: [
       { id: 'pa',    label: '帕斯卡',     sym: 'Pa',    k: 1 },
+      { id: 'pz',    label: '皮兹',       sym: 'pz',    k: 1000 },
       { id: 'kpa',   label: '千帕',       sym: 'kPa',   k: 1000 },
       { id: 'mpa',   label: '兆帕',       sym: 'MPa',   k: 1e6 },
       { id: 'gpa',   label: '吉帕',       sym: 'GPa',   k: 1e9 },
       { id: 'bar',   label: '巴',         sym: 'bar',   k: 1e5 },
       { id: 'mbar',  label: '毫巴',       sym: 'mbar',  k: 100 },
+      { id: 'at',    label: '工程大气压', sym: 'at',    k: 98066.5 },
       { id: 'atm',   label: '标准大气压', sym: 'atm',   k: 101325 },
       { id: 'torr',  label: '托',         sym: 'Torr',  k: 101325 / 760 },
       { id: 'mmhg',  label: '毫米汞柱',   sym: 'mmHg',  k: 133.322387415 },
       { id: 'inhg',  label: '英寸汞柱',   sym: 'inHg',  k: 3386.388640341 },
-      // 毫米水柱：4 ℃ 的水在标准重力下一毫米高 ≈ 9.80665 Pa
+      // 水柱：4 ℃ 的水在标准重力下一毫米高 = 9.80665 Pa，英寸就是它的 25.4 倍
       { id: 'mmh2o', label: '毫米水柱',   sym: 'mmH₂O', k: 9.80665 },
+      { id: 'inh2o', label: '英寸水柱',   sym: 'inH₂O', k: 25.4 * 9.80665 },
       { id: 'psi',   label: '磅每平方英寸', sym: 'psi', k: 6894.757293168361 },
+      { id: 'psf',   label: '磅每平方英尺', sym: 'psf', k: 6894.757293168361 / 144 },
     ],
   },
 
@@ -584,10 +628,233 @@ const UNITS = {
     ],
   },
 
-  /* ---------- 亮度＆光度（基准：流明） ----------
+  /* ---------- 力学五档 ----------
+     力 / 力矩 / 动量＆冲量 / 加速度 / 密度 —— 2026-10-19 从「力学」拆出来
+     的五张卡。它们互相之间是**量纲不同、不能互算**的量（1 牛顿不等于
+     多少牛·米），所以没有合在一张卡里靠副输入硬桥，而是各占一档，
+     档内照旧纯系数 —— 机制上和长度、质量这些没有半点区别。
+
+     三个常客的来历（都挂在 g0 = 9.80665 m/s² 上，1901 年起是精确值）：
+       千克力 kgf = 1 kg × g0；磅力 lbf = 1 lb(0.45359237 kg，精确) × g0；
+       标准重力 g = g0。磅达 pdl = 1 lb·ft/s²（不掺 g0）。
+
+     密度的英制两支：1 lb = 0.45359237 kg（精确），
+       1 ft = 0.3048 m（精确）→ 1 lb/ft³ = 16.018463373960… kg/m³
+       1 in³ = 16.387064 cm³（精确）→ 1 lb/in³ = 27679.904710203… kg/m³ */
+  force: {
+    name: '力',
+    from: 'n', to: 'kgf',
+    units: [
+      // 公制
+      { id: 'mn',  label: '毫牛',   sym: 'mN',  k: 0.001 },
+      { id: 'n',   label: '牛',     sym: 'N',   k: 1 },
+      { id: 'kn',  label: '千牛',   sym: 'kN',  k: 1000 },
+      { id: 'mnn', label: '兆牛',   sym: 'MN',  k: 1e6 },
+      // 重力单位（都按 g0 = 9.80665 m/s² 折算）
+      { id: 'dyn', label: '达因',   sym: 'dyn', k: 1e-5 },
+      { id: 'gf',  label: '克力',   sym: 'gf',  k: 0.00980665 },
+      { id: 'kgf', label: '千克力', sym: 'kgf', k: 9.80665 },
+      { id: 'tf',  label: '吨力',   sym: 'tf',  k: 9806.65 },
+      // 英制
+      { id: 'lbf', label: '磅力',   sym: 'lbf', k: 4.4482216152605 },
+      { id: 'kip', label: '千磅力', sym: 'kip', k: 1000 * 4.4482216152605 },
+      { id: 'ozf', label: '盎司力', sym: 'ozf', k: 4.4482216152605 / 16 },
+      { id: 'pdl', label: '磅达',   sym: 'pdl', k: 0.45359237 * 0.3048 },
+    ],
+  },
+
+  torque: {
+    name: '力矩',
+    from: 'nm', to: 'kgfm',
+    units: [
+      // 公制（含 CGS：达因·厘米 = 1e-5 N × 1e-2 m）
+      { id: 'mnmm',  label: '毫牛·米',     sym: 'mN·m',  k: 0.001 },
+      { id: 'nm',    label: '牛·米',       sym: 'N·m',   k: 1 },
+      { id: 'knm',   label: '千牛·米',     sym: 'kN·m',  k: 1000 },
+      { id: 'mnmm2', label: '兆牛·米',     sym: 'MN·m',  k: 1e6 },
+      { id: 'dyncm', label: '达因·厘米',   sym: 'dyn·cm', k: 1e-7 },
+      // 重力单位
+      { id: 'gfcm',  label: '克力·厘米',   sym: 'gf·cm',  k: 0.00980665 * 0.01 },
+      { id: 'kgfcm', label: '千克力·厘米', sym: 'kgf·cm', k: 0.0980665 },
+      { id: 'kgfm',  label: '千克力·米',   sym: 'kgf·m',  k: 9.80665 },
+      // 英制
+      { id: 'ozfin', label: '盎司力·英寸', sym: 'ozf·in', k: 4.4482216152605 / 16 * 0.0254 },
+      { id: 'lbfin', label: '磅力·英寸',   sym: 'lbf·in', k: 4.4482216152605 * 0.0254 },
+      { id: 'lbfft', label: '磅力·英尺',   sym: 'lbf·ft', k: 4.4482216152605 * 0.3048 },
+      { id: 'pdlft', label: '磅达·英尺',   sym: 'pdl·ft', k: 0.45359237 * 0.3048 * 0.3048 },
+    ],
+  },
+
+  /* 动量和冲量是同一个量纲（kg·m/s = N·s），放一档里按两个量分组展示；
+     组之间照样能互算 —— 1 kg·m/s 本来就精确等于 1 N·s。
+     英制的 slug（司勒格）= 14.593902937206… kg，是 lbf·s²/ft，写法上
+     直接引用 lbf 的数：1 slug·ft/s = 1 lbf·s。 */
+  momentum: {
+    name: '动量＆冲量',
+    from: 'kgms', to: 'ns',
+    units: [
+      ...cvtGroup('动量', [
+        { id: 'gcm_s', label: '克·厘米/秒', sym: 'g·cm/s', k: 1e-5 },
+        { id: 'kgcm_s', label: '千克·厘米/秒', sym: 'kg·cm/s', k: 0.01 },
+        { id: 'gm_s',  label: '克·米/秒',   sym: 'g·m/s',  k: 0.001 },
+        { id: 'kgms',  label: '千克·米/秒', sym: 'kg·m/s', k: 1 },
+        { id: 'tms',   label: '吨·米/秒',   sym: 't·m/s',  k: 1000 },
+        { id: 'lbfts', label: '磅·英尺/秒', sym: 'lb·ft/s', k: 0.45359237 * 0.3048 },
+        { id: 'slugfts', label: '司勒格·英尺/秒', sym: 'slug·ft/s', k: 4.4482216152605 },
+      ]),
+      ...cvtGroup('冲量', [
+        { id: 'dyns', label: '达因·秒', sym: 'dyn·s', k: 1e-5 },
+        { id: 'pds',  label: '磅达·秒', sym: 'pdl·s', k: 0.45359237 * 0.3048 },
+        { id: 'mns',  label: '毫牛·秒', sym: 'mN·s', k: 0.001 },
+        { id: 'ns',   label: '牛·秒',   sym: 'N·s',  k: 1 },
+        { id: 'kns',  label: '千牛·秒', sym: 'kN·s', k: 1000 },
+        { id: 'kgfs', label: '千克力·秒', sym: 'kgf·s', k: 9.80665 },
+        { id: 'lbfs', label: '磅力·秒', sym: 'lbf·s', k: 4.4482216152605 },
+      ]),
+    ],
+  },
+
+  acceleration: {
+    name: '加速度',
+    from: 'ms2', to: 'g0',
+    note: '注：1 Gal（伽）= 1 cm/s²；g = 标准重力 9.80665 m/s²',
+    units: [
+      // 公制
+      { id: 'mms2', label: '毫米/秒²',  sym: 'mm/s²', k: 0.001 },
+      { id: 'cms2', label: '厘米/秒²',  sym: 'cm/s²', k: 0.01 },
+      { id: 'ms2',  label: '米/秒²',    sym: 'm/s²',  k: 1 },
+      { id: 'kmh_s', label: '千米/时·秒', sym: 'km/(h·s)', k: 1000 / 3600 },
+      // 大地测量里的伽
+      { id: 'gal',  label: '伽',        sym: 'Gal',   k: 0.01 },
+      { id: 'mgal', label: '毫伽',      sym: 'mGal',  k: 1e-5 },
+      // 标准重力
+      { id: 'g0',   label: '标准重力',  sym: 'g',     k: 9.80665 },
+      // 英制
+      { id: 'ins2', label: '英寸/秒²',  sym: 'in/s²', k: 0.0254 },
+      { id: 'yds2', label: '码/秒²',    sym: 'yd/s²', k: 0.9144 },
+      { id: 'fts2', label: '英尺/秒²',  sym: 'ft/s²', k: 0.3048 },
+    ],
+  },
+
+  /* ---------- 密度（基准：千克/立方米） ----------
+     ★ 这一档里混着两种单位，是继温度之后**第二类**要走钩子的：
+       · 普通单位（g/cm³、lb/ft³ …）照旧一个系数 k
+       · **比重刻度**（API 度、波美度、特威德尔度、柏拉图度）不是"多少倍"，
+         而是某套刻度上的读数，和密度是**非线性**关系 —— 一个 k 装不下，
+         所以给这些单位挂 sg: { to, from, w } 三个东西：
+           to(v)    读数 → 比重（相对水的密度）
+           from(sg) 比重 → 读数（必须是 to 的严格反函数，来回换不能飘）
+           w        这套刻度定义时用的水有多重（kg/m³）
+         于是 密度 = to(读数) × w，反方向先除 w 再 from()。
+       为什么 w 不统一：API／波美／特威德尔是英制体系，定义在 60°F 的水上
+       （999.016 kg/m³）；柏拉图度是糖度（麦汁），定义在 20°C 上
+       （998.203 kg/m³）。差的那 0.1% 就来自这里。
+
+     五套刻度的式子（都写成能反解的形式）：
+       API        SG = 141.5 / (°API + 131.5)      °API = 141.5/SG − 131.5
+       波美（重）  SG = 145 / (145 − °Bé)           °Bé  = 145 − 145/SG
+       波美（轻）  SG = 140 / (°Bé + 130)           °Bé  = 140/SG − 130
+       特威德尔    SG = 1 + °Tw / 200               °Tw  = (SG − 1) × 200
+       柏拉图      SG = 1 + P/(258.6 − 0.8795P)     P = 258.6x/(1 + 0.8795x)，x = SG−1
+       波美的重轻两套**都留着**：它们的量程不重叠（重波美只管比重 > 1 的
+       盐水、糖浆、酸碱液；轻波美只管比重 < 1 的酒精、氨水），同一个读数
+       落在哪一套由用户选的那个单位决定，不会互相打架。
+       柏拉图用的是可逆的近似式（ASBC 那个三次多项式更准但没有闭式反解），
+       在 0~30 °P 这段和 ASBC 差在 0.01 °P 量级。
+
+     英制几支的来历：1 lb = 0.45359237 kg、1 ft = 0.3048 m、1 in = 0.0254 m
+     都是精确值；加仑按**美制**（3.785411784 L，精确）；slug = lbf·s²/ft。 */
+  density: {
+    name: '密度',
+    from: 'kgm3', to: 'gcm3',
+    note: '注：磅/加仑按美制（1 gal = 3.785411784 L）\n注：重波美 = 145 − 145/比重、轻波美 = 140/比重 − 130\n注：API／波美／特威德尔按 60°F 的水，柏拉图按 20°C',
+    units: [
+      // 公制（1 mg/L = 1 g/m³ = 0.001 kg/m³；1 mg/mL = 1 g/L = 1 kg/m³）
+      ...cvtGroup('公制', [
+        { id: 'mgl',   label: '毫克/升',     sym: 'mg/L',  k: 0.001 },
+        { id: 'gl',    label: '克/升',       sym: 'g/L',   k: 1 },
+        { id: 'mgml',  label: '毫克/毫升',   sym: 'mg/mL', k: 1 },
+        { id: 'kgm3',  label: '千克/立方米', sym: 'kg/m³', k: 1 },
+        { id: 'gcm3',  label: '克/立方厘米', sym: 'g/cm³', k: 1000 },
+        { id: 'gml',   label: '克/毫升',     sym: 'g/mL',  k: 1000 },
+        { id: 'kgL',   label: '千克/升',     sym: 'kg/L',  k: 1000 },
+        { id: 'tm3',   label: '吨/立方米',   sym: 't/m³',  k: 1000 },
+      ]),
+      // 英制
+      ...cvtGroup('英制', [
+        { id: 'lbft3', label: '磅/立方英尺', sym: 'lb/ft³', k: 16.01846337396014 },
+        { id: 'lbin3', label: '磅/立方英寸', sym: 'lb/in³', k: 27679.90471020312 },
+        { id: 'ozin3', label: '盎司/立方英寸', sym: 'oz/in³', k: (0.45359237 / 16) / 1.6387064e-5 },
+        { id: 'slugft3', label: '斯勒格/立方英尺', sym: 'slug/ft³', k: (4.4482216152605 / 0.3048) / 0.028316846592 },
+        { id: 'lbgal', label: '磅/加仑',     sym: 'lb/gal', k: 0.45359237 / 0.003785411784 },
+      ]),
+      // 比重刻度（非线性，走下面的 toBase / fromBase）
+      ...cvtGroup('比重刻度', [
+        {
+          id: 'api', label: 'API度', sym: '°API',
+          sg: {
+            to: v => 141.5 / (v + 131.5),
+            from: sg => 141.5 / sg - 131.5,
+            w: 999.016,
+          },
+        },
+        /* 波美度有**重轻两套**，同一个读数在两边对应不同密度，必须分开：
+             重波美  145 − 145/比重   （比重 > 1：盐水、糖浆、酸碱液）
+             轻波美  140/比重 − 130   （比重 < 1：酒精、氨水这类轻液）
+           16 世纪那套浮计就是"同一支管子，轻液沉得深、重液浮得高"，
+           于是分了两个刻度。两套的符号都是 °Bé，靠中文名（重/轻）区分。 */
+        {
+          id: 'be', label: '重波美度', sym: '°Bé',
+          sg: {
+            to: v => 145 / (145 - v),
+            from: sg => 145 - 145 / sg,
+            w: 999.016,
+          },
+        },
+        {
+          id: 'bel', label: '轻波美度', sym: '°Bé',
+          sg: {
+            to: v => 140 / (v + 130),
+            from: sg => 140 / sg - 130,
+            w: 999.016,
+          },
+        },
+        {
+          id: 'tw', label: '特威德尔度', sym: '°Tw',
+          sg: {
+            to: v => 1 + v / 200,
+            from: sg => (sg - 1) * 200,
+            w: 999.016,
+          },
+        },
+        {
+          id: 'plato', label: '柏拉图度', sym: '°P',
+          sg: {
+            to: v => 1 + v / (258.6 - 0.8795 * v),
+            from: sg => { const x = sg - 1; return 258.6 * x / (1 + 0.8795 * x); },
+            w: 998.203,
+          },
+        },
+      ]),
+    ],
+    /** 该单位的值 → 千克/立方米（普通单位乘 k，刻度单位先翻成比重再乘水重） */
+    toBase(v, id) {
+      const u = this.units.find(x => x.id === id);
+      if (!u) return v;
+      return u.sg ? u.sg.to(v) * u.sg.w : v * u.k;
+    },
+    /** 千克/立方米 → 该单位的值 */
+    fromBase(v, id) {
+      const u = this.units.find(x => x.id === id);
+      if (!u) return v;
+      return u.sg ? u.sg.from(v / u.sg.w) : v / u.k;
+    },
+  },
+
+  /* ---------- 光学（基准：流明） ----------
      ★ 这一档和上面所有类别都不一样，是**唯一需要副输入框**的：
      别的类别里各单位是"同一个量、不同大小"（1 米 = 100 厘米），
-     这一档的四个单位是**四个不同的量**：
+     这一档的四个单位是**四个不同的量**（光度学那四个）：
 
        流明 lm    光通量 Φ
        坎德拉 cd  发光强度 I = Φ / Ω     （每立体角 —— "这个方向多亮"）
@@ -614,8 +881,8 @@ const UNITS = {
 
      sr 在 SI 里是无量纲的（1 sr = 1 m²/m²），所以塞不进单位表里那个 k，
      只能让用户当场给 —— 这是它必须是个"框"而不是"系数"的根本原因。 */
-  luminance: {
-    name: '亮度',
+  optics: {
+    name: '光学',
     from: 'lm', to: 'cd',
     /* 单位表按**四个量**分组，弹窗里一行一个（和「体积＆容积」一个套路，
        见 cvtRenderChips）：
@@ -688,7 +955,7 @@ function cvtUnit(id) {
 
 /** 副输入的权重：Ω^(−a) · A^(−b)。
  *
- *  只有「亮度」那一档用得上，指数 a / b 的含义见 UNITS.luminance 那段说明。
+ *  只有「光学」那一档用得上，指数 a / b 的含义见 UNITS.optics 那段说明。
  *  指数是 0 的那一项在这次换算里用不到，aux 里没给值也照样对
  *  （Math.pow(任意数, 0) 恒为 1）—— 所以「只要立体角」的那些组合
  *  完全不用管面积填没填。 */
@@ -932,7 +1199,7 @@ function cvtAuxParse(raw, allowPi) {
  *    · 纯系数（绝大多数类别）：值 × k上 ÷ k下
  *    · 带偏移的类别（温度）：走类别自己的 toBase / fromBase 钩子，
  *      先化成基准值，再从基准值化到目标单位
- *    · 跨量的类别（亮度）：同一对钩子，但多传一个 aux
+ *    · 跨量的类别（光学）：同一对钩子，但多传一个 aux
  *      （= 用户填的立体角 / 面积），因为那两个量光靠单位是推不出来的
  */
 function cvtConvert(v, aux) {
@@ -999,7 +1266,7 @@ function cvtSync() {
 /* ----------------------------------------------------------
    四之二、副输入框（立体角 / 面积）
    ----------------------------------------------------------
-   只有「亮度」那一档（UNITS.luminance）用得上：那一档的单位跨了四个量，
+   只有「光学」那一档（UNITS.optics）用得上：那一档的单位跨了四个量，
    光靠单位之间的系数换不过去，还得知道光摊在多宽的立体角、多大一片面积上。
 
    这一节干三件事：
@@ -1012,7 +1279,7 @@ function cvtSync() {
 
 /** 当前这对上下单位，需不需要立体角 / 面积。
  *
- *  判据是**指数差**（指数 a / b 的含义见 UNITS.luminance）：
+ *  判据是**指数差**（指数 a / b 的含义见 UNITS.optics）：
  *    a 不同 → 差着立体角     b 不同 → 差着面积
  *  不用一张 (from,to) 的表逐个列 —— 单位加一个（比如将来补「熙提」）
  *  也照样对。 */
@@ -1166,19 +1433,23 @@ function cvtPaintAuxChips() {
   });
 }
 
-/** 把两栏的单位写到按钮上：`米 (m)`，后面跟一个下拉箭头。
- *  没有符号的单位（亩 / 斤 / 天…）就只写名字，不留一对空括号。 */
+/** 把单位写到按钮上：`米 (m)`，后面跟一个下拉箭头。
+ *  没有符号的单位（亩 / 斤 / 天…）就只写名字，不留一对空括号。
+ *  体积⇄质量那一层也用这个（三个按钮长一个样）。 */
+function cvtPaintUnitBtn(btn, u, label) {
+  btn.textContent = u ? (u.sym ? u.label + ' (' + u.sym + ')' : u.label) : '—';
+
+  const arrow = document.createElement('span');
+  arrow.className = 'picker-arrow';
+  arrow.setAttribute('aria-hidden', 'true');
+  btn.appendChild(arrow);
+
+  btn.setAttribute('aria-label', label + '：' + (u ? u.label : '未选择') + '，点击更换');
+}
+
 function cvtPaintUnits() {
   [['from', cvtFromBtn, '原单位'], ['to', cvtToBtn, '目标单位']].forEach(([which, btn, label]) => {
-    const u = cvtUnit(cvtSel[which]);
-    btn.textContent = u ? (u.sym ? u.label + ' (' + u.sym + ')' : u.label) : '—';
-
-    const arrow = document.createElement('span');
-    arrow.className = 'picker-arrow';
-    arrow.setAttribute('aria-hidden', 'true');
-    btn.appendChild(arrow);
-
-    btn.setAttribute('aria-label', label + '：' + (u ? u.label : '未选择') + '，点击更换');
+    cvtPaintUnitBtn(btn, cvtUnit(cvtSel[which]), label);
   });
 }
 
@@ -1200,12 +1471,13 @@ function cvtGroupBreak(name) {
 }
 
 function cvtRenderChips() {
-  const cur = cvtSel[cvtPicking];
+  const src = cvtPickSource();
+  const cur = src.cur;
 
   unitPickerChips.textContent = '';
   let lastGroup = null;
 
-  cvtUnits().forEach(u => {
+  src.units.forEach(u => {
     // 换组了：先插一条换行 + 组名。第一组也要标，不然看不出分组是从哪开始的
     if (u.group && u.group !== lastGroup) {
       unitPickerChips.appendChild(cvtGroupBreak(u.group));
@@ -1232,9 +1504,27 @@ function cvtRenderChips() {
   });
 }
 
+/** 弹窗这次该列哪张单位表、当前选中哪个 —— 换算界面和体积⇄质量共用
+ *  同一个药丸弹窗，只有数据源不同，在这里分道。 */
+function cvtPickSource() {
+  if (cvtPicking === 'bdFrom') return { units: bdUnits('from'), cur: bdSel.from };
+  if (cvtPicking === 'bdTo')   return { units: bdUnits('to'),   cur: bdSel.to };
+  if (cvtPicking === 'bdRho')  return { units: bdUnits('rho'),  cur: bdSel.rho };
+  return { units: cvtUnits(), cur: cvtSel[cvtPicking] };
+}
+
+/** 弹窗标题：跨量的那一页得说清是哪一栏（体积 / 质量 / 密度），
+ *  换算界面里就是老的「原单位 / 目标单位」。 */
+function cvtPickerTitle(which) {
+  if (which === 'bdFrom') return '选择' + bdQtyName('from') + '单位';
+  if (which === 'bdTo')   return '选择' + bdQtyName('to')   + '单位';
+  if (which === 'bdRho')  return '选择密度单位';
+  return which === 'from' ? '选择原单位' : '选择目标单位';
+}
+
 function cvtOpenPicker(which) {
   cvtPicking = which;
-  unitPickerTitle.textContent = which === 'from' ? '选择原单位' : '选择目标单位';
+  unitPickerTitle.textContent = cvtPickerTitle(which);
   cvtRenderChips();
   unitPicker.classList.add('show');
 }
@@ -1256,6 +1546,7 @@ function cvtShowCats() {
   cvtClosePicker();
   cvtPadHide();                 // 键盘是给数值框用的，回列表就没它的事了
   unitConvEl.hidden = true;
+  unitBridgeEl.hidden = true;
   unitCatsEl.hidden = false;
   unitTitleEl.textContent = '单位换算';
 
@@ -1272,6 +1563,24 @@ function cvtPaintCatNote(cat) {
   const text = (cat && cat.note) || '';
   cvtCatNoteEl.textContent = text;
   cvtCatNoteEl.hidden = !text;
+}
+
+/** 体积 / 质量这两档下面那颗「换到另一个量去」的跳转。
+ *
+ *  只在这两档出现（别的类别跟质量、体积没关系，摆出来是噪音）；
+ *  文案跟着类别走：体积页上是「体积 → 质量」，质量页上反过来。
+ *  点它时会把**当前敲的数和单位一起带过去**（见事件绑定那一段），
+ *  用户在体积页算到一半想接着算重量，不用回去重敲一遍。
+ *  没有这一档就整块 hidden —— 不留一条空白的框。 */
+function cvtPaintBridgeLink(catId) {
+  if (!cvtBridgeBtn) return;
+
+  const dir = catId === 'volume' ? 'v2m' : catId === 'mass' ? 'm2v' : '';
+  cvtBridgeBtn.hidden = !dir;
+  if (!dir) { cvtBridgeBtn.dataset.dir = ''; return; }
+
+  cvtBridgeBtn.dataset.dir = dir;
+  cvtBridgeNameEl.textContent = dir === 'v2m' ? '体积 → 质量' : '质量 → 体积';
 }
 
 /** 进某个类别的换算界面 */
@@ -1292,9 +1601,11 @@ function cvtOpenCat(id) {
   cvtAuxClearInputs();                         // 副输入框一律从空白进（不预填，见下）
   cvtPaintUnits();
   cvtPaintCatNote(cat);
+  cvtPaintBridgeLink(id);
   cvtSync();
 
   unitCatsEl.hidden = true;
+  unitBridgeEl.hidden = true;
   unitConvEl.hidden = false;
   unitTitleEl.textContent = cat.name;          // 顶栏跟着变成类别名
   unitBodyEl.scrollTop = 0;                    // 子页面自己从顶部开始
@@ -1429,7 +1740,7 @@ function cvtSwap() {
      下面每键占 4 格），见 css/tools.css。
 
    ★ 一个键盘伺候**三个输入框**（数值 / 立体角 / 面积）：谁拿到焦点就
-     往谁里面插字（cvtPadTarget）。这一档是这么来的 —— 亮度那类要同时填
+     往谁里面插字（cvtPadTarget）。这一档是这么来的 —— 光学那类要同时填
      数值和几何量，而手机上让系统键盘弹三回是没法用的。
 
    ★ 「π」是唯一一个**会灰掉**的键：只有立体角那个框认得 π
@@ -1592,9 +1903,10 @@ function cvtPadHide() {
   gfxClearPadScroller();
 }
 
-/** 把三个输入框都接到这个键盘上 */
+/** 把这一页所有数值框都接到这个键盘上
+ *  （换算界面的数值 + 立体角 + 面积，体积⇄质量的体积/质量 + 密度） */
 function cvtPadBind() {
-  const inputs = [cvtFrom, cvtAuxOmegaEl, cvtAuxAreaEl];
+  const inputs = [cvtFrom, cvtAuxOmegaEl, cvtAuxAreaEl, bdFromEl, bdDensityEl];
 
   // 触摸设备：不叫出系统键盘。本站的输入都自带键盘，系统键盘只会挡掉半屏 ——
   // 而且这块键盘是"一个顶三个"的，让系统键盘插进来反而更乱。
@@ -1639,6 +1951,254 @@ if (cvtPad) {
     cvtPadHide();
     if (cvtPadTarget) cvtPadTarget.blur();
   });
+}
+
+/* ==========================================================
+   九之二、体积 ⇄ 质量（密度作桥）
+   ----------------------------------------------------------
+   质量 = 体积 × 密度。这个式子两头是**两个不同的量**，所以它不属于任何
+   一张单位表 —— 单独一层视图。入口只有一处：体积 / 质量换算页底下的
+   虚线跳转（见 cvtPaintBridgeLink），进来时带着那边的数值和单位，
+   返回时也回到那张换算页。（不放进类别列表 —— 那不是一类单位。）
+
+   状态只有三样：
+     bdDir    方向：'v2m'（体积 → 质量）| 'm2v'
+     bdSel    { from, to, rho } 三个单位 id（from/to 的含义跟着方向走）
+     两个框里的数值就地读，不另存
+
+   换算走三个基准：体积 升、质量 千克、密度 千克/立方米。
+     v2m   V(L) → V/1000 (m³) × ρ(kg/m³) → kg → 目标质量单位
+     m2v   m(kg) ÷ ρ(kg/m³) → m³ × 1000 → L → 目标体积单位
+   密度那档的非线性刻度（API / 波美 / 柏拉图…）不用管：读数和 kg/m³
+   之间的来回全借 UNITS.density 的 toBase，这里只管乘除。
+
+   ★ 方向不是"算两遍"：进哪张卡就按哪个方向摆（上栏是体积还是质量），
+     中间那颗互换按钮掉头时，上下单位一起换位、结果挪到上面 ——
+     和换算界面那颗互换按钮一个手感。
+   ========================================================== */
+
+let bdDir = 'v2m';
+let bdSel = { from: 'l', to: 'kg', rho: 'gcm3' };
+let bdConvScroll = 0;      // 跳走之前换算页滚到哪儿了（返回时还原）
+
+/* 密度快捷键：一组"实心料"、一组"水"，按体积那一栏用的是什么单位二选一。
+   ★ 数值全部取**常温 20 ℃**（温度一变密度就变，水最明显）：
+       水    998.2071 kg/m³ = 0.9982 g/cm³   （4 ℃ 那个 1.000 是教科书整数）
+       纯铁  7.874 g/cm³
+       纯银  10.49 g/cm³
+       纯金  19.32 g/cm³
+   点一颗 = 把密度框填上这个数、把密度单位切到 g/cm³（这几组数就是按它写的）。 */
+const BD_RHO_PRESETS = {
+  water:  { val: '0.9982' },
+  iron:   { val: '7.874'  },
+  silver: { val: '10.49'  },
+  gold:   { val: '19.32'  },
+};
+
+/** 这一层某一栏是哪个量：'体积' | '质量'（方向反了，答案就反） */
+function bdQtyName(which) {
+  const isVol = bdDir === 'v2m' ? which === 'from' : which === 'to';
+  return isVol ? '体积' : '质量';
+}
+
+/** 某一栏能选哪些单位 —— 密度那栏直接借密度档整张表（含比重刻度） */
+function bdUnits(which) {
+  if (which === 'rho') return UNITS.density.units;
+  return bdQtyName(which) === '体积' ? UNITS.volume.units : UNITS.mass.units;
+}
+
+function bdUnit(which, id) {
+  return bdUnits(which).find(u => u.id === id) || null;
+}
+
+/** 三个单位按钮 + 两栏标签 + 顶栏标题 + 那句公式，全跟着方向刷 */
+function bdPaintUnits() {
+  const fromIsVol = bdQtyName('from') === '体积';
+
+  bdFromLabelEl.textContent = fromIsVol ? '体积 V' : '质量 m';
+  bdToLabelEl.textContent   = fromIsVol ? '质量 m' : '体积 V';
+  bdRhoHeadEl.textContent   = fromIsVol ? '质量 = 体积 × 密度' : '体积 = 质量 ÷ 密度';
+
+  cvtPaintUnitBtn(bdFromUnitBtn,  bdUnit('from', bdSel.from),  bdQtyName('from') + '单位');
+  cvtPaintUnitBtn(bdToUnitBtn,    bdUnit('to',   bdSel.to),    bdQtyName('to')   + '单位');
+  cvtPaintUnitBtn(bdDensityBtn,   bdUnit('rho',  bdSel.rho),   '密度单位');
+
+  unitTitleEl.textContent = bdQtyName('from') + ' → ' + bdQtyName('to');
+
+  bdPaintRhoChips();
+
+  /* 底下那句举例跟着方向换 —— 反过来读的时候，"同样 1 升"就不对味了：
+     质量→体积问的是"这么多斤两占多大地方"。 */
+  bdNoteEl.textContent = fromIsVol
+    ? '密度决定结果：同样 1 升，水约 1 千克、汽油约 0.74 千克、铁约 7.87 千克（快捷键按常温 20 ℃）'
+    : '密度决定结果：同样 1 千克，水约 1 升、汽油约 1.35 升、铁约 0.13 升（快捷键按常温 20 ℃）';
+}
+
+/** 清掉某栏的提示（红字和灰字一起收） */
+function bdClearHint(el) {
+  cvtSoftHint(el, '');      // 顺手摘掉 .soft，不然下次的红字会被压成灰的
+  clearError(el);
+}
+
+/** 摆提示：soft=true 是"还没填"的灰字，false 是"填错了"的红字 */
+function bdHint(el, msg, soft) {
+  if (soft) { cvtSoftHint(el, msg); return; }
+  cvtSoftHint(el, '');          // 先摘掉 .soft，不然这句红字会被压成灰的
+  setError(el, msg);
+}
+
+/** 读密度那一栏 → { value: kg/m³ } 或 { msg, hard }。
+ *  hard=false 只表示"还没填"（灰提示），不是错。
+ *  非线性刻度由 UNITS.density.toBase 负责，这里只兜"换出来不是正数"的读数
+ *  （比如重波美 145 度 = 比重无穷大，那是这个读数本身没有对应的密度）。 */
+function bdReadDensity() {
+  const raw = bdDensityEl.value;
+  if (!raw) return { msg: '填一个密度才能换算', hard: false };
+
+  const p = cvtParse(raw);
+  if (p.msg) return { msg: p.msg, hard: true };
+  if (!Number.isFinite(p.value)) return { msg: '这个数字太大了', hard: true };
+
+  const rho = UNITS.density.toBase(p.value, bdSel.rho);
+  if (!Number.isFinite(rho) || !(rho > 0)) {
+    return { msg: '这个读数换不出正的密度，换一个试试', hard: true };
+  }
+  return { value: rho };
+}
+
+/** 上框 → 下框。空着不算错，只是没结果；密度缺了就先讨密度。 */
+function bdSync() {
+  // 1) 上面的数
+  let v = null;
+  if (bdFromEl.value) {
+    const p = cvtParse(bdFromEl.value);
+    if (p.msg) {
+      bdToEl.value = '';
+      setError(bdFromEl, p.msg);
+      bdPaintRhoHint();          // 密度那句提示照摆，别让用户以为只要填上面
+      return;
+    }
+    if (!Number.isFinite(p.value)) {
+      bdToEl.value = '';
+      setError(bdFromEl, '这个数字太大了');
+      return;
+    }
+    v = p.value;
+  }
+  clearError(bdFromEl);
+
+  // 2) 桥：密度
+  const rho = bdReadDensity();
+  if (rho.msg) {
+    bdToEl.value = '';
+    bdHint(bdDensityEl, rho.msg, !rho.hard);
+    return;
+  }
+  bdClearHint(bdDensityEl);
+
+  // 3) 上面空着就先不算（密度填好了也不出假结果）
+  if (v === null) { bdToEl.value = ''; return; }
+
+  const fromU = bdUnit('from', bdSel.from);
+  const toU   = bdUnit('to',   bdSel.to);
+  if (!fromU || !toU) { bdToEl.value = ''; return; }
+
+  let res;
+  if (bdDir === 'v2m') {
+    const litres = v * fromU.k;              // → 升（体积的基准）
+    const kg = litres / 1000 * rho.value;    // 升 → 立方米 → 千克
+    res = kg / toU.k;                        // 千克 → 目标质量单位
+  } else {
+    const kg = v * fromU.k;                  // → 千克（质量的基准）
+    const litres = kg / rho.value * 1000;    // 千克 → 立方米 → 升
+    res = litres / toU.k;                    // 升 → 目标体积单位
+  }
+  bdToEl.value = cvtFmt(res);
+}
+
+/** 密度快捷键摆哪一组：看**体积那一栏**用的是立方单位，还是升/加仑这类容积单位。
+ *    体积（cm³、m³…）→ 纯铁 / 纯银 / 纯金：量一块料有多重
+ *    容积（L、mL、加仑…）→ 水：量一壶水有多重
+ *  另一组整排 hidden（CSS 里补了 .chip[hidden]{display:none}，
+ *  因为 .chip 自带 display:inline-flex，会压掉浏览器的 [hidden]）。 */
+function bdPaintRhoChips() {
+  if (!bdRhoChipsEl) return;
+
+  const volWhich = bdQtyName('from') === '体积' ? 'from' : 'to';
+  const volU = bdUnit(volWhich, bdSel[volWhich]);
+  const isCap = !!volU && volU.group === '容积';
+
+  // 亮哪一颗：密度单位正好是 g/cm³、框里的字也正好等于那个数
+  const cur = bdDensityEl.value.trim();
+  const inGcm3 = bdSel.rho === 'gcm3';
+
+  $$('[data-bd-rho]', bdRhoChipsEl).forEach(chip => {
+    const isWater = chip.dataset.bdRho === 'water';
+    chip.hidden = isCap ? !isWater : isWater;
+    const p = BD_RHO_PRESETS[chip.dataset.bdRho];
+    chip.setAttribute('aria-checked', String(inGcm3 && cur === p.val));
+  });
+}
+
+/** 上面填错时，也把密度那句"还缺一个密度"摆出来（和光学的 cvtDemandAux 一个意思） */
+function bdPaintRhoHint() {
+  const rho = bdReadDensity();
+  if (rho.msg) bdHint(bdDensityEl, rho.msg, !rho.hard);
+}
+
+/** 进这一层：dir 决定上栏摆体积还是质量。
+ *  seed 可选 = { value, unit }：从换算界面那颗跳转过来时，把那边刚敲的数和
+ *  单位带过来（用户在体积页填了 12 升，跳过来就是 12 升 → ? 千克）。 */
+function bdOpen(dir, seed) {
+  bdDir = dir === 'm2v' ? 'm2v' : 'v2m';
+
+  /* 默认摆一对最常用的：升 ⇄ 千克 + 水。
+     密度写 0.9982（20 ℃ 的水），不写教科书那个整数 1 —— 快捷键也是这个值，
+     一进来「水」那颗就是亮的，两种口径不会打架。 */
+  bdSel = bdDir === 'v2m'
+    ? { from: 'l', to: 'kg', rho: 'gcm3' }
+    : { from: 'kg', to: 'l', rho: 'gcm3' };
+
+  // 带过来的单位只在这边确实有才认（体积的是体积单位、质量的是质量单位）
+  if (seed && seed.unit && bdUnit('from', seed.unit)) bdSel.from = seed.unit;
+
+  bdFromEl.value = seed && seed.value ? seed.value : '1';
+  bdDensityEl.value = BD_RHO_PRESETS.water.val;
+  bdClearHint(bdFromEl);
+  bdClearHint(bdDensityEl);
+
+  bdPaintUnits();
+  bdSync();
+
+  cvtPadHide();
+  cvtClosePicker();
+  unitCatsEl.hidden = true;
+  unitConvEl.hidden = true;
+  unitBridgeEl.hidden = false;
+  unitBodyEl.scrollTop = 0;
+}
+
+/** 退一层：回到那张换算页（数值和单位都还留着）。 */
+function bdBack() {
+  unitBridgeEl.hidden = true;
+  unitConvEl.hidden = false;
+  unitTitleEl.textContent = (UNITS[cvtCat] && UNITS[cvtCat].name) || '单位换算';
+  // 先让它显示出来再设 scrollTop：藏着的时候内容高度是 0，设进去会被夹成 0
+  unitBodyEl.scrollTop = bdConvScroll;
+}
+
+/** 掉头：方向和上下单位一起换，结果挪到上面（密度留着 —— 换的是方向，不是物质）*/
+function bdSwap() {
+  const moved = bdToEl.value;
+  if (moved) bdFromEl.value = moved;
+
+  const from = bdSel.from;
+  bdSel.from = bdSel.to;
+  bdSel.to = from;
+  bdDir = bdDir === 'v2m' ? 'm2v' : 'v2m';
+
+  bdPaintUnits();
+  bdSync();
 }
 
 /* ==========================================================
@@ -1693,9 +2253,55 @@ cvtAuxOmegaChips.addEventListener('click', e => {
 /* ---- 交换 ---- */
 cvtSwapBtn.addEventListener('click', cvtSwap);
 
+/* ---- 体积 ⇄ 质量：两个数各改各的，改完就重算 ----
+   密度那一栏也走同一套字符白名单（°API 这种读数是数字，不是字母） */
+bdFromEl.addEventListener('input', () => {
+  cvtFilter(bdFromEl);
+  bdSync();
+});
+bdDensityEl.addEventListener('input', () => {
+  cvtFilter(bdDensityEl);
+  bdSync();
+});
+bdSwapBtn.addEventListener('click', bdSwap);
+
+/* ---- 密度快捷键：填数 + 把密度单位切回 g/cm³（这几组数就是按它写的） ----
+   和光学的立体角药丸一样：点一下就是一整串，**不**顺手 focus（手机上会弹键盘）。
+   填完仍是普通文本，用户还能接着改（7.874 → 7.9 之类）。 */
+if (bdRhoChipsEl) {
+  bdRhoChipsEl.addEventListener('click', e => {
+    const chip = e.target.closest('[data-bd-rho]');
+    if (!chip) return;
+
+    const p = BD_RHO_PRESETS[chip.dataset.bdRho];
+    if (!p) return;
+
+    bdDensityEl.value = p.val;
+    bdSel.rho = 'gcm3';
+    bdClearHint(bdDensityEl);
+    bdPaintUnits();          // 按钮上的单位名跟着换（可能刚从 °API 回来）
+    bdSync();
+    cvtPadHide();
+  });
+}
+
+/* ---- 换算界面底下那颗「体积 → 质量」：带着当前数值和单位跳过去 ----
+   数值原样搬（不重新格式化），单位也搬 —— 用户在体积页填的是「12 加仑」，
+   跳过去还得先改回升就太别扭了。密度仍是默认的水，改一下就是别的物质。 */
+if (cvtBridgeBtn) {
+  cvtBridgeBtn.addEventListener('click', () => {
+    const dir = cvtBridgeBtn.dataset.dir;
+    if (!dir) return;
+    bdConvScroll = unitBodyEl.scrollTop;
+    bdOpen(dir, { value: cvtFrom.value, unit: cvtSel.from });
+  });
+}
+
 /* ---- 复制：数值 / 结果各一颗（见七、那一节） ---- */
 [[cvtCopyFromBtn, cvtFrom, '数值', '复制数值'],
- [cvtCopyToBtn,   cvtTo,   '结果', '复制结果']].forEach(([btn, input, label, aria]) => {
+ [cvtCopyToBtn,   cvtTo,   '结果', '复制结果'],
+ [bdCopyFromBtn,  bdFromEl, '数值', '复制数值'],
+ [bdCopyToBtn,    bdToEl,   '结果', '复制结果']].forEach(([btn, input, label, aria]) => {
   btn.setAttribute('aria-label', aria);
   // 拦 mousedown：不抢输入框的焦点，否则手机上的软键盘会跟着收起来
   btn.addEventListener('mousedown', e => e.preventDefault());
@@ -1705,20 +2311,33 @@ cvtSwapBtn.addEventListener('click', cvtSwap);
 /* ---- 打开单位弹窗 ---- */
 cvtFromBtn.addEventListener('click', () => cvtOpenPicker('from'));
 cvtToBtn.addEventListener('click', () => cvtOpenPicker('to'));
+bdFromUnitBtn.addEventListener('click', () => cvtOpenPicker('bdFrom'));
+bdToUnitBtn.addEventListener('click', () => cvtOpenPicker('bdTo'));
+bdDensityBtn.addEventListener('click', () => cvtOpenPicker('bdRho'));
 
 /* ---- 选中一个单位 ----
    换单位**保留**框里的数字（1 米 → 1 千米），只是按新系数重算结果 ——
-   单位换算器都是这个手感：数字是用户刚敲的，不该被悄悄改掉。 */
+   单位换算器都是这个手感：数字是用户刚敲的，不该被悄悄改掉。
+   体积⇄质量那层共用这个弹窗：它有三个栏（体积 / 质量 / 密度），
+   落到哪个状态由 cvtPicking 说了算。 */
 unitPickerChips.addEventListener('click', e => {
   const chip = e.target.closest('.chip');
   if (!chip || !cvtPicking) return;
 
-  const u = cvtUnit(chip.dataset.unit);
-  if (u) cvtSel[cvtPicking] = u.id;
+  const which = cvtPicking;
+  const u = cvtPickSource().units.find(x => x.id === chip.dataset.unit);
+
+  if (u) {
+    if (which === 'bdFrom')      bdSel.from = u.id;
+    else if (which === 'bdTo')   bdSel.to = u.id;
+    else if (which === 'bdRho')  bdSel.rho = u.id;
+    else                         cvtSel[which] = u.id;
+  }
 
   cvtClosePicker();
-  cvtPaintUnits();
-  cvtSync();
+
+  if (which.indexOf('bd') === 0) { bdPaintUnits(); bdSync(); }
+  else { cvtPaintUnits(); cvtSync(); }
 });
 
 /* ---- 关闭弹窗：✕ / 点遮罩 ---- */
@@ -1727,29 +2346,17 @@ unitPicker.addEventListener('click', e => {
   if (e.target === unitPicker) cvtClosePicker();
 });
 
-/* ---- 顶栏返回：换算界面里先退回类别列表 ----
+/* ---- 顶栏返回：换算界面 / 体积⇄质量里先退回类别列表 ----
    放在**捕获阶段**：tools.js 的返回处理挂在冒泡阶段，捕获先跑，
    stopPropagation 就能把它挡下来（和 cards.js 拦卡片点击同一个套路）。 */
 document.addEventListener('click', e => {
   const back = e.target.closest('[data-tool-back]');
   if (!back || back.closest('.tool-page') !== UNIT_PAGE) return;
-  if (unitConvEl.hidden) return;        // 已经在类别列表：交给 tools.js 关掉功能页
+  if (unitConvEl.hidden && unitBridgeEl.hidden) return;   // 已经在类别列表：交给 tools.js 关掉功能页
   e.preventDefault();
   e.stopPropagation();
-  cvtShowCats();
+  if (!unitBridgeEl.hidden) bdBack(); else cvtShowCats();
 }, true);
-
-/* ---- 返回键（js/backnav.js）：换算界面里先退回类别列表 ----
-   顺序和上面那条顶栏返回一致；软键盘 / 单位选择器那两层由 backnav 按层处理，
-   走到这里时只剩「换算界面 vs 类别列表」这一级。 */
-if (typeof NovaBack !== 'undefined') {
-  NovaBack.inner(top => {
-    if (top !== UNIT_PAGE) return false;    // 上面还压着单位选择器时，那层先关
-    if (unitConvEl.hidden) return false;
-    cvtShowCats();
-    return true;
-  });
-}
 
 /* ---- Esc：一次只退一层（先收键盘，再关弹窗，再退类别列表） ----
    挂在 window 的捕获阶段（见文件头那段说明），才能抢在 tools.js 前面。 */
@@ -1768,10 +2375,22 @@ window.addEventListener('keydown', e => {
     return;
   }
   if (!UNIT_PAGE.classList.contains('show')) return;
-  if (unitConvEl.hidden) return;
+  if (unitConvEl.hidden && unitBridgeEl.hidden) return;
   e.stopPropagation();
-  cvtShowCats();
+  if (!unitBridgeEl.hidden) bdBack(); else cvtShowCats();
 }, true);
+
+/* ---- 返回键（js/backnav.js）：换算界面 / 体积⇄质量里先退回类别列表 ----
+   顺序和上面那条顶栏返回一致；软键盘 / 单位选择器那两层由 backnav 按层处理，
+   走到这里时只剩「子视图 vs 类别列表」这一级。 */
+if (typeof NovaBack !== 'undefined') {
+  NovaBack.inner(top => {
+    if (top !== UNIT_PAGE) return false;    // 上面还压着单位选择器时，那层先关
+    if (unitConvEl.hidden && unitBridgeEl.hidden) return false;
+    if (!unitBridgeEl.hidden) bdBack(); else cvtShowCats();
+    return true;
+  });
+}
 
 /* ---- 进这个功能页：每次从「选类别」开始，并把默认状态复位 ---- */
 document.addEventListener('tool:open', e => {

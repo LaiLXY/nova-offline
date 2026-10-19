@@ -294,8 +294,12 @@
   }));
 
   bsStart.addEventListener('click', () => bsNewRound(bsTier));
-  /* 你先手且尚未有任何一步（初始状态）→ 直接执行，不弹二次确认 */
-  function bsNeedConfirm() { return !(bsFirst === 'you' && bsLogRows.length === 0); }
+  /* 你先手且尚未有任何一步（初始状态）→ 直接执行，不弹二次确认。
+     这一局已经结束（赢了 / 输了）→ 也没什么东西可丢，同样不再问。 */
+  function bsNeedConfirm() {
+    if (bsState === 'over') return false;
+    return !(bsFirst === 'you' && bsLogRows.length === 0);
+  }
   bsResetEl.addEventListener('click', () => {
     if (!bsNeedConfirm()) { clearAi(); bsNewRound(bsTier); return; }
     bsAsk('重来本局？', '当前这局会作废，重新发一副新石子。', '重来', () => { clearAi(); bsNewRound(bsTier); });

@@ -565,6 +565,178 @@
           </svg>
         </span>
       </button>
+      <!-- ===== 新增 7 张占位卡片：承接第 15–21 位，配色按「黄·红·蓝·绿·橙·青·紫」循环 ===== -->
+
+      <button type="button" class="tool-btn" id="btnSl" data-tool="sl">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 点阵连线（数回）：一条**闭合**的 90° 折线环 —— 两个方块错位相叠，
+               绕中心 180° 对称。
+               ★ 为什么不再是敞口的 Z：这个玩法的核心就是「单一自闭环」，
+                 线要首尾相接；敞口折线看着像"还没画完"。
+               ★ 为什么不做「3×3 点阵 + 环」：28px 下格点会被 1.8 的线整条吃掉
+                 （线走过的格点全被盖住），数字也糊成一团，只剩噪点。
+                 这里只留环本身的剪影，缩到 28 都读得出是"一圈接上的折线"。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4 H14 V10 H20 V20 H10 V14 H4 Z"
+                  style="stroke: var(--tool-ico-fg); fill: none;" />
+          </svg>
+        </span>
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">点阵连线</span>
+          <span class="tool-btn-desc">单一自闭环</span>
+        </span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn" id="btnQueen" data-tool="queen">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--tool-ico-fg)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 20.5 Q12 22.5 19 20.5" fill="none" />
+            <path d="M6.2 18.3 Q12 19.8 17.8 18.3" fill="none" />
+            <path d="M7.5 18.3 Q12 16.6 16.5 18.3" fill="none" />
+            <path d="M7.5 18.3 L6.8 9.5 L9 11.5 L10.5 7 L12 11.5 L13.5 7 L15 11.5 L17.2 9.5 L16.5 18.3" fill="none" />
+            <circle cx="6.8" cy="9" r="1.1" fill="var(--tool-ico-fg)" stroke="none" />
+            <circle cx="10.5" cy="6.5" r="1.1" fill="var(--tool-ico-fg)" stroke="none" />
+            <circle cx="12" cy="5.8" r="1.15" fill="var(--tool-ico-fg)" stroke="none" />
+            <circle cx="13.5" cy="6.5" r="1.1" fill="var(--tool-ico-fg)" stroke="none" />
+            <circle cx="17.2" cy="9" r="1.1" fill="var(--tool-ico-fg)" stroke="none" />
+          </svg>
+        </span>
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">互不相犯</span>
+          <span class="tool-btn-desc">八后列阵，各不相侵</span>
+        </span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn is-maintenance" id="btnLife" data-tool="life"
+              aria-description="开发中，暂时不可使用">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <g style="fill: var(--tool-ico-fg); stroke:none;">
+              <rect x="9.8" y="5.4" width="4.4" height="4.4" rx="0.9" />
+              <rect x="14.2" y="9.8" width="4.4" height="4.4" rx="0.9" />
+              <rect x="5.4" y="14.2" width="4.4" height="4.4" rx="0.9" />
+              <rect x="9.8" y="14.2" width="4.4" height="4.4" rx="0.9" />
+              <rect x="14.2" y="14.2" width="4.4" height="4.4" rx="0.9" />
+            </g>
+          </svg>
+        </span>
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">方格生灭<span class="tool-maint-tag">开发中</span></span>
+          <span class="tool-btn-desc">三条定生死</span>
+        </span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn is-maintenance" id="btnMonty" data-tool="monty"
+              aria-description="开发中，暂时不可使用">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <g transform="translate(0,-2.8)">
+              <g style="stroke: var(--tool-ico-fg); fill:none;">
+                <path d="M4.5 20 V10 a2 2 0 0 1 4 0 V20 Z" />
+                <path d="M10 20 V10 a2 2 0 0 1 4 0 V20 Z" />
+                <path d="M15.5 20 V10 a2 2 0 0 1 4 0 V20 Z" />
+              </g>
+              <circle cx="6.9" cy="15" r="0.7" style="fill: var(--tool-ico-fg); stroke:none;" />
+              <circle cx="17.5" cy="15" r="0.7" style="fill: var(--tool-ico-fg); stroke:none;" />
+              <path d="M12 9.6 l1 2 2.1 0.3 -1.5 1.5 0.4 2.1 -2 -1.1 -2 1.1 0.4 -2.1 -1.5 -1.5 2.1 -0.3 z"
+                    style="fill: var(--tool-ico-fg); stroke:none;" />
+            </g>
+          </svg>
+        </span>
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">三门之惑<span class="tool-maint-tag">开发中</span></span>
+          <span class="tool-btn-desc">换一扇，胜率翻倍</span>
+        </span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn is-maintenance" id="btnCaesar" data-tool="caesar"
+              aria-description="开发中，暂时不可使用">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3.5" y="9.5" width="17" height="6" rx="3" style="stroke: var(--tool-ico-fg); stroke-width:1.5; fill:none;" />
+            <circle cx="8" cy="12.5" r="2.1" style="fill: var(--tool-ico-fg); stroke:none;" />
+            <path d="M15 10.5 l3 2 -3 2" style="stroke: var(--tool-ico-fg); stroke-width:1.6; fill:none;" />
+          </svg>
+        </span>
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">位移之秘<span class="tool-maint-tag">开发中</span></span>
+          <span class="tool-btn-desc">字母潜移，密意藏形</span>
+        </span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn is-maintenance" id="btnHamming" data-tool="hamming"
+              aria-description="开发中，暂时不可使用">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <g transform="translate(0.6,3.15)">
+              <g style="stroke: var(--tool-ico-fg); stroke-width:1.4;">
+                <rect x="1.8" y="9.6" width="2.7" height="2.7" rx="0.6" />
+                <rect x="5.1" y="9.6" width="2.7" height="2.7" rx="0.6" />
+                <rect x="8.4" y="9.6" width="2.7" height="2.7" rx="0.6" />
+                <rect x="11.7" y="9.6" width="2.7" height="2.7" rx="0.6" />
+                <rect x="15" y="9.6" width="2.7" height="2.7" rx="0.6" />
+                <rect x="18.3" y="9.6" width="2.7" height="2.7" rx="0.6" />
+              </g>
+              <rect x="11.7" y="9.6" width="2.7" height="2.7" rx="0.6" style="fill: var(--tool-ico-fg); stroke:none;" />
+              <path d="M13.05 5.4 v2.4 M13.05 7.8 l-1.5 -1.6 M13.05 7.8 l1.5 -1.6" style="stroke: var(--tool-ico-fg); stroke-width:1.4;" />
+            </g>
+          </svg>
+        </span>
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">一位之差<span class="tool-maint-tag">开发中</span></span>
+          <span class="tool-btn-desc">单错可纠，奇偶为凭</span>
+        </span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn is-maintenance" id="btnLights" data-tool="lights"
+              aria-description="开发中，暂时不可使用">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <g transform="translate(1,1)">
+              <g style="stroke: var(--tool-ico-fg);">
+                <rect x="4" y="4" width="4" height="4" rx="0.9" />
+                <rect x="14" y="4" width="4" height="4" rx="0.9" />
+                <rect x="4" y="14" width="4" height="4" rx="0.9" />
+                <rect x="14" y="14" width="4" height="4" rx="0.9" />
+              </g>
+              <g style="fill: var(--tool-ico-fg); stroke:none;">
+                <rect x="9" y="4" width="4" height="4" rx="0.9" />
+                <rect x="4" y="9" width="4" height="4" rx="0.9" />
+                <rect x="9" y="9" width="4" height="4" rx="0.9" />
+                <rect x="14" y="9" width="4" height="4" rx="0.9" />
+                <rect x="9" y="14" width="4" height="4" rx="0.9" />
+              </g>
+            </g>
+          </svg>
+        </span>
+        <span class="tool-btn-text">
+          <span class="tool-btn-name">关灯游戏<span class="tool-maint-tag">开发中</span></span>
+          <span class="tool-btn-desc">点一牵四，群灯俱寂</span>
+        </span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
     </section>
 
   </main>
@@ -867,6 +1039,71 @@
         </span>
       </button>
 
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="acceleration">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 加速度：多重箭头（越跑越快的速度线） -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 8.4L7.8 12l-3.2 3.6" /><path d="M8.6 8.4L11.8 12l-3.2 3.6" /><path d="M11.6 12h8.2" /><path d="M16.8 8.4L20.4 12l-3.6 3.6" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">加速度</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="force">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 力：横推箭头 + 被推的方块 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><rect x="13.2" y="6.2" width="8" height="11.6" rx="1.8" /><path d="M2.4 12h8.4" /><path d="M7.6 8.4L11.2 12l-3.6 3.6" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">力</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="torque">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 力矩：绕支点的旋转箭头（中心圆点是轴） -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2" /><path d="M5.4 9.2a7 7 0 0110.4-3.6" /><path d="M15.2 2.6l1.6 3.4-3.6 1" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">力矩</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="momentum">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 动量＆冲量：运动中的球 + 尾后的速度线 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><circle cx="16.6" cy="12" r="3.6" /><path d="M2.6 8.4h6.4" /><path d="M2.6 12h7.6" /><path d="M2.6 15.6h6.4" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">动量＆冲量</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="density">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 密度：方框里塞满颗粒（单位体积里的物质多少） -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="3.4" width="17.2" height="17.2" rx="3.4" /><circle cx="8" cy="8" r="1.1" /><circle cx="12" cy="8" r="1.1" /><circle cx="16" cy="8" r="1.1" /><circle cx="8" cy="12" r="1.1" /><circle cx="12" cy="12" r="1.1" /><circle cx="16" cy="12" r="1.1" /><circle cx="8" cy="16" r="1.1" /><circle cx="12" cy="16" r="1.1" /><circle cx="16" cy="16" r="1.1" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">密度</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
       <button type="button" class="tool-btn unit-cat" data-unit-cat="temp">
         <span class="tool-btn-ico" aria-hidden="true">
           <!-- 温度：温度计（管子 + 圆球）+ 里面那根水银柱 -->
@@ -895,11 +1132,11 @@
 
       <button type="button" class="tool-btn unit-cat" data-unit-cat="pressure">
         <span class="tool-btn-ico" aria-hidden="true">
-          <!-- 压力：向下的力压在一条面上（箭头 + 地面线） -->
+          <!-- 压力＆压强：向下的力压在一条面上（箭头 + 地面线） -->
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
                stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4v8.8" /><path d="M8.2 8.4l3.8 3.8 3.8-3.8" /><path d="M4.8 16.4h14.4" /></svg>
         </span>
-        <span class="tool-btn-text"><span class="tool-btn-name">压力</span></span>
+        <span class="tool-btn-text"><span class="tool-btn-name">压力＆压强</span></span>
         <span class="tool-btn-go" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
                stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
@@ -947,14 +1184,15 @@
         </span>
       </button>
 
-      <button type="button" class="tool-btn unit-cat" data-unit-cat="luminance">
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="optics">
         <span class="tool-btn-ico" aria-hidden="true">
-          <!-- 亮度：灯泡（玻壳 + 两条螺口）
-               这一档的单位表跨了四个量，是最特别的一类，见 js/units.js -->
+          <!-- 光学：三棱镜 + 一道折过的光束（进出棱镜各折一次）
+               这一档的单位表跨了四个量（光通量/发光强度/光照度/亮度），
+               见 js/units.js 的 UNITS.optics -->
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
-               stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2a5.6 5.6 0 00-3.2 10.1c.6.4 1 1.1 1 1.9v.6h4.4v-.6c0-.8.4-1.5 1-1.9A5.6 5.6 0 0012 3.2z" /><path d="M9.8 18.6h4.4" /><path d="M10.6 20.8h2.8" /></svg>
+               stroke-linecap="round" stroke-linejoin="round"><path d="M11.4 3.8L20.6 19.4H2.2z" /><path d="M1.4 12.2h5.4" /><path d="M6.8 12.2l8.6 2.8" /><path d="M15.4 15h7.2" /></svg>
         </span>
-        <span class="tool-btn-text"><span class="tool-btn-name">亮度</span></span>
+        <span class="tool-btn-text"><span class="tool-btn-name">光学</span></span>
         <span class="tool-btn-go" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
                stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
@@ -1033,7 +1271,7 @@
         </div>
 
         <!-- ---------- 副输入（只有需要几何量的类别才出现） ----------
-             亮度那一档跨了「光通量 / 发光强度 / 光照度 / 亮度」四个量，
+             光学那一档跨了「光通量 / 发光强度 / 光照度 / 亮度」四个量，
              单位之间差的不只是一个系数 —— 还要知道**立体角**和**面积**，
              所以那里除了数值，还得再补一个几何量。
              整块按当前上下单位动态显隐（平时 hidden），逻辑全在
@@ -1084,13 +1322,145 @@
 
       </section>
 
-      <!-- 类别自己的注释（比如能量那档要说明「大卡 = 千卡」、亮度那档要列出
-           四个量各自配哪个单位）。内容由 js/units.js 按 UNITS[类别].note 填；
-           没有注的类别整块不显示。注里可以写 \n 分行（CSS 那边是 pre-line）。 -->
+      <!-- 类别自己的注释（比如能量那档要说明「大卡 = 千卡」）。内容由
+           js/units.js 按 UNITS[类别].note 填；没有注的类别整块不显示。
+           注里可以写 \n 分行（CSS 那边是 pre-line）。 -->
       <p class="cvt-cat-note" id="cvtCatNote" hidden></p>
+
+      <!-- 「体积 / 质量」这两档才有的**下一步**：换算算到一半想换个量继续算
+           （5 升油有多重？），就在这儿点一下跳过去，路上把刚敲的数和单位带上。
+           和其它类别无关，所以整块平时 hidden，由 js/units.js 的 cvtOpenCat 摆。
+           样式做成虚线边的小卡：它不是换算结果，是"另一件事的入口"。 -->
+      <button type="button" class="cvt-bridge" id="cvtBridge" hidden>
+        <span class="cvt-bridge-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M5.3 5.6l4.3 2.25v7.25L5.3 17.35 1 15.1V7.85z" /><path d="M1 7.85l4.3 2.25 4.3-2.25" /><path d="M5.3 10.1v7.25" /><path d="M11.2 12h4" /><path d="M13.2 10L15.4 12l-2.2 2" /><circle cx="19.3" cy="12" r="3.6" fill="currentColor" stroke="none" /></svg>
+        </span>
+        <span class="cvt-bridge-txt">
+          <span class="cvt-bridge-name" id="cvtBridgeName">体积 → 质量</span>
+          <span class="cvt-bridge-sub">填上密度就能算</span>
+        </span>
+        <span class="picker-arrow" aria-hidden="true"></span>
+      </button>
 
       <p class="cvt-foot">结果最多保留 10 位有效数字；整数原样显示，极大或极小的数用科学计数法</p>
     </div>
+
+    <!-- ---------- 三、体积 ⇄ 质量（密度作桥） ----------
+         和上面那层「换算界面」是同一副骨架（数值 + 单位 + 互换 + 结果），
+         区别只在于**上下两栏是两个不同的量**（体积 / 质量），中间靠一个
+         密度接起来：质量 = 体积 × 密度。
+
+         为什么它要单独一页，而不是塞进某个类别里：
+           · 类别里的上下单位是"同一个量、不同大小"，一个系数就够；
+             这里跨了量纲，光有系数换不出来，必须让用户**另外填一个数**
+             （和光学那档补立体角 / 面积是同一个道理，只是这次填的是密度）
+           · 密度本身又是个"带单位的量"，所以它自己也配一个单位按钮，
+             单位表直接借密度那一档（含 API 度、波美度这些刻度）
+
+         入口只有一处：体积 / 质量那两张换算页底下的虚线跳转（#cvtBridge）。
+         不进类别列表 —— 它是"算到一半才想起来的下一步"，不是又一类单位。
+         见 js/units.js 的九之二、那一节。 -->
+    <div class="unit-bridge" id="unitBridge" hidden>
+      <section class="cvt-card">
+
+        <div class="field">
+          <div class="cvt-head">
+            <label for="bdFrom" id="bdFromLabel">体积 V</label>
+            <button type="button" class="cvt-copy" id="bdCopyFrom">复制</button>
+          </div>
+          <div class="cvt-row">
+            <div class="cvt-field">
+              <div class="input-wrap is-area" data-field>
+                <textarea id="bdFrom" rows="1"
+                          autocomplete="off"
+                          autocapitalize="off" autocorrect="off" spellcheck="false"
+                          placeholder="例如 3.5、-2、3/4" aria-label="要换算的数值">1</textarea>
+              </div>
+              <div class="hint"></div>
+            </div>
+            <button type="button" class="cvt-unit" id="bdFromUnit"
+                    title="点击更换单位">升 (L)</button>
+          </div>
+        </div>
+
+        <!-- 掉头：方向和上下单位一起换，密度和数值留着 -->
+        <div class="cvt-swap">
+          <button type="button" class="cvt-swap-btn" id="bdSwap"
+                  aria-label="交换体积和质量" title="交换体积和质量">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7.5 4v16" />
+              <path d="M4 16.5L7.5 20l3.5-3.5" />
+              <path d="M16.5 20V4" />
+              <path d="M13 7.5L16.5 4 20 7.5" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="field">
+          <div class="cvt-head">
+            <label for="bdTo" id="bdToLabel">质量 m</label>
+            <button type="button" class="cvt-copy" id="bdCopyTo">复制</button>
+          </div>
+          <div class="cvt-row">
+            <div class="cvt-field">
+              <div class="input-wrap cvt-readonly is-area" data-field>
+                <textarea id="bdTo" rows="1" readonly
+                          placeholder="—" aria-label="换算结果"></textarea>
+              </div>
+              <div class="hint"></div>
+            </div>
+            <button type="button" class="cvt-unit" id="bdToUnit"
+                    title="点击更换单位">千克 (kg)</button>
+          </div>
+        </div>
+
+        <!-- 桥本身：密度。摆在换算卡里面、结果框下面，用一条虚线隔开 ——
+             它是"这次换算还缺的那一个数"，不是另一张卡（和光学那档的
+             #cvtAux 一个位置、一个道理）。 -->
+        <section class="cvt-aux bd-rho" id="bdRho">
+          <p class="cvt-aux-head" id="bdRhoHead">质量 = 体积 × 密度</p>
+          <div class="cvt-aux-item">
+            <label for="bdDensity">密度 ρ</label>
+            <!-- 密度快捷键（见 js/units.js 的 BD_RHO_PRESETS）：
+                 体积单位（立方…）给一块实心金属，容积单位（升、加仑…）给水，
+                 两组二选一显示，另一组整排 hidden。数字都是常温 20 ℃ 的。 -->
+            <div class="cvt-aux-chips" id="bdRhoChips"
+                 role="radiogroup" aria-label="常用密度">
+              <button type="button" class="chip" role="radio" aria-checked="false"
+                      data-bd-rho="water" title="20 ℃ 的水，0.9982 g/cm³">水</button>
+              <button type="button" class="chip" role="radio" aria-checked="false"
+                      data-bd-rho="iron" title="20 ℃ 的纯铁，7.874 g/cm³">纯铁</button>
+              <button type="button" class="chip" role="radio" aria-checked="false"
+                      data-bd-rho="silver" title="20 ℃ 的纯银，10.49 g/cm³">纯银</button>
+              <button type="button" class="chip" role="radio" aria-checked="false"
+                      data-bd-rho="gold" title="20 ℃ 的纯金，19.32 g/cm³">纯金</button>
+            </div>
+            <div class="cvt-row">
+              <div class="cvt-field">
+                <div class="input-wrap" data-field>
+                  <input type="text" id="bdDensity"
+                         autocomplete="off"
+                         autocapitalize="off" autocorrect="off" spellcheck="false"
+                         placeholder="例如 0.9982（水）、7.874（铁）"
+                         aria-label="密度" />
+                </div>
+                <div class="hint"></div>
+              </div>
+              <button type="button" class="cvt-unit" id="bdDensityUnit"
+                      title="点击更换密度单位">克/立方厘米 (g/cm³)</button>
+            </div>
+          </div>
+        </section>
+
+      </section>
+
+      <p class="cvt-cat-note" id="bdNote">密度决定结果：同样 1 升，水约 1 千克、汽油约 0.74 千克、铁约 7.87 千克（快捷键按常温 20 ℃）</p>
+
+      <p class="cvt-foot">结果最多保留 10 位有效数字；整数原样显示，极大或极小的数用科学计数法</p>
+    </div>
+
 
   </div>
 
@@ -2529,6 +2899,185 @@
   </div>
 </div>
 
+<!-- ================= 新增 7 张占位功能页（承接第 15–21 位） ================= -->
+
+<div class="tool-page" id="toolSl">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
+    </button>
+    <h3 class="tool-title">点阵连线</h3>
+  </div>
+  <div class="tool-body">
+    <div class="sl-wrap">
+
+      <!-- 1) 第一页：选尺寸 + 玩法规则 -->
+      <section class="sl-card sl-setup" id="slSetup">
+        <div class="sl-setup-title">选一张盘</div>
+        <div class="sl-sizes" id="slSizes">
+          <button type="button" class="sl-size on" data-size="5"><b>5 × 5</b><span>入门</span></button>
+          <button type="button" class="sl-size" data-size="7"><b>7 × 7</b><span>进阶</span></button>
+          <button type="button" class="sl-size" data-size="10"><b>10 × 10</b><span>困难</span></button>
+        </div>
+        <button type="button" class="sub-save sl-start" id="slStart">开 始</button>
+        <p class="sl-setup-note">沿格线画一条单一自闭环，让每个数字格恰好有那么多条边在环上。</p>
+        <div class="sl-rules">
+          <div class="sl-rules-title">玩法规则</div>
+          <ul class="sl-rules-list">
+            <li>在方格网上画一条<b>单一自闭环</b>（不自交、不中断）。</li>
+            <li>带数字的格子，恰好有<b>该数字条边</b>属于这条环（数字格实时显示当前边数）。</li>
+            <li>点一条边，在<b>画线 / 叉掉 / 空</b>之间循环：画线 = 环经过这里，叉掉 = 确定不经过，空 = 还没定。</li>
+            <li>某格边数<b>超了</b>会标红，<b>差太多又没空边可加</b>会标黄提醒；刚好够就变绿。</li>
+            <li>所有数字都满足、且画的线连成<b>一条</b>单一闭环，就过关。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 2) 第二页：对局 -->
+      <section class="sl-game" id="slGame" hidden>
+        <div class="sl-head">
+          <span class="sl-round" id="slRound">第 1 局</span>
+          <span class="sl-meta" id="slMeta">5 × 5</span>
+          <div class="sl-head-acts">
+            <button type="button" class="sl-tool" id="slUndo">撤销</button>
+            <button type="button" class="sl-tool" id="slReset">重开</button>
+            <button type="button" class="sl-tool" id="slAgain">换一题</button>
+            <button type="button" class="sl-tool" id="slBack">改尺寸</button>
+            <button type="button" class="sl-tool sl-quit" id="slGiveUp">放弃</button>
+          </div>
+        </div>
+        <div class="sl-hud">
+          <div class="sl-stat"><span class="sl-stat-label">用时</span><span class="sl-stat-val" id="slTime">0:00</span></div>
+          <div class="sl-stat"><span class="sl-stat-label">步骤</span><span class="sl-stat-val" id="slSteps">0</span></div>
+        </div>
+        <div class="sl-boardcard">
+          <div class="sl-board">
+            <svg class="sl-svg" id="slSvg" viewBox="0 0 100 100" role="img" aria-label="点阵连线盘面"></svg>
+          </div>
+          <p class="sl-tip" id="slTip"></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 过关 / 放弃浮层 -->
+    <div class="sl-overlay" id="slOverlay">
+      <div class="sl-overlay-box" role="dialog" aria-modal="true" aria-labelledby="nlOvTitle">
+        <h4 id="slOvTitle">过关！</h4>
+        <p id="slOvText"></p>
+        <div class="sl-overlay-acts">
+          <button type="button" class="sub-save" id="slOvOk">确 认</button>
+          <div class="sl-overlay-row">
+            <button type="button" class="mini-btn" id="slOvAgain">再来一题</button>
+            <button type="button" class="mini-btn" id="slOvBack">改尺寸</button>
+          </div>
+        </div>
+        <button type="button" class="mini-btn sl-answer-btn" id="slOvAnswer" hidden>查看答案</button>
+      </div>
+    </div>
+
+    <!-- 二次确认：重开 / 换一题 / 改尺寸 / 放弃共用 -->
+    <div class="confirm-overlay" id="slAskConfirm">
+      <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="nlAskTitle">
+        <h4 id="slAskTitle">重开这一局？</h4>
+        <p id="slAskText"></p>
+        <div class="acts">
+          <button type="button" id="slAskCancel">取消</button>
+          <button type="button" class="danger" id="slAskOk">重开</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tool-page" id="toolQueen">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
+    </button>
+    <h3 class="tool-title">互不相犯</h3>
+  </div>
+  <div class="tool-body">
+    <div class="qn-wrap">
+
+      <!-- 1) 第一页：选棋盘 + 玩法规则 -->
+      <section class="qn-card qn-setup" id="qnSetup">
+        <div class="qn-setup-title">选一张棋盘</div>
+        <div class="qn-sizes" id="qnSizes">
+          <button type="button" class="qn-size" data-size="5"><b>5×5</b><span>入门</span></button>
+          <button type="button" class="qn-size" data-size="6"><b>6×6</b><span>进阶</span></button>
+          <button type="button" class="qn-size on" data-size="8"><b>8×8</b><span>经典</span></button>
+          <button type="button" class="qn-size" data-size="10"><b>10×10</b><span>挑战</span></button>
+        </div>
+        <button type="button" class="sub-save qn-start" id="qnStart">开 始</button>
+        <p class="qn-setup-note">在棋盘上摆下同样多的皇后，让它们谁也吃不到谁。</p>
+        <div class="qn-rules">
+          <div class="qn-rules-title">玩法规则</div>
+          <ul class="qn-rules-list">
+            <li>在 <b>N×N</b> 的棋盘上放 <b>N 枚皇后</b>（8×8 就放 8 枚）。</li>
+            <li>任意两枚皇后都不能处在<b>同一行、同一列、同一条斜线</b>上。</li>
+            <li>点空格放下皇后，点自己的皇后可以拿掉；开局先替你摆好的几枚是<b>深灰色</b>，动不了。</li>
+            <li>每放一枚，它横竖斜吃到的格子会染成<b>浅红</b>；两枚皇后互相攻击时，皇后本身会变红。</li>
+            <li>放满 N 枚、且没有任何两枚互相攻击，就过关。卡住了可以「放弃」看一组答案。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 2) 第二页：对局 -->
+      <section class="qn-game" id="qnGame" hidden>
+        <div class="qn-head">
+          <span class="qn-round" id="qnRound">第 1 局</span>
+          <span class="qn-meta" id="qnMeta">8×8</span>
+          <div class="qn-head-acts">
+            <button type="button" class="qn-tool" id="qnUndo">撤销</button>
+            <button type="button" class="qn-tool" id="qnReset">重开</button>
+            <button type="button" class="qn-tool" id="qnAgain">换一题</button>
+            <button type="button" class="qn-tool" id="qnBack">改尺寸</button>
+            <button type="button" class="qn-tool qn-quit" id="qnGiveUp">放弃</button>
+          </div>
+        </div>
+        <div class="qn-hud">
+          <div class="qn-stat"><span class="qn-stat-label">用时</span><span class="qn-stat-val" id="qnTime">0:00</span></div>
+          <div class="qn-stat"><span class="qn-stat-label">已放</span><span class="qn-stat-val" id="qnCount">0 / 8</span></div>
+        </div>
+        <div class="qn-boardcard">
+          <div class="qn-board">
+            <svg class="qn-svg" id="qnSvg" viewBox="0 0 100 100" role="img" aria-label="互不相犯棋盘"></svg>
+          </div>
+          <p class="qn-tip" id="qnTip"></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 过关 / 放弃浮层 -->
+    <div class="qn-overlay" id="qnOverlay">
+      <div class="qn-overlay-box" role="dialog" aria-modal="true" aria-labelledby="qnOvTitle">
+        <h4 id="qnOvTitle">过关！</h4>
+        <p id="qnOvText"></p>
+        <div class="qn-overlay-acts">
+          <button type="button" class="sub-save" id="qnOvOk">确 认</button>
+          <div class="qn-overlay-row">
+            <button type="button" class="mini-btn" id="qnOvAgain">换一题</button>
+            <button type="button" class="mini-btn" id="qnOvBack">改尺寸</button>
+          </div>
+        </div>
+        <button type="button" class="mini-btn qn-answer-btn" id="qnOvAnswer" hidden>查看答案</button>
+      </div>
+    </div>
+
+    <!-- 二次确认：重开 / 换一题 / 改尺寸 / 放弃共用 -->
+    <div class="confirm-overlay" id="qnAskConfirm">
+      <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="qnAskTitle">
+        <h4 id="qnAskTitle">重开这一局？</h4>
+        <p id="qnAskText"></p>
+        <div class="acts">
+          <button type="button" id="qnAskCancel">取消</button>
+          <button type="button" class="danger" id="qnAskOk">重开</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 单位选择的悬浮窗（单位换算用）
      外观和上面星座/性别那个是同一套（.picker-overlay + .picker-sheet + .chips），
      但各是独立的一个：那个弹窗被 app.js 绑死在个人资料的字段上，这里由
@@ -2631,6 +3180,8 @@
 <script src="js/brahma.js"></script>
 <script src="js/game2048.js"></script>
 <script src="js/bridge.js"></script>
+<script src="js/sl.js"></script>
+<script src="js/queen.js"></script>
 <script src="js/fourcolor.js"></script>
 <script src="js/bash.js"></script>
 <script src="js/morse.js"></script>

@@ -48,6 +48,8 @@ const NB_LAYER_SEL = [
   '.g48-overlay',
   '.ms-overlay',
   '.br-overlay',
+  '.sl-overlay',
+  '.qn-overlay',
 ].join(',');
 
 /* id → 它自己的关闭函数（都是经典 script 的顶层 function，挂在 window 上）。
@@ -57,6 +59,9 @@ const NB_CLOSERS = {
   menuOverlay:  'closePanel',
   nameOverlay:  'closePanel',
   aboutOverlay: 'closePanel',
+  /* 互不相犯：浮层关掉要顺手把棋盘锁进「已看完」状态，
+     否则盘面停在 over 的半锁状态、点哪都没反应 */
+  qnOverlay:    'qnDismissOverlay',
 };
 
 const NovaBack = (() => {
