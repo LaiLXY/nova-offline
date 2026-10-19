@@ -464,6 +464,10 @@
   function slToSetup() {
     slGame.hidden = true; slSetup.hidden = false;
     slGame.classList.remove('is-done');
+    /* ★ 收浮层：过关／放弃的浮层是挂在 .sl-wrap 外面的，不跟着 slGame 一起藏。
+       放弃 → 浮层里点「改尺寸」时页面已经退回选尺寸，浮层却还压在上面
+       （点了像没反应）。回选尺寸这一层，浮层一律收掉。 */
+    slOverlay.classList.remove('show');
     over = false; answerMode = false; gaveUp = false;
     if (slTimer) clearInterval(slTimer);
   }
