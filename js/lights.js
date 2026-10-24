@@ -1,15 +1,18 @@
 /* ==========================================================================
    lights.js —— 功能页：关灯游戏
 
-   玩法：N×N 的盘面开局全亮；点一个格子，它自己和上下左右四格一起翻转
-   （亮的灭、灭的亮），把全部灯关掉就过关。
+   玩法：N×N 的盘面开局是一张乱盘（部分亮着）；点一个格子，它自己和
+   上下左右四格一起翻转（亮的灭、灭的亮），把全部灯关掉就过关。
 
-   ★ 出题：从全灭盘出发，随机按 K 下十字翻转 —— 翻转操作自反且可交换，
-     所以题目必有解（解就是那 K 下的某个组合）。出完再用 GF(2) 高斯消元
-     解一遍，最少步数不达标的题重出，保证各档难度有下限。
+   ★ 出题：从全亮盘出发，随机按 K 下十字翻转 —— 翻转操作自反且可交换，
+     所以题目必有解。出完再用 GF(2) 高斯消元解一遍，最少步数不达标的
+     题重出，保证各档难度有下限。
 
-   ★ 答案即最少步：消元时枚举零空间（本站各尺寸零空间维数 ≤ 4），
-     给出的解就是最少步解；「放弃 → 查看答案」在盘面上标出要按的格子。
+   ★「看答案」不是摆一张标记图，是一串走法（照梵天汉诺的播放器成式）：
+       · 从**当前盘面**现算余下最少步，逐格演示 —— 先高亮要按的格，
+         再翻转十字，一步一停，看得清；
+       · 可暂停 / 停止；停止就停在半路，顶栏留「演示答案」可以续播；
+       · 演示不算玩家步数、不进撤销栈。
 
    纯本地、无后端；样式走 css/tools.css 的 .lt-*（结构对齐互不相犯 .qn-*）。
    ========================================================================== */
@@ -40,6 +43,12 @@
   const ltAgain = $('#ltAgain');
   const ltBack = $('#ltBack');
   const ltGiveUp = $('#ltGiveUp');
+  const ltActsMain = $('#ltActsMain');
+  const ltActsAns = $('#ltActsAns');
+  const ltActsPlay = $('#ltActsPlay');
+  const ltDemo = $('#ltDemo');
+  const ltPlayPauseBtn = $('#ltPlayPause');
+  const ltPlayStopBtn = $('#ltPlayStop');
   const ltGame = $('#ltGame');
   const ltSetup = $('#ltSetup');
   const ltOverlay = $('#ltOverlay');
@@ -60,14 +69,14 @@
   let selSize = 5;
   let lights = new Uint8Array(0);     // 1 = 亮
   let initial = new Uint8Array(0);    // 开局盘面（重开回到这里）
-  let answer = new Set();             // 最少步答案：要按的格子下标
-  let minSteps = 0;
+  let minSteps = 0;                   // 开局盘面的最少步（过关浮层里报数用）
   let undoStack = [];
   let steps = 0;
   let over = false;
-  let answerMode = false;
   let gaveUp = false;
   let round = 0;
+  let play = null;                    // 演示播放器（见「答案演示」一节）
+  let playCur = -1;                   // 演示中正要按的那格（画高亮圈）
 
   /* ---------- 计时 ---------- */
   let ltTimer = null, ltStartT = 0, ltAccum = 0, ltPaused = false;
@@ -104,8 +113,7 @@
     for (const [dr, dc] of d) {
       const r1 = r + dr, c1 = c + dc;
       if (r1 < 0 || r1 >= N || c1 < 0 || c1 >= N) continue;
-      const k = r1 * N + c1;
-      arr[k] ^= 1;
+      arr[r1 * N + c1] ^= 1;
     }
   }
 
@@ -171,7 +179,7 @@
   }
 
   /* ---------- 出题：种子点击 + 最少步达标 ----------
-     从全灭盘按 K 下（K ≥ 下限）→ 必有解；
+     从全亮盘按 K 下（K ≥ 下限）→ 必有解；
      4×4 / 5×5 有自由变量，最少步可能比 K 少，不达标就重出。 */
   function genPuzzle(n, minReq) {
     let best = null;
@@ -204,11 +212,22 @@
     return out;
   }
 
+  /* ---------- 顶栏三组按钮：常规 / 演示入口 / 播放器 ---------- */
+  function ltSyncHead() {
+    const demoing = !!play;
+    const ansGroup = !demoing && over && gaveUp;
+    ltActsMain.hidden = demoing || ansGroup;
+    ltActsAns.hidden = !ansGroup;
+    ltActsPlay.hidden = !demoing;
+  }
+
   /* ---------- 提示语 ---------- */
   function tipState() {
+    if (play) {
+      return { text: '正在演示最少步解 · 第 ' + play.i + ' / ' + play.moves.length + ' 步', warn: false };
+    }
     if (over) {
-      if (answerMode) return { text: '圆圈是答案里要按的格子 · 点「换一题」或「改尺寸」继续', warn: false };
-      if (gaveUp) return { text: '这一局已经放弃 · 点「换一题」或「改尺寸」继续', warn: false };
+      if (gaveUp) return { text: '这一局已经放弃 · 盘面停在半路，点「演示答案」看走法', warn: false };
       return { text: '灯已经全灭 · 盘面已锁，点「换一题」或「改尺寸」继续', warn: false };
     }
     const lit = litCount();
@@ -222,7 +241,7 @@
     ltSvg.setAttribute('viewBox', '0 0 ' + side + ' ' + side);
     while (ltSvg.firstChild) ltSvg.removeChild(ltSvg.firstChild);
 
-    const gBg = svgEl('g'), gOn = svgEl('g'), gAns = svgEl('g'), gHit = svgEl('g');
+    const gBg = svgEl('g'), gOn = svgEl('g'), gPress = svgEl('g'), gHit = svgEl('g');
     gBg.appendChild(svgEl('rect', { class: 'lt-bg', x: 0, y: 0, width: side, height: side }));
 
     for (let r = 0; r < N; r++) {
@@ -239,10 +258,10 @@
             x: x + 8, y: y + 8, width: CELL - 16, height: CELL - 16, rx: 12,
           }));
         }
-        if (over && answerMode && answer.has(k)) {
-          gAns.appendChild(svgEl('circle', {
-            class: 'lt-ans',
-            cx: x + CELL / 2, cy: y + CELL / 2, r: 13,
+        if (playCur === k) {
+          gPress.appendChild(svgEl('rect', {
+            class: 'lt-press',
+            x: x + 4, y: y + 4, width: CELL - 8, height: CELL - 8, rx: 12,
           }));
         }
       }
@@ -260,7 +279,7 @@
     }
     ltSvg.appendChild(gBg);
     ltSvg.appendChild(gOn);
-    ltSvg.appendChild(gAns);
+    ltSvg.appendChild(gPress);
     ltSvg.appendChild(gHit);
 
     // HUD + 提示
@@ -272,13 +291,14 @@
     ltTip.classList.toggle('is-warn', t.warn);
   }
 
-  /* ---------- 过关 / 放弃 / 看答案 ---------- */
+  /* ---------- 过关 / 放弃 ---------- */
   function ltWinCheck() {
     if (over) return;
     if (litCount() !== 0) return;
-    over = true; answerMode = false; gaveUp = false;
+    over = true; gaveUp = false;
     ltGame.classList.add('is-done');
     ltRender();
+    ltSyncHead();
     ltOvTitle.textContent = '过关！';
     ltOvText.textContent = N + ' × ' + N + ' · 用时 ' + ltTime.textContent +
       ' · ' + steps + ' 步（最少 ' + minSteps + ' 步）';
@@ -291,30 +311,109 @@
     ltOverlay.classList.remove('show');
     ltGame.classList.add('is-done');
     ltRender();
+    ltSyncHead();
   }
   function ltDoGiveUp() {
-    over = true; answerMode = false; gaveUp = true;
+    over = true; gaveUp = true;
     ltGame.classList.add('is-done');
     ltRender();
+    ltSyncHead();
     ltOvTitle.textContent = '已放弃这一局';
-    ltOvText.textContent = '可以看一组最少步的答案，也可以直接换一局。';
+    ltOvText.textContent = '可以看一段最少步的演示动画，也可以直接换一局。';
     ltOvOk.hidden = true;
     ltOvAnswer.hidden = false;
     ltOverlay.classList.add('show');
     ltPause();
   }
-  function ltAnswerView() {
-    ltOverlay.classList.remove('show');
-    over = true; answerMode = true; gaveUp = false;
-    ltGame.classList.add('is-done');
-    ltRender();
-  }
-  /* 给 backnav 用：物理返回键 / 顶栏返回箭头关浮层时，别把盘面丢在半锁状态 */
+  /* 给 backnav 用：物理返回键 / 顶栏返回箭头关浮层时，别把盘面丢在半锁状态。
+     放弃后关浮层 = 先收着，顶栏留「演示答案」，想看随时点。 */
   window.ltDismissOverlay = function () {
     if (!ltOverlay.classList.contains('show')) return;
-    if (gaveUp) ltAnswerView();      // 放弃后浮层关掉 = 直接看答案（没别的路可走）
-    else ltSolvedView();
+    ltOverlay.classList.remove('show');
+    ltGame.classList.add('is-done');
+    ltRender();
+    ltSyncHead();
   };
+
+  /* ---------- 答案演示（照梵天汉诺的播放器成式） ----------
+     从当前盘面现算余下最少步，逐格演示：先高亮要按的格（340ms×速度），
+     再翻转十字，稍停进入下一步。暂停 / 停止随时可点；
+     停止停在半路，顶栏留「演示答案」续播。不进撤销栈、不计玩家步数。 */
+  function ltPlaySpeed() {
+    if (N <= 4) return 1;
+    if (N <= 5) return 0.85;
+    if (N <= 6) return 0.7;
+    return 0.55;                           // 7×7 步数多，放快些
+  }
+  function ltPlayStopNow() {
+    if (play) { clearTimeout(play.timer); play = null; }
+    playCur = -1;
+  }
+  function ltPlayEnd(stopped) {
+    ltPlayStopNow();
+    ltRender();
+    if (stopped) {
+      ltSyncHead();
+      ltTip.textContent = '演示已停止 · 盘面停在半路，点「演示答案」续播，或换一局';
+      return;
+    }
+    gaveUp = false;                        // 演完了 = 没有可续的，顶栏回常规收尾组
+    ltSyncHead();
+    toast('ok', '演示结束', '这就是余下盘面的最少步走法');
+  }
+  function ltStartDemo() {
+    if (play) return;
+    const sol = solveMin(lights);
+    if (!sol || !sol.steps) {
+      toast('ok', '已经全灭了', '没有要演示的步子');
+      gaveUp = false;
+      ltOverlay.classList.remove('show');
+      ltSyncHead();
+      ltRender();
+      return;
+    }
+    ltPlayStopNow();
+    over = true; gaveUp = true;
+    ltGame.classList.add('is-done');
+    ltOverlay.classList.remove('show');
+    play = { moves: [...sol.cells], i: 0, paused: false, timer: null, speed: ltPlaySpeed() };
+    ltSyncHead();
+    ltPlayPauseBtn.textContent = '暂停';
+    ltPlayStep();
+  }
+  function ltPlayStep() {
+    if (!play || play.paused) return;
+    if (!page.classList.contains('show')) { ltPlayStopNow(); return; }   // 功能页被关了
+    if (document.hidden) { play.timer = setTimeout(ltPlayStep, 400); return; }   // 后台先等着
+    if (play.i >= play.moves.length) { ltPlayEnd(false); return; }
+    const k = play.moves[play.i];
+    play.i++;
+    playCur = k;
+    ltRender();
+    const sp = play.speed;
+    play.timer = setTimeout(() => {
+      if (!play) return;
+      toggleCross(lights, Math.floor(k / N), k % N);
+      playCur = -1;
+      ltRender();
+      if (!play || play.paused) return;
+      play.timer = setTimeout(ltPlayStep, Math.round(60 * sp));
+    }, Math.round(340 * sp));
+  }
+  function ltPlayPauseToggle() {
+    if (!play) return;
+    if (play.paused) {
+      play.paused = false;
+      ltPlayPauseBtn.textContent = '暂停';
+      ltPlayStep();
+    } else {
+      play.paused = true;
+      clearTimeout(play.timer);
+      /* 高亮还挂在半空（正要按的那格）→ 步子回退一格，续播时从头按这一步 */
+      if (playCur >= 0) { play.i--; playCur = -1; ltRender(); }
+      ltPlayPauseBtn.textContent = '继续';
+    }
+  }
 
   /* ---------- 撤销 / 重开 / 换题 / 改尺寸 ---------- */
   function pushUndo() {
@@ -326,18 +425,22 @@
     const s = undoStack.pop();
     lights = s.lights;
     steps = s.steps;
-    over = false; answerMode = false; gaveUp = false;
+    over = false; gaveUp = false;
+    ltPlayStopNow();
     ltOverlay.classList.remove('show');
     ltGame.classList.remove('is-done');
     ltRender();
+    ltSyncHead();
   }
   function ltResetAll() {
     lights = initial.slice();
-    steps = 0; over = false; answerMode = false; gaveUp = false;
+    steps = 0; over = false; gaveUp = false;
     undoStack = [];
+    ltPlayStopNow();
     ltOverlay.classList.remove('show');
     ltGame.classList.remove('is-done');
     ltRender();
+    ltSyncHead();
     ltStartClock();
   }
   function ltNewRound(size) {
@@ -345,11 +448,11 @@
     const out = genFor(size);
     lights = out.lights;
     initial = out.lights.slice();
-    answer = out.sol.cells;
     minSteps = out.sol.steps;
     undoStack = [];
-    steps = 0; over = false; answerMode = false; gaveUp = false;
+    steps = 0; over = false; gaveUp = false;
     round++;
+    ltPlayStopNow();
     ltRound.textContent = '第 ' + round + ' 局';
     ltMeta.textContent = size + ' × ' + size;
     ltSetup.hidden = true;
@@ -357,14 +460,17 @@
     ltGame.classList.remove('is-done');
     ltOverlay.classList.remove('show');
     ltRender();
+    ltSyncHead();
     ltStartClock();
   }
   function ltToSetup() {
     ltGame.hidden = true;
     ltSetup.hidden = false;
     ltGame.classList.remove('is-done');
-    over = false; answerMode = false; gaveUp = false;
+    over = false; gaveUp = false;
+    ltPlayStopNow();
     if (ltTimer) clearInterval(ltTimer);
+    ltSyncHead();
   }
 
   /* ---------- 二次确认 ---------- */
@@ -372,11 +478,11 @@
     reset: { title: '重开这一局？', text: '回到这一局的开局盘面，步数清零，计时重新开始。', ok: '重开', run: ltResetAll },
     again: { title: '换一题？', text: '当前这一局作废，重新开一盘（开局盘面会变）。', ok: '换一题', run: () => ltNewRound(N) },
     size:  { title: '改尺寸？', text: '当前这一局作废，回到选盘面。', ok: '改尺寸', run: ltToSetup },
-    give:  { title: '放弃这一局？', text: '可以看一组最少步的答案，或直接换一局。', ok: '放弃', run: ltDoGiveUp },
+    give:  { title: '放弃这一局？', text: '可以看一段最少步的演示动画，或直接换一局。', ok: '放弃', run: ltDoGiveUp },
   };
   let ltAskKind = null;
   function ltAskOpen(kind) {
-    /* 这一局已经收尾（过关 / 放弃 / 看答案）→ 换一题 / 改尺寸没什么可丢的，直接走。
+    /* 这一局已经收尾（过关 / 放弃 / 看过演示）→ 换一题 / 改尺寸没什么可丢的，直接走。
        只有还在玩的时候才值得问一句。 */
     if (over && (kind === 'again' || kind === 'size')) { LT_ASK[kind].run(); return; }
     if (kind === 'reset' && !steps) {
@@ -418,7 +524,7 @@
   ltGiveUp.addEventListener('click', () => ltAskOpen('give'));
 
   ltSvg.addEventListener('click', e => {
-    if (over) return;
+    if (over || play) return;
     const hit = e.target.closest ? e.target.closest('[data-cell]') : null;
     if (!hit) return;
     const parts = hit.dataset.cell.split(':');
@@ -433,7 +539,10 @@
   ltOvOk.addEventListener('click', ltSolvedView);
   ltOvAgain.addEventListener('click', () => ltNewRound(N));
   ltOvBack.addEventListener('click', ltToSetup);
-  ltOvAnswer.addEventListener('click', ltAnswerView);
+  ltOvAnswer.addEventListener('click', ltStartDemo);
+  ltDemo.addEventListener('click', ltStartDemo);
+  ltPlayPauseBtn.addEventListener('click', ltPlayPauseToggle);
+  ltPlayStopBtn.addEventListener('click', () => ltPlayEnd(true));
 
   ltAskOk.addEventListener('click', () => {
     const k = ltAskKind;
@@ -450,7 +559,23 @@
     ltSyncPause();
   });
 
-  /* 顶栏返回箭头 / Esc：浮层开着就先关浮层（和物理返回键一个口径），
+  /* Esc：确认框 → 演示中（停止）→ 才交给 backnav / tools.js。
+     挂 window 捕获阶段（照梵天汉诺），拦下之后 tools.js 那个「Esc = 返回」就收不到。 */
+  window.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (!page.classList.contains('show')) return;
+    if (ltAskConfirm.classList.contains('show')) {
+      e.stopPropagation(); e.preventDefault();
+      ltCloseConfirm();
+      return;
+    }
+    if (play) {
+      e.stopPropagation(); e.preventDefault();
+      ltPlayEnd(true);
+    }
+  }, true);
+
+  /* 顶栏返回箭头 / 物理返回键：浮层开着就先关浮层（和 backnav 一个口径），
      别一下把整个功能页关掉。 */
   if (typeof NovaBack !== 'undefined' && NovaBack.inner) {
     NovaBack.inner(top => {

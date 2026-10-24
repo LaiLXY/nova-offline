@@ -4847,9 +4847,9 @@ html[data-layout="tablet"] .qn-overlay-box p { font-size: 15.5px; }
 /* ======================================================
    关灯游戏（lights.js）
    结构对齐「互不相犯」，类名 .lt-*；灭灯 = 冷灰格，
-   亮灯 = 内缩的黄色圆角块；答案 = 蓝色圆圈标记要按的格子。
+   亮灯 = 内缩的黄色圆角块；演示答案 = 蓝底脉冲框圈出正要按的格子。
    ★ 离线版主色是品牌蓝（--brand），但「亮着的灯」保留原来的黄：
-     它是玩法里的图元，不是主题装饰；而且和答案的蓝圈要能分清。
+     它是玩法里的图元，不是主题装饰；而且和演示的蓝框要能分清。
      离线版没有 --yellow，所以灯色用本节自己声明的 --lt-lamp。
    ====================================================== */
 .lt-wrap {
@@ -4962,10 +4962,19 @@ html[data-layout="tablet"] .qn-overlay-box p { font-size: 15.5px; }
 /* 亮灯：内缩的品牌黄圆角块（黄只做浅色，配白盘面刚好） */
 .lt-oncell { fill: var(--lt-lamp); }
 
-/* 答案标记：要按的格子画蓝圈（最少步解） */
-.lt-ans {
-  fill: none; stroke: var(--accent); stroke-width: 3.5;
-  stroke-dasharray: 6.5 5;
+/* 顶栏按钮组（常规 / 演示入口 / 播放器）：display:contents 让按钮直接
+   参与父级 flex 排版；hidden 开关必须显式压回去，否则 contents 会盖掉 hidden */
+.lt-acts { display: contents; }
+.lt-acts[hidden] { display: none !important; }
+/* 演示中正要按的格子：蓝底圈层 + 粗描边（一步一停，看得清按的是哪格） */
+.lt-press {
+  fill: rgba(37, 99, 235, .12);
+  stroke: var(--accent); stroke-width: 4;
+  animation: ltPressPulse .34s ease-in-out infinite alternate;
+}
+@keyframes ltPressPulse {
+  from { stroke-opacity: 1; }
+  to   { stroke-opacity: .35; }
 }
 
 /* 点击热区：铺满整格，透明 */

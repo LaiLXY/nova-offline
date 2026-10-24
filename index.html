@@ -3367,7 +3367,7 @@
             <li>点一个格子，它<b>自己和上下左右相邻的格子</b>一起翻转：亮着的灭、灭着的亮。</li>
             <li>开局<b>一部分灯亮着</b>（每局都不一样），把全部灯都关掉就过关。</li>
             <li>按错了不用怕，「撤销」能一步一步退回去，「重开」回到开局盘面。</li>
-            <li>每一题都保证有解；卡住了可以「放弃」，看一组<b>最少步数</b>的答案。</li>
+            <li>每一题都保证有解；卡住了可以「放弃」，看一段<b>最少步</b>的演示动画。</li>
           </ul>
         </div>
       </section>
@@ -3378,11 +3378,23 @@
           <span class="lt-round" id="ltRound">第 1 局</span>
           <span class="lt-meta" id="ltMeta">5×5</span>
           <div class="lt-head-acts">
-            <button type="button" class="lt-tool" id="ltUndo">撤销</button>
-            <button type="button" class="lt-tool" id="ltReset">重开</button>
-            <button type="button" class="lt-tool" id="ltAgain">换一题</button>
-            <button type="button" class="lt-tool" id="ltBack">改尺寸</button>
-            <button type="button" class="lt-tool lt-quit" id="ltGiveUp">放弃</button>
+            <!-- 常规组：对局中全套；收尾后 is-done 只剩 换一题 / 改尺寸 -->
+            <span class="lt-acts" id="ltActsMain">
+              <button type="button" class="lt-tool" id="ltUndo">撤销</button>
+              <button type="button" class="lt-tool" id="ltReset">重开</button>
+              <button type="button" class="lt-tool" id="ltAgain">换一题</button>
+              <button type="button" class="lt-tool" id="ltBack">改尺寸</button>
+              <button type="button" class="lt-tool lt-quit" id="ltGiveUp">放弃</button>
+            </span>
+            <!-- 演示入口组：放弃后顶栏留一个口子（照梵天汉诺「想看得自己点一下」） -->
+            <span class="lt-acts" id="ltActsAns" hidden>
+              <button type="button" class="lt-tool" id="ltDemo">演示答案</button>
+            </span>
+            <!-- 播放组：演示中替换全部顶栏按钮 -->
+            <span class="lt-acts" id="ltActsPlay" hidden>
+              <button type="button" class="lt-tool" id="ltPlayPause">暂停</button>
+              <button type="button" class="lt-tool" id="ltPlayStop">停止</button>
+            </span>
           </div>
         </div>
         <div class="lt-hud">
