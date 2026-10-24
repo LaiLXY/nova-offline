@@ -1758,11 +1758,11 @@ function cvtSwap() {
                                 .    0    退格
 
    · 去掉「切换」—— 这一页只有一套键位，没什么可切的
-   · 补上小数点、除号、科学计数法的 e+ / e-、圆周率 π
-   · **顶上那行 4 个键**（e+ e- / π），底下四行是标准的 3 列数字盘。
+   · 补上小数点、负号、除号、科学计数法的 e+ / e-、圆周率 π
+   · **顶上那行 5 个键**（e+ e- / - π），底下四行是标准的 3 列数字盘。
      这么排是为了不把键盘撑高：总共还是 5 行，和原来一样。
-     靠 css 的 .gfx-pad-keys.is-numpad 撑开（12 列网格，顶行每键占 3 格、
-     下面每键占 4 格），见 css/tools.css。
+     靠 css 的 .gfx-pad-keys.is-numpad 撑开（15 列网格，顶行每键占 3 格、
+     下面每键占 5 格），见 css/tools.css。
 
    ★ 一个键盘伺候**三个输入框**（数值 / 立体角 / 面积）：谁拿到焦点就
      往谁里面插字（cvtPadTarget）。这一档是这么来的 —— 光学那类要同时填
@@ -1778,6 +1778,7 @@ const CVT_PAD_KEYS = [
   { l: 'e+', fn: 1, op: 1, ins: 'e+', title: '正的指数，例如 1e+3' },
   { l: 'e-', fn: 1, op: 1, ins: 'e-', title: '负的指数，例如 1e-4' },
   { l: '/',  fn: 1, op: 1,           title: '除号（写分数），例如 3/4' },
+  { l: '-',  fn: 1, op: 1, ins: '-', title: '负号，只能写在数的最前面，例如 -5' },
   { l: 'π',  fn: 1, op: 1, title: '圆周率，只在「立体角」里用得上', needsPi: true },
 
   '7', '8', '9',
@@ -1834,7 +1835,7 @@ function cvtPadRender() {
       fn: k.fn, title: k.title,
       action: () => cvtPadInsert(k.ins || k.l),
     });
-    // 顶上那行（e+ e- / π）：换一套列宽，见 .is-numpad
+    // 顶上那行（e+ e- / - π）：换一套列宽，见 .is-numpad
     if (k.op) btn.classList.add('is-op');
 
     // 这个框不认这个字符（只有 π 会撞上）：置灰 + 说明

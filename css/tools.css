@@ -1205,19 +1205,19 @@ html[data-viewport="lg"][data-aspect="wide"] #toolGraph .gfx-pad {
 
 /* ---------- 单位换算的数字盘：顶上多一行 ----------
    16 个键排成 5 行：第一行 4 个（e+ / e- / / / π），下面 4 行还是
-   标准的 3 列数字盘。用 12 列网格做到"同宽不同份"：
+   标准的 3 列数字盘。用 15 列网格做到"同宽不同份"：
 
-     顶行每键占 3 格 → 3 × 4 = 12，一行正好 4 个（每个 1/4 宽）
-     其余每键占 4 格 → 4 × 3 = 12，一行正好 3 个（每个 1/3 宽）
+     顶行每键占 3 格 → 3 × 5 = 15，一行正好 5 个（每个 1/5 宽）
+     其余每键占 5 格 → 5 × 3 = 15，一行正好 3 个（每个 1/3 宽）
 
    这样键盘高度和只有 3 列时**一模一样**（还是 5 行），不会因为多了一个
    键就把输入区挤没。见 js/units.js 的 CVT_PAD_KEYS。 */
 .gfx-pad-keys.is-numpad {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: repeat(15, minmax(0, 1fr));
   gap: var(--kgap);
 }
-.gfx-pad-keys.is-numpad > .gfx-key { grid-column: span 4; }
+.gfx-pad-keys.is-numpad > .gfx-key { grid-column: span 5; }
 .gfx-pad-keys.is-numpad > .gfx-key.is-op { grid-column: span 3; }
 
 /* ---------- 字母键盘：每行一个 flex 行 ----------
