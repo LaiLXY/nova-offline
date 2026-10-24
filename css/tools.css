@@ -4452,6 +4452,59 @@ html[data-viewport="lg"] .ms-key { height: 50px; font-size: 17px; }
 }
 .ms-case-opt.is-on { border-color: #0369a1; background: #f0f9ff; color: #0369a1; font-weight: 600; }
 
+/* ---------- 电码播放（电码 → 文字 + 逐符号播报） ----------
+   纸带「字母一格、格内一个符号」，播到哪个亮哪个；色系沿用本卡天蓝。
+   输入框 / 结果框 / 大小写栏全部复用上面的 .rm-* / .ms-case-*，不另起一套。 */
+.ms-playbar { display: flex; align-items: stretch; gap: 10px; margin-top: 4px; }
+.ms-playbtn {
+  flex: 1 1 auto; min-width: 0; height: 46px; padding: 0 16px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 12px; border: 1px solid #0369a1; background: #0369a1; color: #fff;
+  font-family: inherit; font-size: 15px; font-weight: 600; letter-spacing: .6px;
+  cursor: pointer; touch-action: manipulation;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.ms-playbtn:hover { background: #075e8f; border-color: #075e8f; }
+/* 播放中这个键就是「暂停」：反白，一眼看出是能打断的 */
+.ms-playbtn.is-on { background: #fff; color: #0369a1; }
+.ms-playbtn.is-on:hover { background: #f0f9ff; }
+.ms-playbtn:disabled,
+.ms-playbtn:disabled:hover { background: #cbd5e1; border-color: #cbd5e1; color: #fff; cursor: default; }
+.ms-playagain { flex: 0 0 auto; height: 46px; padding: 0 14px; }
+
+.ms-plprog { height: 3px; margin: 10px 2px 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+.ms-plprog > i { display: block; width: 0; height: 100%; border-radius: 999px; background: #0369a1; }
+
+.ms-pltape {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+  min-height: 62px; max-height: 178px; overflow-y: auto;
+  margin-bottom: 14px;               /* 与下面「输出大小写」拉开，别贴着 */
+  padding: 12px; border-radius: 12px;
+  background: #f0f9ff; border: 1px solid #bae6fd;
+  overscroll-behavior: contain;
+}
+.ms-plempty { margin: 0 auto; font-size: 12.5px; color: var(--muted); text-align: center; line-height: 1.6; }
+.ms-plword { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; max-width: 100%; min-width: 0; }
+.ms-plword + .ms-plword { margin-left: 10px; }
+.ms-plletter {
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 9px; border-radius: 9px;
+  background: #fff; border: 1px solid #dbeafe;
+  transition: border-color .12s, box-shadow .12s;
+}
+.ms-plletter.is-cur { border-color: #7dd3fc; box-shadow: 0 0 0 2px #e0f2fe; }
+.ms-plsym { display: block; background: #94a3b8; transition: background .08s, box-shadow .08s; }
+.ms-plsym.is-dot { width: 7px; height: 7px; border-radius: 50%; }
+.ms-plsym.is-dash { width: 19px; height: 7px; border-radius: 4px; }
+.ms-plsym.is-on { background: #0369a1; box-shadow: 0 0 0 3px #bae6fd; }
+html[data-touch="1"] .ms-pltape { padding: 10px; max-height: 200px; }
+html[data-touch="1"] .ms-plletter { padding: 8px 10px; }
+html[data-touch="1"] .ms-plsym.is-dot { width: 8px; height: 8px; }
+html[data-touch="1"] .ms-plsym.is-dash { width: 21px; height: 8px; }
+/* 播报途中输入框是只读的，压一下字色，避免「为什么打不进去」的错觉 */
+#msPlIn[readonly] { color: var(--muted); }
+
 /* PC 端：软键盘不全宽，居中一块（用户要求电脑端适配大小） */
 html[data-viewport="lg"] #msPad {
   max-width: 480px;

@@ -2548,6 +2548,9 @@
           <button type="button" class="ms-mode" id="msGoGame">
             <b>译电挑战</b><span>听电码 · 逐字母译出整词</span>
           </button>
+          <button type="button" class="ms-mode" id="msGoPlay">
+            <b>电码播放</b><span>贴一段电码 · 边听边看它亮</span>
+          </button>
           <button type="button" class="ms-mode" id="msGoChart">
             <b>电码对照</b><span>数字 0–9 · 字母 A–Z · 常用标点</span>
           </button>
@@ -2599,8 +2602,8 @@
         <div class="ms-case" id="msCase" hidden>
           <button type="button" class="ms-case-toggle" id="msCaseToggle" aria-expanded="false">
             <span>输出大小写</span>
-            <em id="msCaseCur">自动</em>
-            <i class="ms-case-arrow" id="msCaseArrow">▾</i>
+            <em class="ms-case-cur">自动</em>
+            <i class="ms-case-arrow">▾</i>
           </button>
           <div class="ms-case-opts" id="msCaseOpts" hidden>
             <button type="button" class="ms-case-opt is-on" data-case="auto" title="句首大写 + 还原常见人名 / 地名 / 品牌（833 条词库）+ 独立的 i → I">自动</button>
@@ -2621,6 +2624,67 @@
           </div>
         </div>
         <p class="ms-note" id="msNote">/ 分隔字母 · \ 分隔单词 · 空格自动变 \</p>
+      </section>
+
+      <!-- ============ 三级 A4：电码播放（电码 → 文字 + 逐符号播报） ============
+           页面主体就是上面「电码 → 文字」那一套（同一个软键盘 #msPad），
+           只多出「播放 / 暂停 / 从头」与一条高亮纸带。 -->
+      <section class="ms-card ms-player" id="msPlayer" hidden>
+        <div class="ms-backrow">
+          <button type="button" class="mini-btn" data-ms-back="home">‹ 返回</button>
+          <span class="ms-dir-tag">电码 → 文字</span>
+        </div>
+        <div class="field">
+          <label for="msPlIn">输入（摩斯电码）</label>
+          <div class="rm-row">
+            <div class="rm-field">
+              <div class="input-wrap rm-input is-area" data-field>
+                <textarea id="msPlIn" rows="2" placeholder="如 ··\·-/--" maxlength="800"
+                          autocomplete="off" autocapitalize="off" autocorrect="off"
+                          spellcheck="false" aria-label="输入摩斯电码"></textarea>
+              </div>
+              <div class="hint"></div>
+            </div>
+            <button type="button" class="rm-copy" id="msPlCopyIn">复制</button>
+          </div>
+        </div>
+
+        <!-- 播报控制：播放 / 暂停 ⇄ 继续播放 + 从头播放（从头只在暂停时露出） -->
+        <div class="ms-playbar">
+          <button type="button" class="ms-playbtn" id="msPlToggle">播放</button>
+          <button type="button" class="mini-btn ms-playagain" id="msPlRestart" hidden>从头播放</button>
+        </div>
+        <div class="ms-plprog"><i id="msPlProg"></i></div>
+
+        <!-- 高亮纸带：每个字母一格，格内是它的符号，播到哪个哪个亮（js 现铺） -->
+        <div class="ms-pltape" id="msPlTape"></div>
+
+        <div class="ms-case" id="msPlCase">
+          <button type="button" class="ms-case-toggle" aria-expanded="false">
+            <span>输出大小写</span>
+            <em class="ms-case-cur">自动</em>
+            <i class="ms-case-arrow">▾</i>
+          </button>
+          <div class="ms-case-opts" hidden>
+            <button type="button" class="ms-case-opt is-on" data-case="auto">自动</button>
+            <button type="button" class="ms-case-opt" data-case="upper">全部大写</button>
+            <button type="button" class="ms-case-opt" data-case="lower">全部小写</button>
+            <button type="button" class="ms-case-opt" data-case="sentence">仅句子首字母大写</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="msPlOut">结果</label>
+          <div class="rm-row">
+            <div class="rm-field">
+              <div class="input-wrap rm-input rm-readonly is-area">
+                <textarea id="msPlOut" rows="1" readonly placeholder="—" aria-label="播放页翻译结果"></textarea>
+              </div>
+            </div>
+            <button type="button" class="rm-copy" id="msPlCopyOut">复制</button>
+          </div>
+        </div>
+        <p class="ms-note" id="msPlNote">/ 分隔字母 · \ 分隔单词 · 空格也当词间隔 · 12 wpm 播报，播报中锁住输入框</p>
       </section>
 
       <!-- ============ 三级 A3：电码对照表（0–9 / A–Z / 常用标点） ============ -->
@@ -2729,7 +2793,8 @@
   </div>
 
   <!-- 软键盘：摩斯键位（· — 两个大键 + / \ 退格，头部清空 / 完成）。
-       点「电码 → 文字」的输入框才出现；外观复用第六节 .gfx-pad。
+       点「电码 → 文字」或「电码播放」的输入框才出现（同一个键盘，
+       写哪个框由焦点的输入框决定）；外观复用第六节 .gfx-pad。
        键面由 js/morse.js 现铺（点 / 划用图形画，分隔键带小字说明）。 -->
   <div class="gfx-pad ms-pad" id="msPad" hidden>
     <div class="gfx-pad-head">

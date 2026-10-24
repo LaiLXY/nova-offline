@@ -1,7 +1,7 @@
 /* ==========================================================================
    morse.js —— 功能页：异语道破（摩斯电码）
    --------------------------------------------------------------------------
-   两个模式（二级选择 → 各自三级）：
+   三个模式（二级选择 → 各自三级）：
 
      一、摩斯翻译（照罗马数字的双输入框成式）
         enc：文字 → 电码。/ 分隔字母、\ 分隔单词，空格自动变 \，
@@ -20,8 +20,15 @@
         三档：入门 4–5 字母对照表常显 / 进阶 6–8 对照表可展开 /
         困难 8–12 字母（或数字串）无对照表 18wpm。
 
+     三、电码播放（第五节的 pl* 系列）
+        页面主体就是「电码 → 文字」（同一个软键盘，跟着焦点决定写哪个框），
+        多一条播报：播放 → 暂停 ⇄ 继续播放 / 从头播放；播报中锁死输入框，
+        纸带上实时高亮正在发的符号，离开本页立刻静音。
+        时间轴算法同译电挑战，但要能暂停续播，所以换成
+        「播放头 + 提前 220ms 预排」的调度法（见第五节注释）。
+
    依赖：core.js（$ / $$ / toast）、tools.js（tool:open）、
-        graph.js（gfxPadEnsureVisible / gfxClearPadScroller）。
+        graph.js（gfxPadEnsureVisible / gfxClearPadScroller）、backnav.js。
    一次请求都不发，不记战绩。
    ========================================================================== */
 (function () {
@@ -89,9 +96,16 @@
   const msPad = $('#msPad'), msPadKeys = $('#msPadKeys');
   const msPadClear = $('#msPadClear'), msPadDone = $('#msPadDone');
 
-  /* 输出大小写折叠栏（仅 电码 → 文字 方向显示） */
-  const msCase = $('#msCase'), msCaseToggle = $('#msCaseToggle');
-  const msCaseOpts = $('#msCaseOpts'), msCaseCur = $('#msCaseCur'), msCaseArrow = $('#msCaseArrow');
+  /* 输出大小写折叠栏（翻译页 + 播报页各一条，共用同一个 msCaseMode） */
+  const msCase = $('#msCase'), msPlCase = $('#msPlCase');
+  const MS_CASE_BARS = [];
+
+  /* 电码播放（三级 A4） */
+  const msPlayer = $('#msPlayer');
+  const msPlIn = $('#msPlIn'), msPlOut = $('#msPlOut');
+  const msPlTape = $('#msPlTape'), msPlProg = $('#msPlProg');
+  const msPlToggle = $('#msPlToggle'), msPlRestart = $('#msPlRestart');
+  const msPlCopyIn = $('#msPlCopyIn'), msPlCopyOut = $('#msPlCopyOut');
 
   const msTiersEl = $('#msTiers'), msStart = $('#msStart');
   const msRoundEl = $('#msRound'), msMeta = $('#msMeta');
@@ -108,7 +122,7 @@
   /* ==========================================================
      一、层级导航（二级 ↔ 三级）
      ========================================================== */
-  const MS_SECTIONS = [msHome, msTransHome, msTrans, msChart, msGameHome, msGame];
+  const MS_SECTIONS = [msHome, msTransHome, msTrans, msPlayer, msChart, msGameHome, msGame];
 
   function msShow(sec) {
     MS_SECTIONS.forEach(s => { s.hidden = (s !== sec); });
@@ -118,11 +132,12 @@
     const back = e.target.closest('[data-ms-back]');
     if (!back || !PAGE.contains(back)) return;
     msStopAudio();
+    plStop();                    /* 播报页退出去必须当场静音 */
     msPadHide();
     msShow(back.dataset.msBack === 'transHome' ? msTransHome : msHome);
   });
 
-  /* 返回键（js/backnav.js）：先退内部视图 —— 编码 / 解码、游戏、码表都回到
+  /* 返回键（js/backnav.js）：先退内部视图 —— 编码 / 解码、播报、游戏、码表都回到
      各自的上一级，别一下把整个异语道破关掉。真退到底了才 return false，
      让 backnav 去关功能页。
      top 必须就是本页：上面还压着通关浮层时，那层该先关，不归这里管。 */
@@ -130,6 +145,7 @@
     NovaBack.inner(top => {
       if (top !== PAGE) return false;
       if (!msTrans.hidden)   { msStopAudio(); msPadHide(); msShow(msTransHome); return true; }
+      if (!msPlayer.hidden)  { plStop(); msPadHide(); msShow(msHome); return true; }
       if (!msChart.hidden)   { msShow(msHome); return true; }
       if (!msGame.hidden)    { msStopAudio(); msPadHide(); msShow(msGameHome); return true; }
       if (!msGameHome.hidden || !msTransHome.hidden) { msShow(msHome); return true; }
@@ -339,10 +355,57 @@
     return msTermsApply(s).replace(/\bi\b/g, 'I');
   }
 
+  /* 折叠栏两条（翻译页 / 播报页），内容同源：改一处两处的当前值一起变 */
+  function msInitCaseBar(root) {
+    if (!root) return;
+    const bar = {
+      toggle: root.querySelector('.ms-case-toggle'),
+      opts: root.querySelector('.ms-case-opts'),
+      arrow: root.querySelector('.ms-case-arrow'),
+      cur: root.querySelector('.ms-case-cur'),
+      btns: $$('.ms-case-opt', root)
+    };
+    if (!bar.toggle || !bar.opts) return;
+    bar.toggle.addEventListener('click', () => {
+      bar.opts.hidden = !bar.opts.hidden;
+      bar.toggle.setAttribute('aria-expanded', String(!bar.opts.hidden));
+      if (bar.arrow) bar.arrow.textContent = bar.opts.hidden ? '▾' : '▴';
+    });
+    bar.btns.forEach(b => b.addEventListener('click', () => {
+      msCaseMode = b.dataset.case;
+      msPaintCase();
+      msSync();                        /* 翻译页结果立即按新规则重排 */
+      msPlSyncOut();                   /* 播报页结果同规则 */
+    }));
+    MS_CASE_BARS.push(bar);
+  }
+
+  function msPaintCase() {
+    MS_CASE_BARS.forEach(bar => {
+      bar.btns.forEach(x => x.classList.toggle('is-on', x.dataset.case === msCaseMode));
+      if (bar.cur) bar.cur.textContent = MS_CASE_NAMES[msCaseMode];
+    });
+  }
+
   /* ==========================================================
      三、摩斯软键盘（外观复用 .gfx-pad；键位照设计图）
+     ----------------------------------------------------------
+     一个键盘两处用：「电码 → 文字」与「电码播放」的输入框长相一样、
+     键位也一样，所以不铺第二套 —— 点谁就写谁（msPadTarget）。
+     播报中那格输入框是锁着的，此时不弹键盘。
      ========================================================== */
   let msPadCaret = 0;
+  let msPadTarget = null;            /* 软键盘当前写哪个输入框（null = 还没用过） */
+
+  function msPadInput() { return msPadTarget || msIn; }
+
+  /* 只有摩斯电码输入框才弹键盘：翻译页要 dec 方向，播报页播报中不给弹 */
+  function msPadCanShow(el) {
+    if (!el) return false;
+    if (el === msPlIn) return plState !== 'playing';
+    if (el === msIn) return msDir === 'dec';
+    return false;
+  }
 
   function msPadKey(html, opts) {
     const o = opts || {};
@@ -380,33 +443,36 @@
     msPadKeys.appendChild(row2);
   }
 
-  /* 插字后派发 input 事件 —— 同步全交给已有的 msSync 链路 */
+  /* 插字后派发 input 事件 —— 同步全交给各自的 input 链路 */
   function msPadInsert(text) {
-    const v = msIn.value;
+    const el = msPadInput();
+    const v = el.value;
     const pos = Math.min(Math.max(msPadCaret, 0), v.length);
-    msIn.value = v.slice(0, pos) + text + v.slice(pos);
+    el.value = v.slice(0, pos) + text + v.slice(pos);
     msPadCaret = pos + text.length;
-    try { msIn.setSelectionRange(msPadCaret, msPadCaret); } catch (_) {}
-    msIn.dispatchEvent(new Event('input', { bubbles: true }));
+    try { el.setSelectionRange(msPadCaret, msPadCaret); } catch (_) {}
+    el.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   function msPadBackspace() {
-    const v = msIn.value;
+    const el = msPadInput();
+    const v = el.value;
     const pos = Math.min(Math.max(msPadCaret, 0), v.length);
     if (pos === 0) return;
-    msIn.value = v.slice(0, pos - 1) + v.slice(pos);
+    el.value = v.slice(0, pos - 1) + v.slice(pos);
     msPadCaret = pos - 1;
-    try { msIn.setSelectionRange(msPadCaret, msPadCaret); } catch (_) {}
-    msIn.dispatchEvent(new Event('input', { bubbles: true }));
+    try { el.setSelectionRange(msPadCaret, msPadCaret); } catch (_) {}
+    el.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
-  function msPadShow() {
-    if (!msPad || msDir !== 'dec') return;
-    msPadCaret = typeof msIn.selectionStart === 'number'
-      ? msIn.selectionStart : msIn.value.length;
+  function msPadShowFor(el) {
+    if (!msPad || !msPadCanShow(el)) return;
+    msPadTarget = el;
+    msPadCaret = typeof el.selectionStart === 'number'
+      ? el.selectionStart : el.value.length;
     msPadRender();
     msPad.hidden = false;
-    gfxPadEnsureVisible(msIn, msPad);
+    gfxPadEnsureVisible(el, msPad);
   }
 
   function msPadHide() {
@@ -415,25 +481,36 @@
     gfxClearPadScroller();
   }
 
-  function msPadBind() {
-    msIn.addEventListener('focus', msPadShow);
+  /* 两个摩斯输入框（翻译页 / 播报页）共用一套绑定 */
+  function msPadBindInput(input) {
+    if (!input) return;
+    input.addEventListener('focus', () => msPadShowFor(input));
     /* 兜底：个别浏览器点一下未必派发 focus */
-    msIn.addEventListener('click', () => {
-      if (msPad && msPad.hidden && msDir === 'dec') msPadShow();
-      if (typeof msIn.selectionStart === 'number') msPadCaret = msIn.selectionStart;
+    input.addEventListener('click', () => {
+      if (msPad && msPad.hidden) msPadShowFor(input);
+      if (msPadTarget === input && typeof input.selectionStart === 'number') {
+        msPadCaret = input.selectionStart;
+      }
     });
     /* 失焦等一个 tick：点软键盘按钮也会先 blur 一下 */
-    msIn.addEventListener('blur', () => {
+    input.addEventListener('blur', () => {
       setTimeout(() => {
         if (msPad && msPad.contains(document.activeElement)) return;
         msPadHide();
       }, 0);
     });
     ['click', 'keyup', 'input', 'select'].forEach(ev => {
-      msIn.addEventListener(ev, () => {
-        if (typeof msIn.selectionStart === 'number') msPadCaret = msIn.selectionStart;
+      input.addEventListener(ev, () => {
+        if (msPadTarget === input && typeof input.selectionStart === 'number') {
+          msPadCaret = input.selectionStart;
+        }
       });
     });
+  }
+
+  function msPadBind() {
+    msPadBindInput(msIn);
+    msPadBindInput(msPlIn);
   }
 
   /* ---------- 复制（照罗马数字的 rmCopy 成式） ---------- */
@@ -735,13 +812,308 @@
   }
 
   /* ==========================================================
-     五、事件绑定
+     五、电码播放（电码 → 文字，逐符号播报 + 实时高亮）
+     ----------------------------------------------------------
+     ★ 一条时间轴两用（同译电挑战的老办法）：先把每个符号的 (start, dur)
+       算成一串事件，音频按它「往前看 220ms」预排，视觉高亮读同一个播放头
+       （performance.now 推），画面和声音不会各走各的。
+     ★ 暂停 = 记下播放头位置 + 掐掉已排的音；继续 = 从那个位置重排，
+       所以停在符号中间也能接着响、接着亮。
+     ★ 退出页面（返回箭头 / 返回键 / Esc / 浏览器后退）一律 plStop()，
+       见下面的 MutationObserver 与各导航分支。
+     ========================================================== */
+  const MS_PLAY_WPM = 12;            /* 播报速度：1200/wpm = 一「点」的毫秒数 */
+  const MS_PLAY_LOOKAHEAD = 220;     /* 音频预排窗口（毫秒） */
+  const MS_PLAY_LEAD = 0.02;         /* 给音频线程留的余量（秒） */
+
+  let plEvents = [];                 /* { el, start, dur, li } 按时间升序 */
+  let plLetters = [];                /* 每个字母的格子（高亮当前字母用） */
+  let plTotal = 0;                   /* 整段时长（毫秒） */
+  let plState = 'idle';              /* idle | playing | paused */
+  let plPos = 0;                     /* 暂停时记住的播放头 */
+  let plStartAt = 0;                 /* 播放头归零的基准（performance.now） */
+  let plIdx = 0, plVi = 0;           /* 调度指针 / 高亮指针 */
+  let plCurLi = -1, plOn = null;      /* 当前字母格 / 当前亮着的符号 */
+  let plAc = null, plOscs = [];
+  let plTick = null, plRaf = 0;
+  let plLastAt = 0;                  /* 上一个音的排期时刻（秒），防止时钟抖动排乱序 */
+
+  /* 输入归一：长划圆点统一，空格也当词间隔（粘贴带空格的电码是常态） */
+  function msPlSrc() {
+    return msNormMorse(msPlIn.value).replace(/\s+/g, '\\');
+  }
+
+  function msPlSyncOut() {
+    const v = msPlIn.value;
+    msPlOut.value = v.trim() ? msApplyCase(msDecode(msPlSrc())) : '';
+  }
+
+  /* 拆词 → 字母 → 符号，顺手把纸带铺出来（每个符号一个 <i> 供高亮） */
+  function msPlRender() {
+    const src = msPlSrc();
+    msPlTape.textContent = '';
+    plEvents = []; plLetters = []; plTotal = 0;
+    plOn = null; plCurLi = -1; plIdx = 0; plVi = 0;
+
+    const words = [];
+    let word = [], letter = [];
+    const closeLetter = () => { if (letter.length) { word.push(letter); letter = []; } };
+    const closeWord = () => { closeLetter(); if (word.length) { words.push(word); word = []; } };
+    for (const ch of src) {
+      if (ch === '·' || ch === '-') letter.push(ch);
+      else if (ch === '/') closeLetter();
+      else closeWord();
+    }
+    closeWord();
+
+    if (!words.length) {
+      const empty = document.createElement('span');
+      empty.className = 'ms-plempty';
+      empty.textContent = '还没有可播放的电码 —— 在上面敲 · 与 - 试试';
+      msPlTape.appendChild(empty);
+      return;
+    }
+
+    const u = 1200 / MS_PLAY_WPM;    /* 点 = 1 单位，划 = 3 单位 */
+    let t = 0, li = 0;
+    words.forEach((w, wi) => {
+      if (wi > 0) t += 7 * u;        /* 词间隔 7 单位 */
+      const wEl = document.createElement('span');
+      wEl.className = 'ms-plword';
+      w.forEach((chars, ci) => {
+        if (ci > 0) t += 3 * u;      /* 字母间隔 3 单位 */
+        const lEl = document.createElement('span');
+        lEl.className = 'ms-plletter';
+        const myLi = li++;
+        chars.forEach((ch, si) => {
+          if (si > 0) t += u;        /* 符号间隔 1 单位 */
+          const sym = document.createElement('i');
+          sym.className = 'ms-plsym ' + (ch === '·' ? 'is-dot' : 'is-dash');
+          const dur = ch === '·' ? u : 3 * u;
+          plEvents.push({ el: sym, start: t, dur: dur, li: myLi });
+          t += dur;
+          lEl.appendChild(sym);
+        });
+        plLetters[myLi] = lEl;
+        wEl.appendChild(lEl);
+      });
+      msPlTape.appendChild(wEl);
+    });
+    plTotal = t;
+  }
+
+  /* ---------- 播放头 / 高亮 ---------- */
+  function plPosNow() {
+    return plState === 'playing' ? performance.now() - plStartAt : plPos;
+  }
+
+  function plSetOn(el) {
+    if (plOn === el) return;
+    if (plOn) plOn.classList.remove('is-on');
+    plOn = el;
+    if (plOn) plOn.classList.add('is-on');
+  }
+
+  function plSetLetter(li) {
+    if (li === plCurLi) return;
+    if (plCurLi >= 0 && plLetters[plCurLi]) plLetters[plCurLi].classList.remove('is-cur');
+    plCurLi = li;
+    const el = li >= 0 ? plLetters[li] : null;
+    if (!el) return;
+    el.classList.add('is-cur');
+    msPlScrollTo(el);
+  }
+
+  /* 纸带比视野高时，把当前字母滚到中间 */
+  function msPlScrollTo(el) {
+    const box = msPlTape;
+    if (!box || !box.clientHeight) return;
+    const r = el.getBoundingClientRect(), b = box.getBoundingClientRect();
+    if (r.top >= b.top + 4 && r.bottom <= b.bottom - 4) return;
+    box.scrollTop += (r.top - b.top) - box.clientHeight / 2 + r.height / 2;
+  }
+
+  function plHighlight(pos) {
+    while (plVi < plEvents.length && plEvents[plVi].start + plEvents[plVi].dur <= pos) plVi++;
+    const next = plEvents[plVi];
+    plSetOn(next && next.start <= pos ? next.el : null);
+    /* 间隙里仍停在刚发完的字母上，别提前跳到下一个 */
+    let li = -1;
+    if (next && next.start <= pos) li = next.li;
+    else if (plVi > 0) li = plEvents[plVi - 1].li;
+    plSetLetter(li);
+  }
+
+  function plFrame() {
+    if (plState !== 'playing') return;
+    const pos = plPosNow();
+    plHighlight(pos);
+    if (plTotal > 0) {
+      msPlProg.style.width = (Math.min(1, pos / plTotal) * 100).toFixed(2) + '%';
+    }
+    if (pos >= plTotal) { plStop(); return; }
+    plRaf = requestAnimationFrame(plFrame);
+  }
+
+  /* ---------- 音频（600Hz 正弦 + 5ms 包络，同译电挑战） ---------- */
+  function plEnsureAudio() {
+    try {
+      plAc = plAc || new (window.AudioContext || window.webkitAudioContext)();
+      if (plAc.state === 'suspended') plAc.resume();
+      return plAc;
+    } catch (_) { return null; }
+  }
+
+  function plTone(at, dur) {
+    const ac = plAc;
+    if (!ac || !(dur > 0)) return;
+    const end = at + dur;
+    const ramp = Math.min(0.006, dur * 0.4);
+    const osc = ac.createOscillator(), g = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = 600;
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(0.25, at + ramp);
+    g.gain.setValueAtTime(0.25, Math.max(at + ramp, end - ramp));
+    g.gain.exponentialRampToValueAtTime(0.0001, Math.max(at + ramp + 0.002, end));
+    osc.connect(g);
+    g.connect(ac.destination);
+    osc.start(at);
+    osc.stop(end + 0.04);
+    osc.onended = () => { try { osc.disconnect(); g.disconnect(); } catch (_) {} };
+    plOscs.push(osc);
+    /* 长文本会堆很多已经响完的句柄，顺手清一清 */
+    if (plOscs.length > 80) plOscs = plOscs.filter(o => o.playbackState !== 'finished');
+  }
+
+  /* 往前看一小段，把还没排的音排进去（每 40ms 跑一次）。
+     ⚠ base 一个 tick 只取一次：音频时钟是按块跳的，逐事件重取会让相邻
+     两个符号的起点差出几毫秒、甚至前后颠倒；plLastAt 再兜一道单调。 */
+  function plSchedule() {
+    if (plState !== 'playing' || !plAc) return;
+    const base = plAc.currentTime + MS_PLAY_LEAD;
+    const pos = plPosNow();
+    const until = pos + MS_PLAY_LOOKAHEAD;
+    while (plIdx < plEvents.length) {
+      const ev = plEvents[plIdx];
+      if (ev.start > until) break;
+      /* 从符号中间续播：前半截已经响过，只补剩下的 */
+      const skip = Math.max(0, pos - ev.start);
+      const dur = ev.dur - skip;
+      if (dur > 0) {
+        const at = Math.max(plLastAt, base + Math.max(0, ev.start - pos) / 1000);
+        plLastAt = at;
+        plTone(at, dur / 1000);
+      }
+      plIdx++;
+    }
+  }
+
+  function plKillTimers() {
+    if (plTick) { clearInterval(plTick); plTick = null; }
+    if (plRaf) { cancelAnimationFrame(plRaf); plRaf = 0; }
+    plLastAt = 0;
+    plOscs.forEach(o => {
+      try { o.stop(); } catch (_) {}
+      try { o.disconnect(); } catch (_) {}
+    });
+    plOscs = [];
+  }
+
+  function plPaint() {
+    const has = plEvents.length > 0;
+    const st = plState;
+    msPlToggle.textContent = st === 'playing' ? '暂停' : (st === 'paused' ? '继续播放' : '播放');
+    msPlToggle.classList.toggle('is-on', st === 'playing');
+    msPlToggle.disabled = !has;
+    msPlRestart.hidden = st !== 'paused';   /* 从头播放只在暂停时露出 */
+    msPlIn.readOnly = st === 'playing';     /* 播报途中锁住输入框 */
+    msPlayer.classList.toggle('is-playing', st === 'playing');
+    if (st === 'playing') msPadHide();
+  }
+
+  /* 从 from 毫秒处起播（0 = 从头，暂停后传 plPos 即续播） */
+  function plStart(from) {
+    if (!plEvents.length) return;
+    plKillTimers();
+    plEnsureAudio();
+    plPos = Math.max(0, Math.min(from || 0, plTotal));
+    plStartAt = performance.now() - plPos;
+    plIdx = 0;
+    while (plIdx < plEvents.length && plEvents[plIdx].start + plEvents[plIdx].dur <= plPos) plIdx++;
+    plVi = plIdx;
+    plState = 'playing';
+    plPaint();
+    plSchedule();
+    plTick = setInterval(plSchedule, 40);
+    plRaf = requestAnimationFrame(plFrame);
+    msPlProg.style.width = (plTotal ? Math.min(1, plPos / plTotal) * 100 : 0).toFixed(2) + '%';
+  }
+
+  function plPause() {
+    if (plState !== 'playing') return;
+    plPos = Math.min(plPosNow(), plTotal);
+    plState = 'paused';
+    plKillTimers();
+    plPaint();
+  }
+
+  /* 停：静音 + 指针归零（播完 / 退出页面 / 改了电码都走这里） */
+  function plStop() {
+    plKillTimers();
+    plState = 'idle';
+    plPos = 0; plIdx = 0; plVi = 0;
+    if (plOn) { plOn.classList.remove('is-on'); plOn = null; }
+    plSetLetter(-1);
+    if (msPlProg) msPlProg.style.width = '0%';
+    plPaint();
+  }
+
+  /* ==========================================================
+     六、事件绑定
      ========================================================== */
   $('#msGoTrans').addEventListener('click', () => msShow(msTransHome));
   $('#msGoGame').addEventListener('click', () => msShow(msGameHome));
+  $('#msGoPlay').addEventListener('click', () => { plStop(); msShow(msPlayer); });
   $('#msGoChart').addEventListener('click', () => { msBuildChart(); msShow(msChart); });
   $('#msGoEnc').addEventListener('click', () => { msSetDir('enc'); msShow(msTrans); });
   $('#msGoDec').addEventListener('click', () => { msSetDir('dec'); msShow(msTrans); });
+
+  /* ---------- 播报页：输入 → 结果 + 时间轴 ---------- */
+  msPlIn.addEventListener('input', () => {
+    plStop();                 /* 电码变了，原来的时间轴作废 */
+    msPlRender();
+    msPlSyncOut();
+    plPaint();
+  });
+  msPlIn.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    msPlIn.blur();
+  });
+
+  msPlToggle.addEventListener('click', () => {
+    if (plState === 'playing') { plPause(); return; }
+    if (!plEvents.length) {
+      toast('info', '还没有电码可播放', '先在上面敲几个 · 与 -', 'morse-play');
+      return;
+    }
+    plStart(plState === 'paused' ? plPos : 0);
+  });
+
+  msPlRestart.addEventListener('click', () => {
+    if (!plEvents.length) return;
+    plStart(0);
+  });
+
+  /* 播报途中把功能页关掉（返回箭头 / Esc / 浏览器后退）→ 当场静音。
+     closeTool 不广播事件，所以盯 .show 这个类。 */
+  new MutationObserver(() => {
+    if (PAGE.classList.contains('show')) return;
+    plStop();
+    msStopAudio();
+    msPadHide();
+  }).observe(PAGE, { attributes: true, attributeFilter: ['class'] });
 
   $$('#msTiers .ms-tier', msGameHome).forEach(b => b.addEventListener('click', () => {
     $$('#msTiers .ms-tier', msGameHome).forEach(x => x.classList.remove('on'));
@@ -758,36 +1130,30 @@
     msIn.blur();
   });
 
-  [[msCopyIn, msIn, '输入'], [msCopyOut, msOut, '结果']].forEach(([btn, input, label]) => {
+  [[msCopyIn, msIn, '输入'], [msCopyOut, msOut, '结果'],
+   [msPlCopyIn, msPlIn, '输入'], [msPlCopyOut, msPlOut, '结果']].forEach(([btn, input, label]) => {
     btn.setAttribute('aria-label', '复制' + label);
     /* 拦 mousedown：别让输入框失焦、软键盘闪收 */
     btn.addEventListener('mousedown', e => e.preventDefault());
     btn.addEventListener('click', () => msCopy(input, label));
   });
 
-  /* 大小写折叠栏：展开 / 收起 + 四选一 */
-  msCaseToggle.addEventListener('click', () => {
-    msCaseOpts.hidden = !msCaseOpts.hidden;
-    msCaseToggle.setAttribute('aria-expanded', String(!msCaseOpts.hidden));
-    msCaseArrow.textContent = msCaseOpts.hidden ? '▾' : '▴';
-  });
-  $$('#msCaseOpts .ms-case-opt').forEach(b => b.addEventListener('click', () => {
-    msCaseMode = b.dataset.case;
-    $$('#msCaseOpts .ms-case-opt').forEach(x => x.classList.toggle('is-on', x === b));
-    msCaseCur.textContent = MS_CASE_NAMES[msCaseMode];
-    msSync();                          /* 已有结果立即按新规则重排 */
-  }));
+  /* 大小写折叠栏：翻译页 / 播报页各一条，同一套逻辑 */
+  msInitCaseBar(msCase);
+  msInitCaseBar(msPlCase);
+  msPaintCase();
 
   if (msPad) {
     msPadClear.addEventListener('click', () => {
-      msIn.value = '';
+      const el = msPadInput();
+      el.value = '';
       msPadCaret = 0;
-      msSync();
-      try { msIn.setSelectionRange(0, 0); } catch (_) {}
-      msIn.focus();
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      try { el.setSelectionRange(0, 0); } catch (_) {}
+      el.focus();
     });
     /* 「完成」只收键盘，值留着 */
-    msPadDone.addEventListener('click', () => { msPadHide(); msIn.blur(); });
+    msPadDone.addEventListener('click', () => { msPadHide(); msPadInput().blur(); });
   }
   msPadBind();
 
@@ -864,6 +1230,7 @@
     if (!e.detail || e.detail.page !== PAGE) return;
     msPadHide();
     msStopAudio();
+    plStop();
     if (msGame.hidden) {
       $$('#msTiers .ms-tier', msGameHome).forEach(b =>
         b.classList.toggle('on', b.dataset.tier === msTier.key));
@@ -871,9 +1238,15 @@
   });
 
   /* ==========================================================
-     六、初始化
+     七、初始化
      ========================================================== */
   msBuildTable();
   msSetDir('enc');
+  msPlRender();
+  plPaint();
+  /* 播报页的输入框同样只认自绘软键盘（触摸设备屏蔽系统键盘） */
+  if (typeof Device !== 'undefined' && !Device.isPC()) {
+    msPlIn.setAttribute('inputmode', 'none');
+  }
 
 })();
