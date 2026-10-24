@@ -50,6 +50,7 @@ const NB_LAYER_SEL = [
   '.br-overlay',
   '.sl-overlay',
   '.qn-overlay',
+  '.lt-overlay',
 ].join(',');
 
 /* id → 它自己的关闭函数（都是经典 script 的顶层 function，挂在 window 上）。
@@ -62,6 +63,11 @@ const NB_CLOSERS = {
   /* 互不相犯：浮层关掉要顺手把棋盘锁进「已看完」状态，
      否则盘面停在 over 的半锁状态、点哪都没反应 */
   qnOverlay:    'qnDismissOverlay',
+  /* 一位之差：结算浮层关掉 = 点了主按钮（过关 → 回看；放弃 → 看答案），
+     不然盘面停在 over 的半锁状态、点哪都没反应 */
+  hmOverlay:    'hmDismissOverlay',
+  /* 关灯游戏：同互不相犯，浮层关掉要收尾，别停在 over 的半锁状态 */
+  ltOverlay:    'ltDismissOverlay',
 };
 
 const NovaBack = (() => {

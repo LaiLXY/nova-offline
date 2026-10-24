@@ -4843,3 +4843,270 @@ html[data-layout="tablet"] .qn-tip { font-size: 13.5px; }
 html[data-layout="tablet"] .qn-overlay-box { max-width: 400px; padding: 28px 26px; }
 html[data-layout="tablet"] .qn-overlay-box h4 { font-size: 21px; }
 html[data-layout="tablet"] .qn-overlay-box p { font-size: 15.5px; }
+
+/* ======================================================
+   关灯游戏（lights.js）
+   结构对齐「互不相犯」，类名 .lt-*；灭灯 = 冷灰格，
+   亮灯 = 内缩的黄色圆角块；答案 = 蓝色圆圈标记要按的格子。
+   ★ 离线版主色是品牌蓝（--brand），但「亮着的灯」保留原来的黄：
+     它是玩法里的图元，不是主题装饰；而且和答案的蓝圈要能分清。
+     离线版没有 --yellow，所以灯色用本节自己声明的 --lt-lamp。
+   ====================================================== */
+.lt-wrap {
+  --lt-lamp: #ffd900;          /* 亮灯的黄（离线版不设 --yellow） */
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lt-wrap [hidden] { display: none !important; }
+
+.lt-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+
+/* ---------- 1) 第一页：选盘面 + 规则 ---------- */
+.lt-setup { display: flex; flex-direction: column; gap: 12px; }
+.lt-setup-title { font-size: 15px; font-weight: 600; }
+.lt-setup-note { font-size: 12.5px; color: var(--muted); text-align: center; }
+
+.lt-rules {
+  background: #f8f9fb;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.lt-rules-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.lt-rules-list {
+  margin: 0; padding-left: 18px;
+  font-size: 13px; line-height: 1.75; color: var(--muted);
+}
+.lt-rules-list li + li { margin-top: 6px; }
+.lt-rules-list b { color: var(--text); font-weight: 600; }
+
+.lt-sizes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.lt-size {
+  flex: 0 1 calc((100% - 24px) / 4);
+  min-width: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 6px; border-radius: 10px;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--text);
+  font-family: inherit; font-size: 14.5px; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.lt-size span { font-size: 12px; color: var(--muted); }
+.lt-size:hover { background: #f8f9fb; }
+.lt-size.on { border-color: var(--accent); background: #eff4ff; color: var(--accent); }
+.lt-size.on span { color: var(--accent); }
+.lt-start { margin-top: 2px; }
+
+/* ---------- 2) 第二页：对局 ---------- */
+.lt-game { display: flex; flex-direction: column; gap: 12px; }
+
+.lt-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lt-round { font-size: 14px; font-weight: 600; }
+.lt-meta { font-size: 12.5px; color: var(--muted); }
+.lt-head-acts { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* 过关 / 放弃后盘面锁住：隐藏 撤销 / 重开 / 放弃，只剩 换一题 / 改尺寸 */
+.lt-game.is-done #ltUndo,
+.lt-game.is-done #ltReset,
+.lt-game.is-done #ltGiveUp { display: none; }
+.lt-tool {
+  padding: 7px 11px; border-radius: 9px;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--text);
+  font-family: inherit; font-size: 13px; cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.lt-tool:hover { background: #f8f9fb; }
+.lt-tool:disabled { opacity: .45; cursor: default; background: #fff; }
+.lt-quit { color: var(--muted); }
+.lt-quit:hover { color: var(--danger); border-color: var(--danger); background: #fef2f2; }
+
+.lt-hud { display: flex; gap: 10px; }
+.lt-stat {
+  flex: 1 1 0; min-width: 0;
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 9px 12px; border-radius: 11px;
+  background: #f8f9fb; border: 1px solid var(--line);
+}
+.lt-stat-label { font-size: 12px; color: var(--muted); }
+.lt-stat-val {
+  font-size: 20px; font-weight: 700; line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 盘面 ---------- */
+.lt-boardcard { padding: 12px; }
+.lt-board {
+  width: 100%; max-width: 460px; margin: 0 auto;
+  border-radius: 16px; background: #fff;
+  border: 1px solid var(--line-strong); overflow: hidden;
+}
+.lt-svg {
+  display: block; width: 100%; height: auto;
+  user-select: none; -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 盘底 + 灭灯格：冷灰一眼认得出「这格是灭的」 */
+.lt-bg { fill: #fff; }
+.lt-offcell { fill: #e9edf4; }
+/* 亮灯：内缩的品牌黄圆角块（黄只做浅色，配白盘面刚好） */
+.lt-oncell { fill: var(--lt-lamp); }
+
+/* 答案标记：要按的格子画蓝圈（最少步解） */
+.lt-ans {
+  fill: none; stroke: var(--accent); stroke-width: 3.5;
+  stroke-dasharray: 6.5 5;
+}
+
+/* 点击热区：铺满整格，透明 */
+.lt-hit { fill: transparent; cursor: pointer; }
+.lt-hit:hover { fill: rgba(37, 99, 235, .08); }
+.lt-game.is-done .lt-hit { cursor: default; }
+.lt-game.is-done .lt-hit:hover { fill: transparent; }
+
+.lt-tip {
+  font-size: 12.5px; color: var(--muted); text-align: center;
+  line-height: 1.6; margin-top: 10px; transition: color .2s;
+}
+.lt-tip.is-warn { color: var(--danger); font-weight: 600; }
+
+/* ---------- 过关浮层 ---------- */
+.lt-overlay {
+  position: fixed; inset: 0; z-index: 252;
+  display: none; place-items: center; padding: 24px;
+  background: rgba(17, 24, 39, .45);
+}
+.lt-overlay.show { display: grid; }
+.lt-overlay-box {
+  width: 100%; max-width: 340px; background: #fff;
+  border-radius: 16px; padding: 24px; text-align: center;
+  box-shadow: 0 24px 56px -16px rgba(16, 24, 40, .34);
+  animation: sheetUp .2s ease both;
+}
+.lt-overlay-box h4 { font-size: 19px; font-weight: 600; }
+.lt-overlay-box p { font-size: 14px; color: #4b5563; line-height: 1.7; margin-top: 9px; }
+.lt-overlay-acts { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.lt-overlay-acts .sub-save { margin-top: 0; }
+.lt-overlay-row { display: flex; gap: 10px; }
+.lt-overlay-row > * { flex: 1 1 0; min-width: 0; }
+.lt-answer-btn { width: 100%; margin-top: 10px; }
+.lt-overlay-box [hidden] { display: none !important; }
+
+/* ---------- 小屏手机 ---------- */
+html[data-viewport="xs"] .lt-boardcard { padding: 10px; }
+html[data-viewport="xs"] .lt-board { border-radius: 13px; }
+html[data-viewport="xs"] .lt-size { padding: 9px 4px; font-size: 13.5px; }
+html[data-viewport="xs"] .lt-size span { font-size: 11.5px; }
+html[data-viewport="xs"] .lt-tool { padding: 7px 9px; font-size: 12.5px; }
+
+/* ======================================================
+   一位之差（.hm-* 见 js/hamming.js）
+   三模式（纠错 / 距离 / 编码）+ 玩法规则卡。
+   ★ 卡片壳与摩斯（十六节）**完全同一套成式**，不再另起皮肤：
+     ms-wrap / ms-card / ms-choose / ms-choose-title / ms-modes /
+     ms-mode / ms-tiers / ms-tier / ms-head / ms-round / ms-meta /
+     ms-head-acts / ms-tool / ms-backrow / mini-btn / ms-note /
+     ms-rules / ms-overlay / sub-save。
+   这一节只留本卡独有的东西：位格子（.hm-cell）、甲乙两行、
+   校验组 chip、规则条目。要改观感去改十六节，别在这里重造壳。
+   ====================================================== */
+
+/* 规格两档时把 ms-tiers 的三列压成两列（纠错 / 编码用） */
+.ms-tiers.is-2 { grid-template-columns: repeat(2, 1fr); }
+
+/* 选规格页底下那行「查看完整规则 ›」 */
+.hm-link {
+  align-self: center;
+  margin: -2px 0 0; padding: 0;
+  border: 0; background: none; color: #0369a1;
+  font-family: inherit; font-size: 12.5px; cursor: pointer;
+}
+.hm-link:hover { text-decoration: underline; }
+
+/* 对局里的一行小字说明 */
+.hm-tip { margin: 0; font-size: 12.5px; line-height: 1.6; color: var(--muted); }
+
+/* ---------- 位格子：上面小位置号、下面大位值 ----------
+   15 位折成每行 8 列（--hm-cols 由 js 按码长现写）。
+   ★ width:100% 不能省：父级 .ms-game 是 flex column，子项带 auto 外边距
+     时 stretch 失效，板子会缩成内容宽（格子被挤成一条）。 */
+.hm-board {
+  display: grid;
+  grid-template-columns: repeat(var(--hm-cols, 7), 1fr);
+  gap: 6px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.hm-cell {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px;
+  padding: 7px 2px 6px;
+  border: 1px solid var(--line-strong); border-radius: 9px;
+  background: #fff;
+  font-variant-numeric: tabular-nums;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.hm-cell.is-parity { border-style: dashed; background: #f8fafc; }
+.hm-pos { font-size: 10.5px; line-height: 1; color: var(--muted); }
+.hm-bit { font-size: 19px; font-weight: 700; line-height: 1.25; color: var(--text); }
+.hm-cell.is-sel { border-color: #0369a1; background: #f0f9ff; box-shadow: 0 0 0 2px #bae6fd; }
+.hm-cell.is-sel .hm-bit { color: #0369a1; }
+.hm-cell.is-wrong { border-color: #dc2626; background: #fef2f2; }
+.hm-cell.is-wrong .hm-bit { color: #dc2626; }
+.hm-cell.is-err { border-color: #dc2626; background: #fef2f2; }
+.hm-cell.is-err .hm-bit { color: #dc2626; }
+.hm-cell.is-ans { border-color: #16a34a; background: #f0fdf4; }
+.hm-cell.is-ans .hm-bit { color: #15803d; }
+.hm-cell.is-group { border-color: #f0c419; background: #fffbe6; }
+.hm-cell.is-mark { border-color: #0369a1; background: #f0f9ff; box-shadow: 0 0 0 2px #bae6fd; }
+.hm-board.is-shake { animation: msShake .3s; }
+
+/* ---------- 距离模式：甲 / 乙两组 ---------- */
+.hm-dist { display: flex; flex-direction: column; gap: 8px; }
+.hm-dist-row { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; }
+.hm-row-tag {
+  display: grid; place-items: center;
+  width: 30px; height: 30px; margin-top: 6px; border-radius: 8px;
+  background: #f0f9ff; color: #0369a1;
+  font-size: 13px; font-weight: 700;
+}
+.hm-board-flat { margin: 0; }
+
+/* ---------- 编码模式：校验组 chip ---------- */
+.hm-groups { display: flex; gap: 8px; }
+.hm-group-chip {
+  padding: 6px 14px; border-radius: 999px;
+  border: 1px solid var(--line-strong); background: #fff; color: var(--muted);
+  font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.hm-group-chip:hover { background: #f8f9fb; }
+.hm-group-chip.is-on { border-color: #f0c419; background: #fffbe6; color: #a16207; }
+
+/* ---------- 玩法规则卡：分条的书面说明 ---------- */
+.hm-rule + .hm-rule { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.hm-rule-h { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.hm-rule-list { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.75; color: var(--muted); }
+.hm-rule-list li + li { margin-top: 6px; }
+.hm-rule-list b { color: var(--text); font-weight: 600; }
+.hm-rule-list sup { font-size: 9px; }
+
+/* 二次确认：压过结算浮层（.ms-overlay 是 252） */
+#hmAskConfirm { z-index: 360; }
+
+/* ---------- 触屏 / 平板微调 ---------- */
+html[data-touch="1"] .hm-cell { padding: 9px 2px 8px; }
+html[data-touch="1"] .hm-bit { font-size: 21px; }
+html[data-touch="1"] .hm-pos { font-size: 11px; }
+html[data-layout="tablet"] .hm-bit { font-size: 23px; }

@@ -680,8 +680,7 @@
         </span>
       </button>
 
-      <button type="button" class="tool-btn is-maintenance" id="btnHamming" data-tool="hamming"
-              aria-description="开发中，暂时不可使用">
+      <button type="button" class="tool-btn" id="btnHamming" data-tool="hamming">
         <span class="tool-btn-ico" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <g transform="translate(0.6,3.15)">
@@ -699,7 +698,7 @@
           </svg>
         </span>
         <span class="tool-btn-text">
-          <span class="tool-btn-name">一位之差<span class="tool-maint-tag">开发中</span></span>
+          <span class="tool-btn-name">一位之差</span>
           <span class="tool-btn-desc">单错可纠，奇偶为凭</span>
         </span>
         <span class="tool-btn-go" aria-hidden="true">
@@ -707,8 +706,7 @@
         </span>
       </button>
 
-      <button type="button" class="tool-btn is-maintenance" id="btnLights" data-tool="lights"
-              aria-description="开发中，暂时不可使用">
+      <button type="button" class="tool-btn" id="btnLights" data-tool="lights">
         <span class="tool-btn-ico" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <g transform="translate(1,1)">
@@ -729,7 +727,7 @@
           </svg>
         </span>
         <span class="tool-btn-text">
-          <span class="tool-btn-name">关灯游戏<span class="tool-maint-tag">开发中</span></span>
+          <span class="tool-btn-name">关灯游戏</span>
           <span class="tool-btn-desc">点一牵四，群灯俱寂</span>
         </span>
         <span class="tool-btn-go" aria-hidden="true">
@@ -3078,6 +3076,359 @@
   </div>
 </div>
 
+<div class="tool-page" id="toolHamming">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
+    </button>
+    <h3 class="tool-title">一位之差</h3>
+  </div>
+
+  <!-- ============================================================
+       功能页：一位之差（汉明）
+       出题、判题全在 js/hamming.js 里，一次请求都不发，不记战绩。
+       页面骨架照「异语道破」的子卡片成式：壳样式直接复用那一节的
+       .ms-*（wrap / card / choose / modes / mode / tiers / tier /
+       head / tool / backrow / rules / overlay），本卡自己的位格子、
+       校验组 chip 等在 css/tools.css 的汉明一节（.hm-*）。
+       ★ 2026-10-24 定：**就和摩斯同一套卡片成式，别再另起皮肤** ——
+         之前试过 hm- 自有壳（方角+蓝条+序号行），观感反而和站内其余卡脱节。
+         要动观感去改十六节，第十八节只留本卡元素。
+
+       三种模式，各自由「选规格」和「对局」两张卡组成：
+         · 纠错挑战  hmErrSetup / hmErrGame   —— 码字被翻转了一位，点出是哪位
+         · 距离挑战  hmDistSetup / hmDistGame —— 两组数逐位对比，标出所有不同的位
+         · 编码挑战  hmEncSetup / hmEncGame   —— 数据位已就位，把校验位摆对
+       结算走同一个浮层 #hmOverlay（.ms-overlay 壳）；
+       对局中「换一道 / 放弃」的二次确认共用 #hmAskConfirm
+       （.confirm-overlay 壳，z-index 提到 360 压过结算浮层）。
+       ============================================================ -->
+  <div class="tool-body" id="toolHammingBody">
+    <div class="ms-wrap">
+
+      <!-- ============ 二级：选择玩法 ============ -->
+      <section class="ms-card ms-choose" id="hmHome">
+        <div class="ms-choose-title">选择玩法</div>
+        <div class="ms-modes">
+          <button type="button" class="ms-mode" id="hmGoErr">
+            <b>纠错挑战</b><span>码字被翻转一位，指出它的位置</span>
+          </button>
+          <button type="button" class="ms-mode" id="hmGoDist">
+            <b>距离挑战</b><span>逐位比对两组数，标出全部不同位</span>
+          </button>
+          <button type="button" class="ms-mode" id="hmGoEnc">
+            <b>编码挑战</b><span>数据位已就位，把校验位摆到合法</span>
+          </button>
+          <button type="button" class="ms-mode" id="hmGoRule">
+            <b>玩法规则</b><span>码字结构、校验组与三种模式的判定</span>
+          </button>
+        </div>
+        <div class="ms-rules">
+          <div class="ms-rules-title">码字约定</div>
+          <ul class="ms-rules-list">
+            <li>位置编号自 <b>1</b> 起，位置号为 <b>2 的幂</b>（1、2、4、8）者即校验位。</li>
+            <li>采用<b>偶校验</b>：每个校验圈内 1 的个数为偶数。</li>
+            <li>码长取 2<sup>r</sup> − 1，本页提供 <b>(7,4)</b> 与 <b>(15,11)</b> 两种。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============ 模式 A：纠错 · 选码长 ============ -->
+      <section class="ms-card ms-choose" id="hmErrSetup" hidden>
+        <div class="ms-backrow"><button type="button" class="mini-btn" data-hm-back="home">‹ 返回</button></div>
+        <div class="ms-choose-title">纠错挑战 · 选码长</div>
+        <div class="ms-tiers is-2" id="hmErrLens">
+          <button type="button" class="ms-tier on" data-len="7"><b>(7,4)</b><span>3 个校验位</span></button>
+          <button type="button" class="ms-tier" data-len="15"><b>(15,11)</b><span>4 个校验位</span></button>
+        </div>
+        <p class="ms-note">7 位码字 = 3 个校验位（P1、P2、P4）+ 4 个数据位；15 位码字 = 4 个校验位 + 11 个数据位。</p>
+        <button type="button" class="hm-link" data-hm-back="hmRule">查看完整规则 ›</button>
+        <button type="button" class="sub-save ms-start" id="hmErrStart">开 始</button>
+      </section>
+
+      <!-- ============ 模式 A：纠错 · 对局 ============ -->
+      <section class="ms-card ms-game" id="hmErrGame" hidden>
+        <div class="ms-head">
+          <span class="ms-round" id="hmErrRound">第 1 局</span>
+          <span class="ms-meta" id="hmErrMeta">汉明(7,4) 码</span>
+          <div class="ms-head-acts" id="hmErrActs">
+            <button type="button" class="ms-tool" id="hmErrNew">换一道</button>
+            <button type="button" class="ms-tool" id="hmErrQuit">放弃</button>
+          </div>
+          <div class="ms-head-acts" id="hmErrActsAns" hidden>
+            <button type="button" class="ms-tool" id="hmErrAgain2">再来一局</button>
+            <button type="button" class="ms-tool" id="hmErrRechoose2">重选码长</button>
+          </div>
+        </div>
+        <p class="hm-tip" id="hmErrTip">翻转位恰好一位：选中一格后提交</p>
+        <div class="hm-board" id="hmErrBoard"></div>
+        <button type="button" class="sub-save ms-start" id="hmErrSubmit">就是这一位</button>
+      </section>
+
+      <!-- ============ 模式 B：距离 · 选位数 ============ -->
+      <section class="ms-card ms-choose" id="hmDistSetup" hidden>
+        <div class="ms-backrow"><button type="button" class="mini-btn" data-hm-back="home">‹ 返回</button></div>
+        <div class="ms-choose-title">距离挑战 · 选位数</div>
+        <div class="ms-tiers" id="hmDistLens">
+          <button type="button" class="ms-tier" data-len="8"><b>8 位</b><span>两组各 8 位</span></button>
+          <button type="button" class="ms-tier on" data-len="12"><b>12 位</b><span>两组各 12 位</span></button>
+          <button type="button" class="ms-tier" data-len="16"><b>16 位</b><span>两组各 16 位</span></button>
+        </div>
+        <p class="ms-note">两位以上才会出题：本页题目保证两组的汉明距离不小于 3。</p>
+        <button type="button" class="hm-link" data-hm-back="hmRule">查看完整规则 ›</button>
+        <button type="button" class="sub-save ms-start" id="hmDistStart">开 始</button>
+      </section>
+
+      <!-- ============ 模式 B：距离 · 对局 ============ -->
+      <section class="ms-card ms-game" id="hmDistGame" hidden>
+        <div class="ms-head">
+          <span class="ms-round" id="hmDistRound">第 1 局</span>
+          <span class="ms-meta" id="hmDistMeta">每组 12 位</span>
+          <div class="ms-head-acts" id="hmDistActs">
+            <button type="button" class="ms-tool" id="hmDistNew">换一道</button>
+            <button type="button" class="ms-tool" id="hmDistQuit">放弃</button>
+          </div>
+          <div class="ms-head-acts" id="hmDistActsAns" hidden>
+            <button type="button" class="ms-tool" id="hmDistAgain2">再来一局</button>
+            <button type="button" class="ms-tool" id="hmDistRechoose2">重选位数</button>
+          </div>
+        </div>
+        <p class="hm-tip" id="hmDistTip">点任意一格即标记整列，再点一次取消</p>
+        <div class="hm-dist">
+          <div class="hm-dist-row">
+            <span class="hm-row-tag">甲</span>
+            <div class="hm-board hm-board-flat" id="hmDistBoardA"></div>
+          </div>
+          <div class="hm-dist-row">
+            <span class="hm-row-tag">乙</span>
+            <div class="hm-board hm-board-flat" id="hmDistBoardB"></div>
+          </div>
+        </div>
+        <button type="button" class="sub-save ms-start" id="hmDistSubmit">标记完成</button>
+      </section>
+
+      <!-- ============ 模式 C：编码 · 选码长 ============ -->
+      <section class="ms-card ms-choose" id="hmEncSetup" hidden>
+        <div class="ms-backrow"><button type="button" class="mini-btn" data-hm-back="home">‹ 返回</button></div>
+        <div class="ms-choose-title">编码挑战 · 选码长</div>
+        <div class="ms-tiers is-2" id="hmEncLens">
+          <button type="button" class="ms-tier on" data-len="7"><b>(7,4)</b><span>3 个校验位</span></button>
+          <button type="button" class="ms-tier" data-len="15"><b>(15,11)</b><span>4 个校验位</span></button>
+        </div>
+        <p class="ms-note">数据位锁定不可改；仅校验位（虚线格）可翻转。</p>
+        <button type="button" class="hm-link" data-hm-back="hmRule">查看完整规则 ›</button>
+        <button type="button" class="sub-save ms-start" id="hmEncStart">开 始</button>
+      </section>
+
+      <!-- ============ 模式 C：编码 · 对局 ============ -->
+      <section class="ms-card ms-game" id="hmEncGame" hidden>
+        <div class="ms-head">
+          <span class="ms-round" id="hmEncRound">第 1 局</span>
+          <span class="ms-meta" id="hmEncMeta">汉明(7,4) 码</span>
+          <div class="ms-head-acts" id="hmEncActs">
+            <button type="button" class="ms-tool" id="hmEncNew">换一道</button>
+            <button type="button" class="ms-tool" id="hmEncQuit">放弃</button>
+          </div>
+          <div class="ms-head-acts" id="hmEncActsAns" hidden>
+            <button type="button" class="ms-tool" id="hmEncAgain2">再来一局</button>
+            <button type="button" class="ms-tool" id="hmEncRechoose2">重选码长</button>
+          </div>
+        </div>
+        <div class="hm-groups" id="hmEncGroups">
+          <button type="button" class="hm-group-chip" data-p="1">P1</button>
+          <button type="button" class="hm-group-chip" data-p="2">P2</button>
+          <button type="button" class="hm-group-chip" data-p="4">P4</button>
+          <button type="button" class="hm-group-chip" data-p="8">P8</button>
+        </div>
+        <p class="hm-tip" id="hmEncTip">点虚线格翻转校验位，使每组校验圈内 1 的个数为偶数</p>
+        <div class="hm-board" id="hmEncBoard"></div>
+        <button type="button" class="sub-save ms-start" id="hmEncSubmit">校验完成</button>
+      </section>
+
+      <!-- ============ 四级：玩法规则（书面说明，不参与对局） ============ -->
+      <section class="ms-card ms-choose" id="hmRule" hidden>
+        <div class="ms-backrow"><button type="button" class="mini-btn" data-hm-back="home">‹ 返回</button></div>
+        <div class="ms-choose-title">玩法规则</div>
+
+        <div class="hm-rule">
+          <div class="hm-rule-h">一、码字结构</div>
+          <ul class="hm-rule-list">
+            <li>本页采用汉明码，码长 n 取 2<sup>r</sup> − 1，括号内依次写作总位数与数据位数：(7,4)、(15,11)。</li>
+            <li>位置编号自 1 起。位置号为 2 的幂者（1、2、4、8）为校验位，记作 P1、P2、P4、P8；其余位置为数据位。</li>
+          </ul>
+        </div>
+
+        <div class="hm-rule">
+          <div class="hm-rule-h">二、校验组</div>
+          <ul class="hm-rule-list">
+            <li>校验位 P<sub>k</sub> 负责位置号二进制表示中第 k 位为 1 的全部位置，称为它的一「组校验圈」。</li>
+            <li>(7,4) 码的具体归属：P1 辖 1、3、5、7；P2 辖 2、3、6、7；P4 辖 4、5、6、7。</li>
+            <li>编码挑战中点亮 P1、P2、P4、P8 标签，可高亮该组覆盖的格子，用于核对覆盖范围。</li>
+          </ul>
+        </div>
+
+        <div class="hm-rule">
+          <div class="hm-rule-h">三、偶校验</div>
+          <ul class="hm-rule-list">
+            <li>每个校验圈内 1 的个数须为偶数，等价于该组全部位的异或结果为 0。</li>
+            <li>校验位的取值即为其余下组内各位的异或结果；据此把各组补成偶数个 1，即构出一个合法码字。</li>
+          </ul>
+        </div>
+
+        <div class="hm-rule">
+          <div class="hm-rule-h">四、纠错原理</div>
+          <ul class="hm-rule-list">
+            <li>逐组计算异或结果，结果不为 0 的组即「校验失败」。</li>
+            <li>若码字至多被翻转一位，把校验失败各组的编号相加，所得即为出错位置的编号 —— 校验子的二进制形式直接指向错误位。</li>
+          </ul>
+        </div>
+
+        <div class="hm-rule">
+          <div class="hm-rule-h">五、三种模式的判定</div>
+          <ul class="hm-rule-list">
+            <li><b>纠错挑战</b>：码字被翻转恰好一位。选中一格后提交；答错记一次失误，可继续尝试。</li>
+            <li><b>距离挑战</b>：标出两组数全部不同的列。不同的位数即两组的汉明距离；标记与实际完全一致即过关。</li>
+            <li><b>编码挑战</b>：调整校验位，使各组均为偶数个 1。提交后仅提示未通过的校验组，不直接给出答案。</li>
+          </ul>
+        </div>
+
+        <div class="hm-rule">
+          <div class="hm-rule-h">六、计分与记录</div>
+          <ul class="hm-rule-list">
+            <li>每局只统计本局的尝试次数与失误次数，不跨局累计。</li>
+            <li>对局在浏览器本地完成，不向服务器提交数据，也不写入账户记录。</li>
+            <li>放弃后可查看本题答案；答案视图下盘面锁定，仅可回看。</li>
+          </ul>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ---------- 结算浮层（照异语道破的 .ms-overlay 壳） ----------
+       过关：主按钮「确 认」→ 收浮层、盘面锁住回看，顶栏换「再来一局 / 重选」。
+       放弃：主按钮换「查看答案」，下面再给三个出口 ——
+             再来一局 / 重选码长（距离模式写作「重选位数」）/ 退出（回「选择玩法」）。
+       过关那一路不需要额外出口（回看里顶栏就有），所以那一排默认藏起来。 -->
+  <div class="ms-overlay" id="hmOverlay">
+    <div class="ms-overlay-box" role="dialog" aria-modal="true" aria-labelledby="hmOvTitle">
+      <h4 id="hmOvTitle">过关！</h4>
+      <p id="hmOvText"></p>
+      <div class="ms-overlay-acts">
+        <button type="button" class="sub-save" id="hmOvPrimary">确 认</button>
+        <div class="ms-overlay-row" id="hmOvExtra" hidden>
+          <button type="button" class="mini-btn" id="hmOvAgain">再来一局</button>
+          <button type="button" class="mini-btn" id="hmOvRechoose">重选码长</button>
+        </div>
+        <button type="button" class="mini-btn" id="hmOvExit" hidden>退出</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ---------- 「换一道 / 放弃」的二次确认（共用一个壳） ----------
+       对局中才弹；已经收尾（浮层开着 / 回看中）走顶栏出口，不问。
+       z-index 提到 360，压过结算浮层（252）。 -->
+  <div class="confirm-overlay" id="hmAskConfirm">
+    <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="hmAskTitle">
+      <h4 id="hmAskTitle">放弃这一局？</h4>
+      <p id="hmAskText"></p>
+      <div class="acts">
+        <button type="button" id="hmAskCancel">取消</button>
+        <button type="button" class="danger" id="hmAskOk">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tool-page" id="toolLights">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5" /><path d="M12 19l-7-7 7-7" /></svg>
+    </button>
+    <h3 class="tool-title">关灯游戏</h3>
+  </div>
+  <div class="tool-body">
+    <div class="lt-wrap">
+
+      <!-- 1) 第一页：选盘面 + 玩法规则 -->
+      <section class="lt-card lt-setup" id="ltSetup">
+        <div class="lt-setup-title">选一张盘面</div>
+        <div class="lt-sizes" id="ltSizes">
+          <button type="button" class="lt-size" data-size="4"><b>4×4</b><span>入门</span></button>
+          <button type="button" class="lt-size on" data-size="5"><b>5×5</b><span>进阶</span></button>
+          <button type="button" class="lt-size" data-size="6"><b>6×6</b><span>经典</span></button>
+          <button type="button" class="lt-size" data-size="7"><b>7×7</b><span>挑战</span></button>
+        </div>
+        <button type="button" class="sub-save lt-start" id="ltStart">开 始</button>
+        <p class="lt-setup-note">开局盘面是一张打乱的灯阵，想办法把它们全部关掉。</p>
+        <div class="lt-rules">
+          <div class="lt-rules-title">玩法规则</div>
+          <ul class="lt-rules-list">
+            <li>点一个格子，它<b>自己和上下左右相邻的格子</b>一起翻转：亮着的灭、灭着的亮。</li>
+            <li>开局<b>一部分灯亮着</b>（每局都不一样），把全部灯都关掉就过关。</li>
+            <li>按错了不用怕，「撤销」能一步一步退回去，「重开」回到开局盘面。</li>
+            <li>每一题都保证有解；卡住了可以「放弃」，看一组<b>最少步数</b>的答案。</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 2) 第二页：对局 -->
+      <section class="lt-game" id="ltGame" hidden>
+        <div class="lt-head">
+          <span class="lt-round" id="ltRound">第 1 局</span>
+          <span class="lt-meta" id="ltMeta">5×5</span>
+          <div class="lt-head-acts">
+            <button type="button" class="lt-tool" id="ltUndo">撤销</button>
+            <button type="button" class="lt-tool" id="ltReset">重开</button>
+            <button type="button" class="lt-tool" id="ltAgain">换一题</button>
+            <button type="button" class="lt-tool" id="ltBack">改尺寸</button>
+            <button type="button" class="lt-tool lt-quit" id="ltGiveUp">放弃</button>
+          </div>
+        </div>
+        <div class="lt-hud">
+          <div class="lt-stat"><span class="lt-stat-label">用时</span><span class="lt-stat-val" id="ltTime">0:00</span></div>
+          <div class="lt-stat"><span class="lt-stat-label">步数</span><span class="lt-stat-val" id="ltSteps">0</span></div>
+          <div class="lt-stat"><span class="lt-stat-label">亮灯</span><span class="lt-stat-val" id="ltLit">0</span></div>
+        </div>
+        <div class="lt-boardcard">
+          <div class="lt-board">
+            <svg class="lt-svg" id="ltSvg" viewBox="0 0 100 100" role="img" aria-label="关灯游戏盘面"></svg>
+          </div>
+          <p class="lt-tip" id="ltTip"></p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 过关 / 放弃浮层 -->
+    <div class="lt-overlay" id="ltOverlay">
+      <div class="lt-overlay-box" role="dialog" aria-modal="true" aria-labelledby="ltOvTitle">
+        <h4 id="ltOvTitle">过关！</h4>
+        <p id="ltOvText"></p>
+        <div class="lt-overlay-acts">
+          <button type="button" class="sub-save" id="ltOvOk">确 认</button>
+          <div class="lt-overlay-row">
+            <button type="button" class="mini-btn" id="ltOvAgain">换一题</button>
+            <button type="button" class="mini-btn" id="ltOvBack">改尺寸</button>
+          </div>
+        </div>
+        <button type="button" class="mini-btn lt-answer-btn" id="ltOvAnswer" hidden>查看答案</button>
+      </div>
+    </div>
+
+    <!-- 二次确认：重开 / 换一题 / 改尺寸 / 放弃共用 -->
+    <div class="confirm-overlay" id="ltAskConfirm">
+      <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="ltAskTitle">
+        <h4 id="ltAskTitle">重开这一局？</h4>
+        <p id="ltAskText"></p>
+        <div class="acts">
+          <button type="button" id="ltAskCancel">取消</button>
+          <button type="button" class="danger" id="ltAskOk">重开</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 单位选择的悬浮窗（单位换算用）
      外观和上面星座/性别那个是同一套（.picker-overlay + .picker-sheet + .chips），
      但各是独立的一个：那个弹窗被 app.js 绑死在个人资料的字段上，这里由
@@ -3185,5 +3536,7 @@
 <script src="js/fourcolor.js"></script>
 <script src="js/bash.js"></script>
 <script src="js/morse.js"></script>
+<script src="js/hamming.js"></script>
+<script src="js/lights.js"></script>
 </body>
 </html>

@@ -26,6 +26,8 @@ const TOOLS = {
   bridge:   'toolBridge',
   sl:       'toolSl',
   queen:    'toolQueen',
+  hamming:  'toolHamming',
+  lights:   'toolLights',
 };
 
 /* ---------- 开发中、点不进去的卡片 ----------
@@ -34,14 +36,12 @@ const TOOLS = {
    点它只弹一句提示：既没有页面，也没有任何放行的路子。
    放**捕获阶段**并 stopPropagation：把下面那个入口点击挡在外面 ——
    就算哪天 TOOLS 里又把它加回去，这层也拦得住。
-   （囚徒困境 / 方格生灭 / 三门之惑 / 位移之秘 / 一位之差 / 关灯游戏） */
+   （囚徒困境 / 方格生灭 / 三门之惑 / 位移之秘） */
 const WIP_TOOLS = {
   prisoner: '囚徒困境',
   life:     '方格生灭',
   monty:    '三门之惑',
   caesar:   '位移之秘',
-  hamming:  '一位之差',
-  lights:   '关灯游戏',
 };
 
 document.addEventListener('click', e => {
