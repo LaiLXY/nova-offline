@@ -261,7 +261,7 @@
   }
 
   /* ---------- 输出大小写（仅 dec 方向） ----------
-     auto：句子首字母大写 + 独立的 i → I
+     auto：句子首字母大写 + 专有名词还原 + 独立的 i → I
      sentence：只做句子首字母大写
      upper / lower：整串变换。解码结果本身全大写，所以先统一转小写再抬。 */
   let msCaseMode = 'auto';
@@ -281,10 +281,62 @@
     return out;
   }
 
+  /* ---------- 专有名词词库（只给「自动」用） ----------
+     数据在 js/morse-terms.js（由名词库脚本从 terms.py 生成，别手改）。
+     链路：全小写 → 句首大写 → 整词换回正确写法 → 独立 i→I。
+     ⚠ 顺序不能反：先替换再跑句首大写，iOS 会被抬成 IOS。
+     同形词（china 中国 / 瓷器）靠紧邻的一个邻词判，规则表见 NOVA_MORSE_HOMO。 */
+  const MS_TERMS = new Map();
+  const MS_HOMO = (typeof NOVA_MORSE_HOMO !== 'undefined' && NOVA_MORSE_HOMO) || {};
+  const MS_WORD_RE = /[A-Za-z]+(?:'[A-Za-z]+)?/g;
+  const MS_TERM_RE = (function () {
+    const list = (typeof NOVA_MORSE_TERMS !== 'undefined' && NOVA_MORSE_TERMS) || [];
+    list.forEach(function (t) {
+      const k = String(t).toLowerCase();
+      if (!MS_TERMS.has(k)) MS_TERMS.set(k, t);      /* 同一拼写只留第一条 */
+    });
+    if (!MS_TERMS.size) return null;                  /* 词库空：整条链路不产生开销 */
+    const keys = Array.from(MS_TERMS.keys())
+      .sort(function (a, b) { return b.length - a.length; })   /* 长词优先：New York 不被 York 抢走 */
+      .map(function (k) { return k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); });
+    return new RegExp('(^|[^A-Za-z])(' + keys.join('|') + ')(?![A-Za-z])', 'gi');
+  })();
+
+  /* 取紧邻的前后两个单词（小写）。只认一个词是刻意的边界：
+     a piece of china 隔着 of，仍判成中国，宁可漏判瓷器也不能把 capital of china 判错 */
+  function msNeighbors(text, start, end) {
+    const head = text.slice(0, start).match(MS_WORD_RE);
+    const tail = text.slice(end).match(MS_WORD_RE);
+    return [head ? head[head.length - 1].toLowerCase() : '',
+            tail ? tail[0].toLowerCase() : ''];
+  }
+
+  /* 同形词判大小写：判小写的邻词优先 → 判大写的邻词 → 默认写回 */
+  function msHomograph(key, before, after) {
+    const h = MS_HOMO[key];
+    if (!h) return MS_TERMS.get(key);
+    if (h.la.indexOf(after) >= 0 || h.lb.indexOf(before) >= 0) return key;
+    if (h.ua.indexOf(after) >= 0 || h.ub.indexOf(before) >= 0) return MS_TERMS.get(key);
+    return h.d;
+  }
+
+  function msTermsApply(text) {
+    if (!MS_TERM_RE) return text;
+    return text.replace(MS_TERM_RE, function (m, pre, word, offset) {
+      const key = word.toLowerCase();
+      if (!MS_TERMS.has(key)) return m;
+      const start = offset + pre.length;
+      const nb = msNeighbors(text, start, start + word.length);
+      return pre + msHomograph(key, nb[0], nb[1]);
+    });
+  }
+
   function msApplyCase(text) {
     if (msCaseMode === 'upper') return text.toUpperCase();
     if (msCaseMode === 'lower') return text.toLowerCase();
-    return msCaseSentence(text, msCaseMode === 'auto');
+    const s = msCaseSentence(text, false);
+    if (msCaseMode !== 'auto') return s;              /* sentence：只做句首，不套词库 */
+    return msTermsApply(s).replace(/\bi\b/g, 'I');
   }
 
   /* ==========================================================

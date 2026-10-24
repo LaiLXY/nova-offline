@@ -2603,10 +2603,10 @@
             <i class="ms-case-arrow" id="msCaseArrow">▾</i>
           </button>
           <div class="ms-case-opts" id="msCaseOpts" hidden>
-            <button type="button" class="ms-case-opt is-on" data-case="auto">自动</button>
-            <button type="button" class="ms-case-opt" data-case="upper">全部大写</button>
-            <button type="button" class="ms-case-opt" data-case="lower">全部小写</button>
-            <button type="button" class="ms-case-opt" data-case="sentence">仅句子首字母大写</button>
+            <button type="button" class="ms-case-opt is-on" data-case="auto" title="句首大写 + 还原常见人名 / 地名 / 品牌（833 条词库）+ 独立的 i → I">自动</button>
+            <button type="button" class="ms-case-opt" data-case="upper" title="整串转大写">全部大写</button>
+            <button type="button" class="ms-case-opt" data-case="lower" title="整串转小写">全部小写</button>
+            <button type="button" class="ms-case-opt" data-case="sentence" title="只抬句首字母，不还原专有名词">仅句子首字母大写</button>
           </div>
         </div>
         <div class="field">
@@ -3547,6 +3547,9 @@
 <script src="js/queen.js"></script>
 <script src="js/fourcolor.js"></script>
 <script src="js/bash.js"></script>
+<!-- 异语道破的词库数据（833 条专名 + 同形词邻词表），由名词库脚本生成；
+     必须在 morse.js 之前加载。 -->
+<script src="js/morse-terms.js"></script>
 <script src="js/morse.js"></script>
 <script src="js/hamming.js"></script>
 <script src="js/lights.js"></script>
