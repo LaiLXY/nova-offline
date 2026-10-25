@@ -3841,8 +3841,8 @@
 <div class="toasts" id="toasts"></div>
 
 <!-- ============================================================
-     设置：齿轮菜单 → 更改称呼 / 关于 Nova
-     离线版没有账号体系，设置里就这两项（逻辑见 js/settings.js）
+     设置：齿轮菜单 → 更改称呼 / 关于 Nova / 清空缓存
+     离线版没有账号体系，设置里就这三项（逻辑见 js/settings.js）
      ============================================================ -->
 <div class="menu-overlay" id="menuOverlay">
   <div class="menu-sheet" role="dialog" aria-modal="true" aria-label="设置">
@@ -3860,6 +3860,17 @@
         <path d="M12 7.6h.01" />
       </svg>
       关于 Nova
+    </button>
+    <!-- 清空缓存：危险项，靠下、单独用红字，点了还要过一道二次确认 -->
+    <button type="button" class="menu-item is-danger" id="miClear">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 7h16" />
+        <path d="M10 4h4a1 1 0 011 1v2H9V5a1 1 0 011-1z" />
+        <path d="M6.5 7l.9 12a2 2 0 002 1.9h5.2a2 2 0 002-1.9l.9-12" />
+        <path d="M10 11v5.5" />
+        <path d="M14 11v5.5" />
+      </svg>
+      清空缓存
     </button>
     <div class="menu-sep"></div>
     <button type="button" class="menu-cancel" id="miCancel">取消</button>
@@ -3896,6 +3907,20 @@
     </div>
     <div class="acts">
       <button type="button" class="primary" id="aboutClose">知道了</button>
+    </div>
+  </div>
+</div>
+
+<!-- 清空缓存：二次确认。清的是本机浏览器里的本地记录（称呼 / 各游戏存档），
+     删完刷新一次，回到刚打开的样子（逻辑见 js/settings.js） -->
+<div class="confirm-overlay" id="clearOverlay">
+  <div class="confirm-box2 clear-box" role="dialog" aria-modal="true" aria-labelledby="clearTitle">
+    <h4 id="clearTitle">清空缓存？</h4>
+    <p>会删掉这台设备上存的全部本地记录：称呼、2048 最高分、24 点战绩、魔方设置区的收起状态等。</p>
+    <p class="clear-warn">清空之后没法恢复，程序本身不受影响。</p>
+    <div class="acts">
+      <button type="button" id="clearCancel">取消</button>
+      <button type="button" class="danger" id="clearConfirm">清空</button>
     </div>
   </div>
 </div>

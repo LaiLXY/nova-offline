@@ -7036,3 +7036,266 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
   }
 }
 
+
+/* ======================================================
+   二十四、单位换算：换算页 / 密度桥页「近乎全屏 + 置顶」
+   ------------------------------------------------------
+   第二十节把「选类别」那一层放宽到 1160 / 1500 / 1900 了，
+   可是点进去之后的**换算页**（#unitConv）和**体积⇄质量**（#unitBridge）
+   还停在手机尺度的 560px 窄卡上（第七节那句「换算界面仍是一张窄卡」
+   就是当年的有意为之）—— 2560×1440 上整张卡只占屏宽 22%，
+   里面还是 12.5–16px 的小字，比四周的空白还轻，看着像没加载完。
+   ★ 现在的口径（Roy 两轮反馈定下的）：**卡片铺满屏宽、从顶栏下面开始排**。
+     宽度用 min(上限, Nvw)：1024→86vw、1600→88vw、2200→92vw（2560 上 2320），
+     上限只防超宽屏（3440/5120）把输入框拉成一条跑道。
+   ★ 这两页是**一竖列**（数值 / 互换 / 结果），所以不能只拉宽：
+     光改 max-width 会得到一条 2000px 长、45px 高的扁输入框，更难看。
+     宽度、字号、控件高度、内边距得一起长：数字 20/26/32px、单位按钮
+     19/24/30px、行高 62/81/102px —— 比例和手机上一致，只是整体放大。
+   ★ 纵向**不居中**（`justify-content: flex-start`）：第二十节给 .tool-body
+     的 safe center 是给「一张卡占半个屏」的对局页用的，铺满宽之后再居中
+     就变成上下各空一大片。
+   ★ 顶栏也跟着长一档（--cvt-bar-*）：卡片 92vw 了，顶栏还是 17px/40px
+     的话，一眼就是「框变大了、界面没变大」。
+   ★ 三档只写一张**尺寸表**（--cvt-* 变量），底下的规则一套吃三档：
+     同样二十来条属性抄三遍，迟早漏一条；而且主版和 Nova Offline
+     两份 tools.css 的这一段要求逐字节一致，越短越不容易走样。
+   ★ 变量挂在 html 上（不是 #toolUnits）：单位弹窗 #unitPicker 是
+     功能页外面的兄弟节点，挂在 #toolUnits 上它继承不到。
+   ★ 手机 / 平板 / 窄窗口电脑零影响：所有规则都锁在
+     data-device="pc" + data-aspect="wide" 里（置顶那条锁 data-device="pc"）。
+   ====================================================== */
+
+/* ---------- 尺寸表：三档只改这里 ----------
+   宽度写成 min(上限, Nvw)：屏越宽卡片越铺满（2560 上是 92vw ≈ 2355），
+   上限只是防超宽屏（3440/5120）上把输入框拉成一条跑道。 */
+@media (min-width: 1024px) {
+  html[data-device="pc"][data-aspect="wide"] {
+    --cvt-w: min(1120px, 86vw);   /* 换算卡 / 桥卡的最大宽度 */
+    --cvt-gap: 18px;              /* 卡与卡、页内各块之间的间距 */
+    --cvt-pad: 26px 28px;         /* 卡片内边距 */
+    --cvt-radius: 16px;
+    --cvt-label: 18px;            /* 「数值 / 换算结果 / 密度 ρ」 */
+    --cvt-copy: 15px;             /* 「复制」那颗小药丸 */
+    --cvt-num: 20px;              /* 输入框 / 结果框里的数字 */
+    --cvt-fieldpad: 14px;         /* 输入框上下内边距（撑高度用） */
+    --cvt-unit: 19px;             /* 单位按钮 */
+    --cvt-unitpad: 18px 16px;
+    --cvt-swap: 58px;             /* 中间的互换按钮 */
+    --cvt-small: 15.5px;          /* 页脚 / 类别注 / 字段提示 / 桥卡副标题 */
+    --cvt-name: 17px;             /* 桥卡标题 */
+    --cvt-ico: 44px;              /* 桥卡左边那块图标 */
+    --cvt-chip: 11px 18px;        /* 立体角 / 密度那几个快捷键药丸 */
+    --cvt-chipfs: 16px;
+    --cvt-picker-w: 760px;        /* 单位弹窗 */
+    --cvt-bar-pad: 14px;          /* 顶栏：上下内边距 / 返回键 / 标题 */
+    --cvt-bar-btn: 44px;
+    --cvt-bar-title: 19px;
+  }
+}
+@media (min-width: 1600px) {
+  html[data-device="pc"][data-aspect="wide"] {
+    --cvt-w: min(1600px, 88vw);
+    --cvt-gap: 20px;
+    --cvt-pad: 34px 36px;
+    --cvt-radius: 18px;
+    --cvt-label: 22px;
+    --cvt-copy: 18px;
+    --cvt-num: 26px;
+    --cvt-fieldpad: 20px;
+    --cvt-unit: 24px;
+    --cvt-unitpad: 24px 22px;
+    --cvt-swap: 72px;
+    --cvt-small: 19.5px;
+    --cvt-name: 21px;
+    --cvt-ico: 54px;
+    --cvt-chip: 14px 22px;
+    --cvt-chipfs: 20px;
+    --cvt-picker-w: 900px;
+    --cvt-bar-pad: 16px;
+    --cvt-bar-btn: 48px;
+    --cvt-bar-title: 21px;
+  }
+}
+@media (min-width: 2200px) {
+  html[data-device="pc"][data-aspect="wide"] {
+    /* 2560×1440：卡片 92vw ≈ 2355（屏宽 92%），数字 32px —— 桌面软件里
+       一个表单应该就是这个体积，不再是「手机卡片摆在屏幕中间」 */
+    --cvt-w: min(2320px, 92vw);
+    --cvt-gap: 22px;
+    --cvt-pad: 44px 48px;
+    --cvt-radius: 20px;
+    --cvt-label: 27px;
+    --cvt-copy: 21px;
+    --cvt-num: 32px;
+    --cvt-fieldpad: 26px;
+    --cvt-unit: 30px;
+    --cvt-unitpad: 31px 26px;
+    --cvt-swap: 88px;
+    --cvt-small: 23px;
+    --cvt-name: 26px;
+    --cvt-ico: 62px;
+    --cvt-chip: 18px 28px;
+    --cvt-chipfs: 24px;
+    --cvt-picker-w: 1040px;
+    --cvt-bar-pad: 20px;
+    --cvt-bar-btn: 56px;
+    --cvt-bar-title: 25px;
+  }
+}
+
+/* ---------- 顶栏也长一档 ----------
+   卡片铺到 92vw 之后，顶栏还是手机尺寸的 17px / 40px 返回键，
+   一眼就是「框变大了、界面没变大」。只改单位换算这一页的顶栏。 */
+html[data-device="pc"][data-aspect="wide"] #toolUnits .tool-bar {
+  padding: var(--cvt-bar-pad) calc(var(--cvt-bar-pad) * 2);
+  gap: calc(var(--cvt-bar-pad) * .8);
+}
+html[data-device="pc"][data-aspect="wide"] #toolUnits .tool-back {
+  width: var(--cvt-bar-btn);
+  height: var(--cvt-bar-btn);
+  border-radius: calc(var(--cvt-bar-btn) * .25);
+}
+html[data-device="pc"][data-aspect="wide"] #toolUnits .tool-back svg {
+  width: calc(var(--cvt-bar-btn) * .52);
+  height: calc(var(--cvt-bar-btn) * .52);
+}
+html[data-device="pc"][data-aspect="wide"] #toolUnits .tool-title { font-size: var(--cvt-bar-title); }
+
+/* ---------- 置顶排列：这一页不再纵向居中 ----------
+   第二十节给 PC 的 .tool-body 加了 `justify-content: safe center`，
+   那条是给「一张卡占半个屏」的对局页用的。单位换算现在卡片几乎铺满屏宽，
+   再居中就成了上下各空一大片；顶到顶栏下面开始排，才像桌面版的一页表单。
+   ★ 只锁 #toolUnits：别的功能页还是居中。 */
+html[data-device="pc"] #toolUnits .tool-body { justify-content: flex-start; }
+
+
+/* ---------- 外框：换算页 / 密度桥页同一套 ---------- */
+html[data-device="pc"][data-aspect="wide"] #toolUnits :is(.unit-conv, .unit-bridge) {
+  width: 100%;
+  max-width: var(--cvt-w);
+  gap: var(--cvt-gap);
+}
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-card {
+  padding: var(--cvt-pad);
+  border-radius: var(--cvt-radius);
+}
+
+/* ---------- 字段头：label 与「复制」一起长，仍在同一个高度带上 ----------
+   「复制」的内边距按字号推（0.45em / 0.95em），省得再为它单开变量 */
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-head { margin-bottom: calc(var(--cvt-label) * .4); }
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-head > label { font-size: var(--cvt-label); }
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-copy {
+  font-size: var(--cvt-copy);
+  padding: calc(var(--cvt-copy) * .45) calc(var(--cvt-copy) * .95);
+}
+
+/* ---------- 输入 / 结果框 ----------
+   字号和上下内边距一起长：只长字号的话行高几乎不动，框拉宽之后又细又长。
+   textarea 自己清零了 padding（见第七节），撑高度只能靠外层 .input-wrap。 */
+html[data-device="pc"][data-aspect="wide"] #toolUnits :is(.unit-conv, .unit-bridge) .input-wrap.is-area {
+  padding-top: var(--cvt-fieldpad);
+  padding-bottom: var(--cvt-fieldpad);
+}
+html[data-device="pc"][data-aspect="wide"] #toolUnits :is(.unit-conv, .unit-bridge) .input-wrap.is-area > textarea {
+  font-size: var(--cvt-num);
+}
+/* 报错 / 提示那行：平时不显示，一旦显示就得读得清 */
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-field .hint,
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-aux-item .hint {
+  font-size: var(--cvt-small);
+}
+
+/* ---------- 单位按钮 ----------
+   高度跟着输入框走：字号 + 上下内边距按比例给，两者差不出 2px。 */
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-row { gap: calc(var(--cvt-gap) * .9); }
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-unit {
+  font-size: var(--cvt-unit);
+  padding: var(--cvt-unitpad);
+  gap: calc(var(--cvt-unit) * .45);
+}
+/* 按钮里的下拉小箭头是 JS 插进来的 8×8 小方块，不跟着长就成了个脏点 */
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-unit .picker-arrow {
+  width: calc(var(--cvt-unit) * .5);
+  height: calc(var(--cvt-unit) * .5);
+  margin-top: -5px;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+}
+
+/* ---------- 中间的互换按钮 ---------- */
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-swap { padding: calc(var(--cvt-gap) * .75) 0; }
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-swap-btn {
+  width: var(--cvt-swap);
+  height: var(--cvt-swap);
+}
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-swap-btn svg {
+  width: calc(var(--cvt-swap) * .46);
+  height: calc(var(--cvt-swap) * .46);
+}
+
+/* ---------- 类别注 / 页脚 / 桥卡 ---------- */
+html[data-device="pc"][data-aspect="wide"] #toolUnits :is(.cvt-cat-note, .cvt-foot) { font-size: var(--cvt-small); }
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-cat-note { padding: calc(var(--cvt-gap) * .85) calc(var(--cvt-gap) * 1.1); }
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-bridge {
+  padding: calc(var(--cvt-gap) * .85) calc(var(--cvt-gap) * 1.1);
+  gap: calc(var(--cvt-gap) * .8);
+}
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-bridge-ico {
+  width: var(--cvt-ico);
+  height: var(--cvt-ico);
+  border-radius: calc(var(--cvt-ico) * .3);
+}
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-bridge-ico svg {
+  width: calc(var(--cvt-ico) * .58);
+  height: calc(var(--cvt-ico) * .58);
+}
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-bridge-name { font-size: var(--cvt-name); }
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-bridge-sub { font-size: var(--cvt-small); }
+
+/* ---------- 桥卡的密度区（.cvt-aux）：标题 / 标签 / 药丸 / 输入框一起长 ----------
+   这里面的输入框是普通 <input>（不是 textarea），字号来自 base.css 的 16px。 */
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-aux {
+  margin-top: calc(var(--cvt-gap) * 1.2);
+  padding-top: var(--cvt-gap);
+  gap: var(--cvt-gap);
+}
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-aux-head { font-size: var(--cvt-small); }
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-aux-item { gap: calc(var(--cvt-gap) * .6); }
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-aux-item > label { font-size: var(--cvt-label); }
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-aux .input-wrap > input {
+  font-size: var(--cvt-num);
+}
+/* 密度那栏的输入框是高 45px 的普通 <input>，而上面两栏是 textarea 撑起来的
+   （高度 = 1.5em + 上下内边距）。用同一条公式给个 min-height，两种框才一样高、
+   和右边的单位按钮也才排得齐 —— 直接调 input 的 padding 得逐档试，不稳。 */
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-aux .input-wrap {
+  min-height: calc(var(--cvt-num) * 1.5 + var(--cvt-fieldpad) * 2 + 2px);
+}
+html[data-device="pc"][data-aspect="wide"] #toolUnits .cvt-aux-chips .chip {
+  padding: var(--cvt-chip);
+  font-size: var(--cvt-chipfs);
+  /* 单字药丸（水 / π）跟着放大，别缩成一颗小圆球 */
+  min-width: calc(var(--cvt-chipfs) * 4);
+}
+
+/* ---------- 单位弹窗：换算页放大了，弹窗还是 680 就显得抠 ----------
+   ★ 选择器里 #unitPicker 必须带上 .picker-overlay 这个类：第七节那条
+     680 的规则是 `html[data-viewport="lg"][data-aspect="wide"] #unitPicker
+     .picker-sheet`，两者权重一样，只靠顺序迟早被后人插队顶掉。 */
+html[data-device="pc"][data-aspect="wide"] #unitPicker.picker-overlay .picker-sheet {
+  max-width: var(--cvt-picker-w);
+}
+html[data-device="pc"][data-aspect="wide"] #unitPicker .chip {
+  padding: var(--cvt-chip);
+  font-size: var(--cvt-chipfs);
+}
+html[data-device="pc"][data-aspect="wide"] #unitPicker .chips-group { font-size: var(--cvt-small); }
+/* 弹窗自己的标题 / 关闭键也跟上：药丸都 24px 了，头还是一行 16.5px 的小字 */
+html[data-device="pc"][data-aspect="wide"] #unitPicker .picker-head h4 {
+  font-size: calc(var(--cvt-small) * 1.15);
+}
+html[data-device="pc"][data-aspect="wide"] #unitPicker .picker-head .x {
+  font-size: var(--cvt-small);
+}
+

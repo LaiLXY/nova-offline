@@ -60,6 +60,7 @@ const NB_CLOSERS = {
   menuOverlay:  'closePanel',
   nameOverlay:  'closePanel',
   aboutOverlay: 'closePanel',
+  clearOverlay: 'closePanel',
   /* 互不相犯：浮层关掉要顺手把棋盘锁进「已看完」状态，
      否则盘面停在 over 的半锁状态、点哪都没反应 */
   qnOverlay:    'qnDismissOverlay',

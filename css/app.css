@@ -576,6 +576,12 @@ html[data-layout="tablet"] .chip .sym { font-size: 20px; }
 .menu-item:focus-visible { outline: none; background: #f2f6fe; }
 .menu-item svg { width: 19px; height: 19px; stroke: var(--muted); flex: 0 0 auto; }
 
+/* 危险项（清空缓存）：红字红图标 + 淡红 hover，和上面两项区分开 */
+.menu-item.is-danger { color: var(--danger); }
+.menu-item.is-danger svg { stroke: var(--danger); }
+.menu-item.is-danger:hover,
+.menu-item.is-danger:focus-visible { background: #fdf2f3; }
+
 .menu-sep { height: 1px; background: var(--line); margin: 6px 0; }
 
 .menu-cancel {
@@ -621,6 +627,14 @@ html[data-layout="tablet"] .chip .sym { font-size: 20px; }
 .about-rows b { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
 .about-box .acts { justify-content: center; }
 .about-box .acts button { min-width: 120px; }
+
+/* ---------- 清空缓存的二次确认 ---------- */
+/* 正文说明用 base.css 的 .confirm-box2 p，这里只把「删了回不来」那句标红加重 */
+.clear-box .clear-warn {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--danger);
+}
 
 /* ======================================================
    PC（lg + wide）：底部栏回到「浮在右上角」，菜单改居中弹窗

@@ -1,8 +1,9 @@
 /* ==========================================================================
    settings.js —— 底部「设置」齿轮
-   离线版没有账号，设置里只有两项：
+   离线版没有账号，设置里只有三项：
      · 更改称呼：改欢迎页上叫你的名字（只存本机 localStorage，见 home.js）
      · 关于 Nova：版本号 / 上次更新时间（写死在下面两个常量里）
+     · 清空缓存：把本机存的全部记录删掉（二次确认后才动手）
    ========================================================================== */
 
 /* ★ 发版时只改这两行，其他地方都读它们 */
@@ -13,6 +14,7 @@ const btnSettings  = $('#btnSettings');
 const menuOverlay  = $('#menuOverlay');
 const nameOverlay  = $('#nameOverlay');
 const aboutOverlay = $('#aboutOverlay');
+const clearOverlay = $('#clearOverlay');
 
 const setNameInput = $('#nameInput');
 const setNameHint  = $('#nameHint');
@@ -131,11 +133,68 @@ if (aboutClose) aboutClose.addEventListener('click', () => {
   focusGear();
 });
 
+/* ---------- 3) 清空缓存 ----------
+   离线版没有后端，所有「记住过」的东西都躺在浏览器 localStorage 里，
+   键名统一带 nova_ 前缀：
+     nova_offline_name            称呼
+     nova_offline_game2048        2048 最高分
+     nova_offline_points24        24 点战绩
+     nova_prisoner_spoil / _clear 囚徒困境彩蛋进度
+     nova_magic_set_collapsed     魔方设置区收没收起
+   删的时候按前缀把整库扫一遍（不写死清单），以后加了新存档不用回来改这张表；
+   只认 nova_ / nova- 开头的键，别的东西一律不碰。 */
+const CACHE_PREFIX = /^nova[_-]/i;
+
+function clearLocalCache() {
+  let n = 0;
+  try {
+    const hit = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && CACHE_PREFIX.test(k)) hit.push(k);
+    }
+    /* 先收集再删：边遍历边 removeItem 会让下标错位，漏掉一半 */
+    hit.forEach(k => { localStorage.removeItem(k); n++; });
+  } catch (_) { /* 无痕模式下 localStorage 可能直接抛错，当作本来就没缓存 */ }
+  return n;
+}
+
+const miClear = $('#miClear');
+if (miClear) miClear.addEventListener('click', () => {
+  closePanel(menuOverlay);
+  /* 焦点落在「取消」上：这个框里回车不该是删除 */
+  openPanel(clearOverlay, '#clearCancel');
+});
+
+const clearCancel = $('#clearCancel');
+if (clearCancel) clearCancel.addEventListener('click', () => {
+  closePanel(clearOverlay);
+  focusGear();
+});
+
+const clearConfirm = $('#clearConfirm');
+if (clearConfirm) clearConfirm.addEventListener('click', () => {
+  const n = clearLocalCache();
+  closePanel(clearOverlay);
+  focusGear();
+
+  if (!n) {
+    toast('info', '本来就没有缓存可清');
+    return;
+  }
+
+  toast('ok', '已清空 ' + n + ' 项本地记录');
+  /* 各游戏的最高分 / 进度还留在内存里（清 localStorage 不会改它们），
+     刷新一次才是真的回到刚打开的样子。留 800ms 让提示先露个脸。 */
+  setTimeout(() => location.reload(), 800);
+});
+
 /* ---------- 点遮罩关闭 ---------- */
 [
   [menuOverlay, () => closePanel(menuOverlay)],
   [nameOverlay, () => closePanel(nameOverlay)],
   [aboutOverlay, () => closePanel(aboutOverlay)],
+  [clearOverlay, () => closePanel(clearOverlay)],
 ].forEach(([el, close]) => {
   if (!el) return;
   el.addEventListener('click', e => {
@@ -151,7 +210,7 @@ if (aboutClose) aboutClose.addEventListener('click', () => {
    那边 stopPropagation 之后这里自然收不到，不会把主页的菜单一起关掉 */
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  const order = [aboutOverlay, nameOverlay, menuOverlay];
+  const order = [clearOverlay, aboutOverlay, nameOverlay, menuOverlay];
   for (const el of order) {
     if (el && el.classList.contains('show')) {
       closePanel(el);

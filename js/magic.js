@@ -377,13 +377,16 @@ function mgPaintSetSum() {
 }
 
 /** 收起 / 展开设置区。收起是为了防误触 —— 玩的时候手指在棋盘上忙，
- *  这块紧挨着棋盘，很容易顺手划到。 */
-function mgFoldSet(on) {
+ *  这块紧挨着棋盘，很容易顺手划到。
+ *  persist = false 时只改界面不落盘：启动时「恢复上次状态」不该顺手
+ *  写一条 localStorage，否则「清空缓存」刚删干净，一刷新又冒出来一条。 */
+function mgFoldSet(on, persist) {
   if (mgSetBody) mgSetBody.hidden = on;
   if (mgSetToggle) {
     mgSetToggle.textContent = on ? '展开' : '收起';
     mgSetToggle.setAttribute('aria-expanded', on ? 'false' : 'true');
   }
+  if (persist === false) return;
   try { localStorage.setItem(MG_SET_KEY, on ? '1' : '0'); } catch (_) {}
 }
 
@@ -1150,6 +1153,7 @@ mgPaintChips();
 mgPadRender();
 mgSetActions();
 /* 恢复上次的收起状态（默认展开）。放在 mgNewGame 之前，
-   这样首屏一出来就是用户上次留下的样子，不会先展开再"啪"地收起。 */
-mgFoldSet(mgReadFolded());
+   这样首屏一出来就是用户上次留下的样子，不会先展开再"啪"地收起。
+   第二个参数 false = 只摆界面、不写回存储（存储留给用户真去点收起时写）。 */
+mgFoldSet(mgReadFolded(), false);
 mgNewGame();
