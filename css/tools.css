@@ -281,6 +281,20 @@ html[data-touch="1"] .tool-btn { padding-top: 16px; padding-bottom: 16px; }
 }
 html[data-layout="tablet"] .tool-maint-tag { font-size: 14px; padding: 3px 11px; }
 
+/* 「通关」用的绿色药丸（囚徒困境通关后挂这个）。
+   底比卡片的绿(#1DB994)淡一档、字比它深，放在彩色卡片上也压得住。 */
+.tool-maint-tag.is-ok { background: #e4f7f1; color: #12836a; }
+
+/* 囚徒困境被彻底封死（三句台词都听完了）：
+   连"坏掉的按钮"都不剩，只剩一张图 —— 点不动、悬停无反应、颜色抽掉。
+   ★ 用 id 提权重，稳稳压过上面 .tool-btn.is-maintenance 那几条。 */
+#btnPrisoner.is-sealed {
+  pointer-events: none;
+  filter: grayscale(1) contrast(.88) brightness(1.02);
+}
+/* 贴图态连右侧箭头一起收掉 —— 留着它，看着还是"能点进去" */
+#btnPrisoner.is-sealed .tool-btn-go { visibility: hidden; }
+
 /* 平板放大（判定见 js/core.js 的 data-layout） */
 html[data-layout="tablet"] .home-tools { max-width: 560px; gap: 16px; }
 html[data-layout="tablet"] .tool-btn { padding: 18px 22px; gap: 20px; }
@@ -5326,3 +5340,324 @@ html[data-touch="1"] .hm-cell { padding: 9px 2px 8px; }
 html[data-touch="1"] .hm-bit { font-size: 21px; }
 html[data-touch="1"] .hm-pos { font-size: 11px; }
 html[data-layout="tablet"] .hm-bit { font-size: 23px; }
+
+/* ======================================================
+   五、囚徒困境（三关问答 + 彩蛋，见 js/prisoner.js）
+   类名前缀 .pr-*（prisoner）；配色借囚徒卡片那个绿 #1DB994，
+   和 .hm-* / .lt-* / .fc-* 互不相犯。
+   ====================================================== */
+.pr-wrap {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 四幕靠 hidden 切换，而 .pr-stage 自己带 display:flex ——
+   所以必须补这条 !important，否则藏不住（老坑，别再踩） */
+.pr-stage { display: flex; flex-direction: column; gap: 16px; }
+.pr-stage[hidden],
+.pr-wrap [hidden] { display: none !important; }
+
+/* ---------- 氛围层：极淡网格 + 卡片扫描光 ----------
+   不放"第几关""剩几次机会"这类字样 —— 系统不解释规则，只看着你。
+   网格底色和扫描光都压到 4% 上下，白底上几乎看不见，移动时才察觉。 */
+#toolPrisoner .tool-body {
+  position: relative;
+  background-color: #fff;
+  background-image:
+    linear-gradient(rgba(29, 185, 148, .028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 185, 148, .028) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-attachment: local;
+}
+
+.pr-brief { position: relative; overflow: hidden; }
+/* 一条扫描光横向掠过简报，4.5 秒一轮 —— 像有台机器在读这张纸 */
+.pr-brief::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: -70px;
+  width: 70px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(29, 185, 148, .10), transparent);
+  animation: prSweep 4.6s linear infinite;
+}
+@keyframes prSweep {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(760px); }   /* 大于卡片宽度即可，靠 overflow 裁掉 */
+}
+
+/* ---------- 案情简报 ---------- */
+.pr-brief {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+.pr-sys { font-size: 14.5px; font-weight: 600; line-height: 1.7; color: var(--text); }
+.pr-sys-sub { margin-top: 6px; font-size: 13.5px; line-height: 1.75; color: var(--muted); }
+
+.pr-rows-title {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
+.pr-rows { list-style: none; margin: 6px 0 0; padding: 0; }
+.pr-rows li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.pr-rows li + li { border-top: 1px dashed #eef0f4; }
+.pr-rows span { flex: 0 1 auto; color: var(--muted); }
+.pr-rows b { flex: 0 0 auto; text-align: right; font-weight: 600; color: var(--text); }
+
+/* ---------- 密文：等宽字体 + 拉开字距，一眼看出是"码" ---------- */
+.pr-cipher {
+  margin-top: 12px;
+  padding: 16px 10px;
+  border: 1px solid #cfeae2;
+  border-radius: 10px;
+  background: #eef8f5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  color: #0f6b58;
+  text-align: center;
+  word-break: break-word;
+}
+
+/* ---------- 题面 ---------- */
+.pr-q { font-size: 15px; font-weight: 600; line-height: 1.75; color: var(--text); }
+.pr-q-lg { font-size: 17px; line-height: 1.8; }
+
+/* ---------- 选项 ---------- */
+.pr-opts { display: flex; flex-direction: column; gap: 10px; }
+.pr-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.pr-opt i {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #f1f3f6;
+  color: #6b7280;
+  font-style: normal;
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: background .15s, color .15s;
+}
+.pr-opt:hover { border-color: #b9c0cb; background: #f8f9fb; }
+.pr-opt.on { border-color: var(--brand); background: #f2f7ff; }
+.pr-opt.on:hover { background: #eaf2ff; }
+.pr-opt.on i { background: var(--brand); color: #fff; }
+
+/* ---------- 第二关输入框 ---------- */
+.pr-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 16px;            /* 16px 以下 iOS 会整页放大，别改小 */
+  letter-spacing: .06em;
+  text-align: center;
+  color: var(--text);
+}
+.pr-input::placeholder { letter-spacing: 0; color: #9aa1ac; }
+.pr-input:focus {
+  outline: none;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(60, 131, 245, .14);
+}
+
+/* .sub-save 自带 margin-top:20px，这里是 flex + gap:16，要压掉 */
+.pr-submit { margin-top: 0; }
+
+/* ---------- 动效：让它像"系统正在处理你" ----------
+   四层节奏，全都短：
+     · 进一幕      —— 每个直接子元素依次浮起（stagger 60ms）
+     · 选项悬停    —— 左沿滑出一根绿竖线，像被锁定
+     · 选项选中    —— 一圈蓝光扩散出去（一次性，不循环）
+     · 答对转场    —— 整幕横向抖一下 + 掉透明度（glitch），才换下一幕
+     · 答错        —— 四角泛红、整屏压暗，然后才被弹出去
+   ★ animation 一律 0.4s 以内，宁可快得像系统，不要慢得像网页。 */
+.pr-stage.is-enter > * { animation: prRise .38s cubic-bezier(.2, .8, .3, 1) both; }
+.pr-stage.is-enter > *:nth-child(2) { animation-delay: .06s; }
+.pr-stage.is-enter > *:nth-child(3) { animation-delay: .12s; }
+.pr-stage.is-enter > *:nth-child(4) { animation-delay: .18s; }
+.pr-stage.is-enter > *:nth-child(5) { animation-delay: .24s; }
+
+@keyframes prRise {
+  from { opacity: 0; transform: translateY(9px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 选项：左沿一根竖线，悬停/选中时从中间长出来 */
+.pr-opt { position: relative; overflow: hidden; }
+.pr-opt::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 50%;
+  width: 2px; height: 0;
+  background: #1DB994;
+  transform: translateY(-50%);
+  transition: height .18s ease;
+}
+.pr-opt:hover::before,
+.pr-opt.on::before { height: 62%; }
+
+/* 选中那一下的蓝色扩散 */
+.pr-opt.on { animation: prLock .34s ease-out; }
+@keyframes prLock {
+  0%   { box-shadow: 0 0 0 0 rgba(60, 131, 245, .34); }
+  100% { box-shadow: 0 0 0 9px rgba(60, 131, 245, 0); }
+}
+
+/* 打字机光标：正在打的时候跟着闪，打完就收 */
+.is-typing::after {
+  content: "";
+  display: inline-block;
+  width: 2px; height: 1em;
+  margin-left: 3px;
+  vertical-align: -.16em;
+  background: #1DB994;
+  animation: prCaret .72s steps(1) infinite;
+}
+@keyframes prCaret { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+
+/* 答对转场：整幕故障一下 */
+.pr-stage.is-glitch { animation: prGlitch .21s steps(2) both; }
+@keyframes prGlitch {
+  0%   { transform: none; opacity: 1; }
+  35%  { transform: translateX(-4px); opacity: .5; filter: blur(.5px); }
+  70%  { transform: translateX(3px); opacity: 1; filter: none; }
+  100% { transform: none; opacity: 1; }
+}
+
+/* 答错：四角泛红 + 压暗（挂在工具页上，盖住整个内容区） */
+#toolPrisoner.is-alarm .tool-body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(180, 20, 30, 0) 33%, rgba(180, 20, 30, .40) 100%);
+  animation: prAlarm .44s ease-out both;
+}
+@keyframes prAlarm {
+  0%   { opacity: 0; }
+  28%  { opacity: 1; }
+  100% { opacity: .95; }
+}
+
+/* 密文打完之后"解"一下：一圈绿光从框内散掉（一次性，不循环） */
+.pr-cipher.is-decoded { animation: prDecode .55s ease-out; }
+@keyframes prDecode {
+  0%   { box-shadow: inset 0 0 0 1px rgba(29, 185, 148, .55), 0 0 20px rgba(29, 185, 148, .26); }
+  100% { box-shadow: inset 0 0 0 1px rgba(29, 185, 148, 0), 0 0 0 rgba(29, 185, 148, 0); }
+}
+
+/* 通关标题：从发光、字距拉开，收成安静的一行 */
+.pr-egg.is-enter .pr-egg-title { animation: prGlow 1s cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes prGlow {
+  0%   { opacity: 0; letter-spacing: .22em; text-shadow: 0 0 22px rgba(29, 185, 148, .85); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; letter-spacing: normal; text-shadow: 0 0 0 rgba(29, 185, 148, 0); }
+}
+
+/* ---------- 彩蛋 ---------- */
+.pr-egg { padding-top: 4px; }
+.pr-egg-title { font-size: 20px; font-weight: 700; color: var(--text); }
+.pr-egg-lead { font-size: 14.5px; line-height: 1.8; color: #4b5563; }
+
+/* 两个选择：纯文字，故意不做成按钮 —— 不点，只读 */
+.pr-choos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fbfcfd;
+}
+.pr-choos-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+.pr-choos-row b { flex: 0 0 auto; font-weight: 600; color: var(--text); }
+.pr-choos-row span { color: var(--muted); }
+
+/* ---------- 逻辑规则（折叠） ---------- */
+.pr-rule-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.pr-rule-toggle:hover { border-color: #b9c0cb; background: #f8f9fb; }
+.pr-rule-toggle svg { width: 18px; height: 18px; stroke: #9aa1ac; transition: transform .2s; }
+.pr-rule-toggle.on svg { transform: rotate(180deg); }
+
+.pr-rule {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+.pr-rule h5 { font-size: 14px; font-weight: 700; color: var(--text); }
+.pr-rule p { margin-top: 12px; font-size: 13.5px; line-height: 1.85; color: #4b5563; }
+.pr-rule p + p { padding-top: 12px; border-top: 1px dashed #eef0f4; }
+.pr-rule b { color: var(--text); font-weight: 600; }
+
+/* ---------- 触屏 / 平板微调 ---------- */
+html[data-touch="1"] .pr-opt { padding: 15px 14px; }
+html[data-layout="tablet"] .pr-q { font-size: 16.5px; }
+html[data-layout="tablet"] .pr-q-lg { font-size: 19px; }
+html[data-layout="tablet"] .pr-opt { padding: 15px 16px; font-size: 16px; }
+html[data-layout="tablet"] .pr-cipher { font-size: 20px; }

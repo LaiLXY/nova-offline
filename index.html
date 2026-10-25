@@ -406,9 +406,14 @@
         </span>
       </button>
 
-      <!-- 囚徒困境：正式版这一页也还没做完，离线版直接写成「下线卡片」——
-           卡片置灰 + 名字后面挂「开发中」，点了只弹一句提示，
-           页面本身不存在（详见 js/tools.js 的 WIP_TOOLS）。 -->
+      <!-- 囚徒困境：★ 这一张是「藏起来的门」，不是下线卡片。
+           首页照旧挂灰卡 + 「开发中」（正式版这一页确实没做完），
+           但点进去能答题 —— 三关全过才看得见彩蛋。
+           三关里错一次，这张卡当场毁掉：名字变 [404]、角标变「损坏」，
+           再点三次（三句台词）之后就彻底变贴图、没反应了。
+           状态全在 localStorage，清站点数据可复原。
+           外观/逻辑见 js/prisoner.js（paintCard），本文件只留三个可改文字的钩子：
+           #prName / #prTag / #prDesc。 -->
       <button type="button" class="tool-btn is-maintenance" id="btnPrisoner" data-tool="prisoner"
               aria-description="开发中，暂时不可使用">
         <span class="tool-btn-ico" aria-hidden="true">
@@ -436,8 +441,8 @@
         </span>
 
         <span class="tool-btn-text">
-          <span class="tool-btn-name">囚徒困境<span class="tool-maint-tag">开发中</span></span>
-          <span class="tool-btn-desc">背叛与信任</span>
+          <span class="tool-btn-name"><span id="prName">囚徒困境</span><span class="tool-maint-tag" id="prTag">开发中</span></span>
+          <span class="tool-btn-desc" id="prDesc">背叛与信任</span>
         </span>
 
         <span class="tool-btn-go" aria-hidden="true">
@@ -2415,6 +2420,111 @@
          （key = 卡片的 data-tool = 页面 id）
        · 顶栏标题跟卡片名一致，和上面几张同一个写法
      ============================================================ -->
+<!-- ============================================================
+     功能页：囚徒困境（★ 彩蛋门，不是对局）
+     三关问答，全过才进彩蛋；错一关，首页那张卡当场毁掉。
+     逻辑与存档全在 js/prisoner.js，本处只摆结构。
+     ★ 三关是同一页里的四幕，靠 hidden 切换（showStage）：
+       先把 .pr-stage 写成 display:flex，所以必须有
+       `.pr-stage[hidden]{display:none!important}` 兜底，否则藏不住。
+     ============================================================ -->
+<div class="tool-page" id="toolPrisoner">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">囚徒困境</h3>
+  </div>
+
+  <div class="tool-body" id="prBody">
+    <div class="pr-wrap">
+
+      <!-- ---------- 第一关：判决 ---------- -->
+      <section class="pr-stage" id="prStage1">
+        <div class="pr-brief">
+          <p class="pr-sys" id="prSys1">【系统提示】你已进入「囚徒困境」副本。</p>
+          <p class="pr-sys-sub">两名囚徒被分别关押，无法沟通。你们面前各有一份协议，可签署「沉默」或「背叛」。</p>
+          <div class="pr-rows-title">判决结果</div>
+          <ul class="pr-rows">
+            <li><span>两人都沉默</span><b>各判 1 年</b></li>
+            <li><span>你背叛，他沉默</span><b>你被释放，他判 3 年</b></li>
+            <li><span>你沉默，他背叛</span><b>你判 3 年，他被释放</b></li>
+            <li><span>两人都背叛</span><b>各判 2 年</b></li>
+          </ul>
+        </div>
+
+        <p class="pr-q">如果两个囚徒都只考虑自身利益，且无法沟通，最终最可能出现的结局是？</p>
+
+        <div class="pr-opts" id="prOpts1">
+          <button type="button" class="pr-opt" data-val="A"><i>A</i><span>两人都沉默</span></button>
+          <button type="button" class="pr-opt" data-val="B"><i>B</i><span>两人都背叛</span></button>
+          <button type="button" class="pr-opt" data-val="C"><i>C</i><span>一人背叛，一人沉默</span></button>
+          <button type="button" class="pr-opt" data-val="D"><i>D</i><span>无法判断</span></button>
+        </div>
+
+        <button type="button" class="sub-save pr-submit" id="prSubmit1" disabled>确 认</button>
+      </section>
+
+      <!-- ---------- 第二关：破译 ---------- -->
+      <section class="pr-stage" id="prStage2" hidden>
+        <div class="pr-brief">
+          <p class="pr-sys" id="prSys2">【系统提示】系统截获一段密文。</p>
+          <p class="pr-cipher"><span id="prCipherText">TGNGCUG VJG RTKUQPGT</span></p>
+          <p class="pr-sys-sub">每个字母都向后偏移了 2 位。把它还原，并提取其中的关键词。</p>
+        </div>
+
+        <p class="pr-q">还原后的关键词是——</p>
+
+        <input type="text" class="pr-input" id="prInput" placeholder="输入一个单词"
+               autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+
+        <button type="button" class="sub-save pr-submit" id="prSubmit2">破 译</button>
+      </section>
+
+      <!-- ---------- 第三关：一句话 ---------- -->
+      <section class="pr-stage" id="prStage3" hidden>
+        <p class="pr-q pr-q-lg">囚徒困境里，真正打破循环的不是背叛，也不是信任，而是——</p>
+
+        <div class="pr-opts" id="prOpts3">
+          <button type="button" class="pr-opt" data-val="A"><i>A</i><span>合作</span></button>
+          <button type="button" class="pr-opt" data-val="B"><i>B</i><span>听天由命</span></button>
+        </div>
+
+        <button type="button" class="sub-save pr-submit" id="prSubmit3" disabled>确 认</button>
+      </section>
+
+      <!-- ---------- 彩蛋 ---------- -->
+      <section class="pr-stage pr-egg" id="prEgg" hidden>
+        <h4 class="pr-egg-title">恭喜通关</h4>
+        <p class="pr-egg-lead">由于作者在写「异语道破」时把我忘了，所以你只有两个选择——</p>
+
+        <div class="pr-choos">
+          <p class="pr-choos-row"><b>1. 背叛</b><span>关闭页面</span></p>
+          <p class="pr-choos-row"><b>2. 信任</b><span>去 GitHub 给作者点个 Star</span></p>
+        </div>
+
+        <button type="button" class="pr-rule-toggle" id="prRuleToggle" aria-expanded="false"
+                aria-controls="prRule">
+          <span>逻辑规则</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"
+               stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+        </button>
+
+        <div class="pr-rule" id="prRule" hidden>
+          <h5>重复博弈</h5>
+          <p><b>一次，和很多次。</b>只打一局的囚徒困境里，背叛是严格优势策略——无论对方怎么选，背叛都更划算。可一旦双方还会再见面，账就没法一次结清：今天占的便宜，会记在下一局的门口。</p>
+          <p><b>针锋相对。</b>1980 年，政治学家 Robert Axelrod 办了一场「重复囚徒困境」的计算机竞赛。几十种策略里得分最高的不是最精明的那个，而是最简单的那个——针锋相对（Tit for Tat）：第一轮无条件合作，此后照抄对方上一轮的做法。它同时具备四个品质：不先背叛、被背叛就一定还手、对方回头就一笔勾销、行为规律到对方看得懂。</p>
+          <p><b>最后一把的陷阱。</b>如果双方都确知只打 N 局，理性会从最后一把往回拆：最后一把没有下一次，背叛；既然最后一把注定背叛，倒数第二把也就没有未来，背叛……一直拆回第一把。合作能成立，靠的不是善意，而是「以后还有以后」。</p>
+          <p><b>回到这里。</b>你刚才那三关，是一次单局；你现在手里这两个选项，也是一次单局。但如果你打算再来——那我们之间，就是重复博弈了。</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
 <div class="tool-page" id="toolFourColor">
   <div class="tool-bar">
     <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
@@ -3784,5 +3894,7 @@
 <script src="js/morse.js"></script>
 <script src="js/hamming.js"></script>
 <script src="js/lights.js"></script>
+<!-- 囚徒困境：藏起来的三关问答（卡片本身是灰的「开发中」，见 js/prisoner.js） -->
+<script src="js/prisoner.js"></script>
 </body>
 </html>

@@ -28,6 +28,10 @@ const TOOLS = {
   queen:    'toolQueen',
   hamming:  'toolHamming',
   lights:   'toolLights',
+  /* 囚徒困境：★ 它不是"做完了的功能"，是一道藏起来的门 ——
+     卡片照旧挂「开发中」，但点得进来（三关问答 + 彩蛋，见 js/prisoner.js）。
+     所以它不能留在下面的 WIP_TOOLS 里：那一层是捕获阶段拦截，会把点击吃掉。 */
+  prisoner: 'toolPrisoner',
 };
 
 /* ---------- 开发中、点不进去的卡片 ----------
@@ -36,9 +40,8 @@ const TOOLS = {
    点它只弹一句提示：既没有页面，也没有任何放行的路子。
    放**捕获阶段**并 stopPropagation：把下面那个入口点击挡在外面 ——
    就算哪天 TOOLS 里又把它加回去，这层也拦得住。
-   （囚徒困境 / 方格生灭 / 三门之惑 / 位移之秘） */
+   （方格生灭 / 三门之惑 / 位移之秘 —— 囚徒困境已从这里摘掉，见 TOOLS 里那条注释） */
 const WIP_TOOLS = {
-  prisoner: '囚徒困境',
   life:     '方格生灭',
   monty:    '三门之惑',
   caesar:   '位移之秘',
