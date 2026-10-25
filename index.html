@@ -925,11 +925,14 @@
 <!-- ============================================================
      功能页：单位换算
      和其它功能页一样：一条顶栏（返回 + 标题）、下面 body 放内容。
-     body 里是**两层视图**（用 hidden 切，逻辑见 js/units.js）：
-       1) #unitCats  选类别（一张卡一个类别）
-       2) #unitConv  换算界面（上框输数值 → 下框同步出结果）
-     加一个类别：这里复制一张类别卡（换 data-unit-cat / 图标 / 文案），
-     再到 js/units.js 的 UNITS 里补一份单位表即可。
+     body 里是**三层视图**（用 hidden 切，逻辑见 js/units.js）：
+       1) #unitCats  选领域（一张卡一个领域，共 25 张）
+       2) #unitSubs  选量（只有电学 / 磁学 / 放射性 / 粘度 / 浓度才有这层，
+                      卡片是 js 现画的，这里只留一个空容器）
+       3) #unitConv  换算界面（上框输数值 → 下框同步出结果）
+     加一个领域：这里复制一张类别卡（换 data-unit-cat / 图标 / 文案），
+     再到 js/units.js 的 UNITS 里补一条。领域里若有好几个量，只加这一张卡，
+     各个量在 UNITS 里写 kids / parent，第二层会自动长出来。
      ============================================================ -->
 <div class="tool-page" id="toolUnits">
   <div class="tool-bar">
@@ -944,7 +947,8 @@
   <div class="tool-body" id="toolUnitsBody">
 
     <!-- ---------- 一、选类别 ----------
-         一张卡一个类别，沿用首页那种 .tool-btn（图标 + 大标题 + 箭头）。
+         一张卡一个**领域**（不一定是单个物理量：电学那种点了还要再选量），
+         沿用首页那种 .tool-btn（图标 + 大标题 + 箭头）。
          只有大标题，不带 .tool-btn-desc —— 类别页就一张张名字摆着，
          副标题那行说明是多余的。
 
@@ -953,8 +957,11 @@
              带上就会被当成功能入口，首页和「卡片维护」都会多出一条
            · 图标只画形状：底色和描线由 css/tools.css 的 .unit-cat 统一给
              （蓝底白画，和首页那张「单位换算」卡同色号）
-         所以加一个类别：这里复制一张卡（改 data-unit-cat 和图标），
-         再到 js/units.js 补一条同名数据即可。 -->
+         所以加一个领域：这里复制一张卡（改 data-unit-cat 和图标），
+         再到 js/units.js 补一条同名数据即可。
+         ★ 领域里若有好几个量（电学 / 磁学 / 放射性 / 粘度 / 浓度），
+           只加这一张卡；量写在 UNITS 里（kids / parent），第二层由
+           cvtRenderKids 现画，不用在这儿再抄一遍。 -->
     <div class="unit-cats" id="unitCats">
       <button type="button" class="tool-btn unit-cat" data-unit-cat="length">
         <span class="tool-btn-ico" aria-hidden="true">
@@ -1196,7 +1203,141 @@
                stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
         </span>
       </button>
+
+      <!-- ===== 2026-10-25 新增七个领域 =====
+           前五张（电学 / 磁学 / 放射性 / 粘度 / 浓度）下面还挂着若干个
+           「量」，点它们是进**第二层选量**，不是直接进换算页 —— 名单在
+           js/units.js 的 UNITS[父键].kids 里，卡片由 cvtRenderKids 现画。
+           角度、分辨率只有一个量，所以没有第二层，点进去就是换算页。
+           两类在这里长得一模一样（都是 .unit-cat），差别全在 js 里判断。 -->
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="electric">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 电学：插头（两只脚 + 头身 + 一截电缆）。
+               原来这里是闪电，和「功率」那张撞得一模一样 —— 闪电归功率
+               （Power 的通用画法）。没选电池：竖电池缩到 28px 像香水瓶，
+               横电池像电量条，都不够干脆；插头轮廓独一份，和谁都不撞。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9.4 3.4v3.4" /><path d="M14.6 3.4v3.4" /><path d="M7 6.8h10v4a5 5 0 0 1-10 0z" /><path d="M12 15.8v3.8" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">电学</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="magnetism">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 磁学：空心马蹄磁铁（U 形**轮廓带** + 臂上两条分界线）。
+               和这个库其它卡一样走 1.7 描线 —— 前面试过粗管实心、实心极帽、
+               外扩极靴、等宽极头 + 底色缝，都不是这条口径；Roy 定的是空心 U。
+               一条闭合 path 走完整个「带」：外壁下去 → 底部弧 → 右外壁上来
+               → 顶端横封口 → 右内壁下去 → 内弧回来 → 左内壁上来 → 闭合。
+               顶端那条封口横线就是**极面**；再在两臂各补一条横线（y=8.6），
+               把最上面 5.2 高的一段切成「磁极」，底下是磁身。
+               · 底部弧**压扁**了（rx 8.6 / ry 7.0，不是正圆）：正圆会把腿挤短，
+                 整个 U 看着是个矮胖的碗。压扁后直腿从 3.2 长到 4.8，比例才像马蹄。
+                 ry 再小（6.5）内腔底部就平得像块方砖，所以停在 7.0。
+               · 壁厚 5.5：4.0 时空心不明显（缩到 28px 像单线 U），6.4 内腔又挤成一条缝；
+                 5.5 在 28px 下内腔还剩约 2.4px 蓝缝，空心看得出来
+               · 内弧必须跟着外弧走：rx 8.6−5.5=3.1、ry 7.0−5.5=1.5，两个弧同心 → 带子等宽
+               · 两条分界线的端点正好落在内/外壁上，butt 收口，圆头会凸出壁外 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 3.4v10a8.6 7 0 0 0 17.2 0V3.4H15.1v10a3.1 1.5 0 0 1-6.2 0V3.4z" /><path d="M3.4 8.6h5.5" stroke-linecap="butt" /><path d="M15.1 8.6h5.5" stroke-linecap="butt" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">磁学</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="radiation">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 放射性：三叶符号（一片画三次，各转 120°） -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.5" /><path d="M10.9 10.1L8.2 5.4a7.6 7.6 0 0 1 7.6 0l-2.7 4.7z" /><path d="M10.9 10.1L8.2 5.4a7.6 7.6 0 0 1 7.6 0l-2.7 4.7z" transform="rotate(120 12 12)" /><path d="M10.9 10.1L8.2 5.4a7.6 7.6 0 0 1 7.6 0l-2.7 4.7z" transform="rotate(240 12 12)" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">放射性</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="viscosity">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 粘度：一滴正在往下坠的液体 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8c3.5 4.1 5.6 6.9 5.6 9.5a5.6 5.6 0 0 1-11.2 0c0-2.6 2.1-5.4 5.6-9.5z" /><path d="M9.6 13.4a2.6 2.6 0 0 0 2.6 2.6" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">粘度</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="concentration">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 浓度：锥形瓶 + 液面线 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9.4 2.8h5.2" /><path d="M10.8 2.8v6.4l-4.5 9a2.3 2.3 0 0 0 2.1 3.3h7.2a2.3 2.3 0 0 0 2.1-3.3l-4.5-9V2.8" /><path d="M8.1 15.2h7.8" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">浓度</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="angle">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 角度：两条射线夹一段弧。
+               弧**以顶点为圆心**（半径 9.8）：两端精确落在水平线和斜线上，各距顶点 9.8，
+               所以弧尖永远不会戳出射线。旧版圆心随手放，终点 (10.2, 12.7) 而斜线
+               在 y=12.7 处的 x 是 10.683 —— 弧尖比斜线多出去 0.48，看着就是
+               「中间的弧线超出了两端直线」。改半径时按这个算：
+               斜线方向 (15.2,−14.4)/20.938 = (0.7260,−0.6877)，终点 = 顶点 + r×方向；
+               r=9.8 → (10.515, 12.860)，即相对起点 Δ(−2.685, −6.74)。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 19.6h17" /><path d="M3.4 19.6L18.6 5.2" /><path d="M13.2 19.6a9.8 9.8 0 0 0 -2.685 -6.74" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">角度</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="resolution">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 分辨率：一台显示器（屏幕 + 立柱 + 底座）。
+               原来画的是屏幕里切九宫格 —— 缩到 28px 就是一块窗格，
+               像表格/田字格，读不出「屏幕」这层意思（Roy 的反馈）。
+               现在屏幕里**刻意留空**：一块干净的屏幕轮廓才认得出是显示器；
+               塞像素点会变成「图片/相册」，塞放大镜+小方块又会糊成一团。
+               dpi/ppi/lp/mm 都是「一英寸里塞多少点」，屏幕本身就是最省事的物象。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><rect x="2.8" y="4.4" width="18.4" height="12.8" rx="2.2" /><path d="M12 17.2v2.6" /><path d="M8.4 20.4h7.2" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">分辨率</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
     </div>
+
+    <!-- ---------- 一之二、选量（第二层） ----------
+         只有「一个领域好几个量」的那五张卡（电学 / 磁学 / 放射性 / 粘度 /
+         浓度）才会走到这一层：内容由 js/units.js 的 cvtRenderKids 按
+         UNITS[父键].kids 现画进这个容器。
+         ★ 别在这儿手写卡片 —— 一份清单只能有一处真源，否则加一个量要改
+           两个文件，迟早对不上。第一层留在 HTML 是因为那 25 张卡各有图标。
+         角度、分辨率只有一个量，不经过这一层。 -->
+    <div class="unit-cats" id="unitSubs" hidden></div>
 
     <!-- ---------- 二、换算 ----------
          上框是唯一输入源，下框只读、跟着算出来。
@@ -2700,7 +2841,7 @@
             <button type="button" class="rm-copy" id="msPlCopyOut">复制</button>
           </div>
         </div>
-        <p class="ms-note" id="msPlNote">/ 分隔字母 · \ 分隔单词 · 空格也当词间隔 · 按右上角所选速度播报（默认 18 wpm），播报中锁住输入框</p>
+        <p class="ms-note" id="msPlNote">/ 分隔字母 · \ 分隔单词 · · 与 . 都算点 · 空格也当词间隔 · 按右上角所选速度播报（默认 18 wpm），播报中锁住输入框</p>
       </section>
 
       <!-- ============ 三级 A3：电码对照表（0–9 / A–Z / 常用标点） ============ -->
@@ -2818,6 +2959,15 @@
       <button type="button" class="mini-btn" id="msPadDone">完成</button>
     </div>
     <div class="gfx-pad-keys is-rows" id="msPadKeys"></div>
+    <!-- PC 两栏（键盘停靠右半屏）时，键面下方列出实体键盘的快捷键。
+         手机 / 平板上 .ms-pad-tips 是 display:none，永远不会露出来。 -->
+    <div class="ms-pad-tips" aria-hidden="true">
+      <span><kbd>←</kbd><b>·</b></span>
+      <span><kbd>→</kbd><b>-</b></span>
+      <span><kbd>↑</kbd><b>/</b></span>
+      <span><kbd>↓</kbd><b>\</b></span>
+      <span><kbd>⌫</kbd><b>退格</b></span>
+    </div>
   </div>
 </div>
 

@@ -126,8 +126,34 @@
      ========================================================== */
   const MS_SECTIONS = [msHome, msTransHome, msTrans, msPlayer, msChart, msGameHome, msGame];
 
+  /* ★ PC 宽屏：翻译（电码方向）/ 播报两页改成「左内容 + 右键盘」两栏。
+     判据 = 真 PC（Device.isPC()，手机 / 平板一律 false）+ 窗口 ≥1024，
+     与 css/tools.css 里 `@media (min-width:1024px) html[data-device="pc"]`
+     那段一一对应 —— 改一边必须改另一边，否则类名加了也不生效。 */
+  function msPadDock() {
+    return typeof Device !== 'undefined' && Device.isPC()
+      && window.matchMedia('(min-width: 1024px)').matches;
+  }
+  /* 两栏开关就一个类名（#toolMorse.ms-dock），布局全交给 CSS */
+  function msPadDockSync(on) {
+    if (PAGE) PAGE.classList.toggle('ms-dock', !!on);
+  }
+
   function msShow(sec) {
     MS_SECTIONS.forEach(s => { s.hidden = (s !== sec); });
+    /* 两栏页一进来就把键盘摆好。等焦点再摆的话，点输入框那一下整张卡片
+       会横向挪半屏 —— 刚点进去的框自己跑了。手机 / 平板上 wantPad 永远
+       落空（msPadDock() 是 false），仍旧是原来那套「按焦点弹键盘」。 */
+    const wantPad = sec === msPlayer || (sec === msTrans && msDir === 'dec');
+    if (wantPad && msPadDock()) {
+      const el = sec === msPlayer ? msPlIn : msIn;
+      msPadShowFor(el);
+      /* 顺手给焦点：PC 上进来就能直接用实体键盘敲（打字、方向键都算）。
+         只在停靠态做 —— 手机上 focus 会把系统键盘顶出来。 */
+      try { el.focus({ preventScroll: true }); } catch (_) { el.focus(); }
+    } else {
+      msPadHide(true);
+    }
   }
 
   document.addEventListener('click', e => {
@@ -160,15 +186,25 @@
      ========================================================== */
   let msDir = 'enc';
 
+  /* 底注：编码方向不提方向键；解码方向在 PC 两栏里顺手把快捷键写出来。
+     （msPadDock() 随窗口宽度变，所以换方向、resize 都要重画一次） */
+  function msNotePaint() {
+    if (!msNote) return;
+    const enc = msDir === 'enc';
+    let txt = enc
+      ? '/ 分隔字母 · \\ 分隔单词 · 空格自动变 \\ · 不认识的字符跳过'
+      : '/ 分隔字母 · \\ 分隔单词 · · 与 . 都算点 · 没写 / 的段会自动切分';
+    if (!enc && msPadDock()) txt += ' · 方向键 ← · → - ↑ / ↓ \\ ⌫ 退格';
+    msNote.textContent = txt;
+  }
+
   function msSetDir(dir) {
     msDir = dir;
     const enc = dir === 'enc';
     msDirTag.textContent = enc ? '文字 → 电码' : '电码 → 文字';
     msInLabel.textContent = enc ? '输入（英文 / 拼音）' : '输入（摩斯电码）';
+    msNotePaint();
     msIn.placeholder = enc ? '如 I am Roy.' : '如 ··\\·-/--';
-    msNote.textContent = enc
-      ? '/ 分隔字母 · \\ 分隔单词 · 空格自动变 \\ · 不认识的字符跳过'
-      : '/ 分隔字母 · \\ 分隔单词 · 没写 / 的段会自动切分';
     msCase.hidden = enc;               /* 大小写只对 译回文字 有意义 */
     msIn.value = '';
     msOut.value = '';
@@ -180,9 +216,15 @@
     }
   }
 
-  /* 摩斯串宽容化：长划 / 各种圆点统一成本站的 · 和 - */
+  /* 摩斯串宽容化：长划 / 各种圆点统一成本站的 · 和 -
+     ★ 半角句点 . 也算点：实体键盘上最顺手就是它（小键盘更是），
+       以前只有 · 才认，敲 . 会当成无效符号出 □。只在解析时归一，
+       输入框里显示的仍是用户自己敲的字符，不硬改。 */
   function msNormMorse(s) {
-    return s.replace(/[—–―]/g, '-').replace(/[•●◦]/g, '·');
+    return s
+      .replace(/[—–―]/g, '-')
+      .replace(/[•●◦∙⋅]/g, '·')
+      .replace(/\./g, '·');
   }
 
   function msEncode(text) {
@@ -436,6 +478,13 @@
     b.innerHTML = html;
     if (o.title) b.title = o.title;
     b.setAttribute('aria-label', o.aria || o.title || '按键');
+    /* 键角的实体键盘提示（只在 PC 两栏里露出，见 tools.css 的 .ms-kbdhint） */
+    if (o.hint) {
+      const hint = document.createElement('i');
+      hint.className = 'ms-kbdhint';
+      hint.textContent = o.hint;
+      b.appendChild(hint);
+    }
     b.addEventListener('mousedown', e => e.preventDefault());
     b.addEventListener('click', o.action);
     return b;
@@ -449,17 +498,17 @@
     const row1 = document.createElement('div');
     row1.className = 'gfx-pad-row ms-pad-row-big';
     row1.appendChild(msPadKey('<span class="ms-bigdot"></span>',
-      { title: '点（短）', aria: '输入点', action: () => msPadInsert('·') }));
+      { title: '点（短）', aria: '输入点', hint: '←', action: () => msPadInsert('·') }));
     row1.appendChild(msPadKey('<span class="ms-bigdash"></span>',
-      { title: '划（长）', aria: '输入划', action: () => msPadInsert('-') }));
+      { title: '划（长）', aria: '输入划', hint: '→', action: () => msPadInsert('-') }));
     msPadKeys.appendChild(row1);
 
     const row2 = document.createElement('div');
     row2.className = 'gfx-pad-row ms-pad-row-sep';
     row2.appendChild(msPadKey('<b>/</b><small>字符间隔符</small>',
-      { cls: 'is-fn is-stack', title: '插入字符间隔符 /', action: () => msPadInsert('/') }));
+      { cls: 'is-fn is-stack', title: '插入字符间隔符 /', hint: '↑', action: () => msPadInsert('/') }));
     row2.appendChild(msPadKey('<b>\\</b><small>单词间隔符</small>',
-      { cls: 'is-fn is-stack', title: '插入单词间隔符 \\', action: () => msPadInsert('\\') }));
+      { cls: 'is-fn is-stack', title: '插入单词间隔符 \\', hint: '↓', action: () => msPadInsert('\\') }));
     row2.appendChild(msPadKey('\u232B', { fn: 1, title: '退格', aria: '退格', action: msPadBackspace }));
     msPadKeys.appendChild(row2);
   }
@@ -467,6 +516,7 @@
   /* 插字后派发 input 事件 —— 同步全交给各自的 input 链路 */
   function msPadInsert(text) {
     const el = msPadInput();
+    if (!el || el.readOnly) return;      /* 播报中那个框是锁着的，别从键盘硬塞 */
     const v = el.value;
     const pos = Math.min(Math.max(msPadCaret, 0), v.length);
     el.value = v.slice(0, pos) + text + v.slice(pos);
@@ -477,6 +527,7 @@
 
   function msPadBackspace() {
     const el = msPadInput();
+    if (!el || el.readOnly) return;
     const v = el.value;
     const pos = Math.min(Math.max(msPadCaret, 0), v.length);
     if (pos === 0) return;
@@ -493,13 +544,34 @@
       ? el.selectionStart : el.value.length;
     msPadRender();
     msPad.hidden = false;
+    /* PC 两栏：键盘占满右半屏、不压左边内容，顶输入框这套完全不用跑 ——
+       gfxPadEnsureVisible 只看**纵向**有没有重叠，侧栏必然算「压住」，
+       真跑了反而会把整页往上滚一格。 */
+    if (msPadDock()) {
+      gfxClearPadScroller();
+      msPadDockSync(true);
+      return;
+    }
+    msPadDockSync(false);
     gfxPadEnsureVisible(el, msPad);
+    /* 矮窗口（1440×640、1280×600、手机横屏）里键盘一弹就把下半截压住：
+       gfxPadEnsureVisible 只保证**输入框自己**露出来，「结果」框（或播报页的
+       播放按钮）照样被盖。这里把紧跟其后的那一块也顶到键盘上沿 ——
+       同一个滚动容器、同样的补底边距，重复调用是幂等的。 */
+    const next = !msTrans.hidden ? msOut : (!msPlayer.hidden ? msPlToggle : null);
+    if (next && next.offsetParent) gfxPadEnsureVisible(next, msPad);
   }
 
-  function msPadHide() {
-    if (!msPad || msPad.hidden) return;
-    msPad.hidden = true;
-    gfxClearPadScroller();
+  /* force：真要收（「完成」、换页、关卡片）。不传时 PC 停靠态**不收** ——
+     它已经是右半屏的一部分，失焦 / 点「复制」都收掉的话，右半屏就空一块。 */
+  function msPadHide(force) {
+    if (!msPad) return;
+    if (!force && msPadDock() && !msPad.hidden) return;
+    if (!msPad.hidden) {
+      msPad.hidden = true;
+      gfxClearPadScroller();
+    }
+    msPadDockSync(false);
   }
 
   /* 两个摩斯输入框（翻译页 / 播报页）共用一套绑定 */
@@ -533,6 +605,75 @@
     msPadBindInput(msIn);
     msPadBindInput(msPlIn);
   }
+
+  /* ---------- PC 实体键盘快捷输入（对应右栏键面） ----------
+     ← ·   → -   ↑ /   ↓ \   ⌫ 退格
+     只在「PC 两栏键盘正开着」时接管，几条边界都别松：
+       · 手机 / 平板没有方向键，本来就碰不到（msPadDock() 直接 false）；
+       · 编码方向（文字 → 电码）还得用方向键挪光标，不抢；
+       · 播报中那个框是 readonly，msPadCanShow() 已经是 false；
+       · 焦点在别的输入框（比如别处的搜索框）时不抢 —— 本页没有第二处，
+         但 tools.js 那层还有，别把方向键全吃掉；
+       · 退格只在焦点不在输入框里时才接管：焦点本来就在框里的话，
+         交给浏览器原生退格更好（能删选区、能按住连删）。 */
+  const MS_ARROW_KEY = { ArrowLeft: '·', ArrowRight: '-', ArrowUp: '/', ArrowDown: '\\' };
+
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    if (!msPad || msPad.hidden || !PAGE.classList.contains('show')) return;
+    if (!msPadDock()) return;
+    if (msPlSpeedOpts && !msPlSpeedOpts.hidden) return;   /* 速度下拉开着时让给人 */
+    const el = msPadInput();
+    if (!el || !msPadCanShow(el) || el.readOnly) return;
+    const ae = document.activeElement;
+    /* 焦点落在「别的**可编辑**表单控件」上（别处的输入框）就一律不抢；
+       结果框是 readonly，在那儿按退格本来就什么都不会发生，可以照常接管 */
+    const otherField = ae && ae !== el &&
+      /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) && !ae.readOnly && !ae.disabled;
+    if (otherField) return;
+
+    /* 光标位置一律以框里为准：input / textarea 失焦后 selectionStart 仍然保留，
+       所以先点一下框中间、再点到别处，接着按键也不会插到旧位置去。 */
+    if (typeof el.selectionStart === 'number') {
+      msPadCaret = Math.min(el.selectionStart, el.value.length);
+    }
+
+    /* 退格 = 右栏那枚「退格」键：焦点已在框里就放行原生，别处才代劳 */
+    if (e.key === 'Backspace') {
+      if (ae === el) return;
+      e.preventDefault();
+      msPadBackspace();
+      return;
+    }
+
+    const text = MS_ARROW_KEY[e.key];
+    if (!text) return;
+    e.preventDefault();
+    msPadInsert(text);
+  });
+
+  /* 窗口尺寸变了：两栏开关跟着宽度走（布局由 CSS 管，这里只同步类名与底注） */
+  let msDockTimer = null;
+  window.addEventListener('resize', () => {
+    if (msDockTimer) clearTimeout(msDockTimer);
+    msDockTimer = setTimeout(() => {
+      msDockTimer = null;
+      if (!PAGE.classList.contains('show')) return;
+      const dock = msPadDock();
+      if (!dock) {
+        /* 拖窄了：交回原来那套贴底浮层，顺手把输入框顶到键盘上沿 */
+        if (msPad && !msPad.hidden) {
+          const el = msPadInput();
+          if (msPadCanShow(el)) msPadShowFor(el); else msPadHide(true);
+        } else {
+          msPadDockSync(false);
+        }
+      } else {
+        msPadDockSync(msPad && !msPad.hidden);
+      }
+      msNotePaint();
+    }, 150);
+  });
 
   /* ---------- 复制（照罗马数字的 rmCopy 成式） ---------- */
   const MS_TOAST_COPY = 'morse-copy';
@@ -1051,7 +1192,9 @@
     msPlRestart.hidden = st !== 'paused';   /* 从头播放只在暂停时露出 */
     msPlIn.readOnly = st === 'playing';     /* 播报途中锁住输入框 */
     msPlayer.classList.toggle('is-playing', st === 'playing');
-    if (st === 'playing') msPadHide();
+    /* 浮层键盘会挡住纸带，播报时收掉；PC 两栏里它是右半屏的常驻面板，
+       本来就压不到纸带，收掉反而让右半屏空一块（插件也别去动它）。 */
+    if (st === 'playing' && !msPadDock()) msPadHide();
   }
 
   /* 从 from 毫秒处起播（0 = 从头，暂停后传 plPos 即续播） */
@@ -1186,7 +1329,7 @@
     if (PAGE.classList.contains('show')) return;
     plStop();
     msStopAudio();
-    msPadHide();
+    msPadHide(true);          /* 卡片关掉了：键盘 + 两栏一起收（下次进来重算） */
   }).observe(PAGE, { attributes: true, attributeFilter: ['class'] });
 
   $$('#msTiers .ms-tier', msGameHome).forEach(b => b.addEventListener('click', () => {
@@ -1226,8 +1369,9 @@
       try { el.setSelectionRange(0, 0); } catch (_) {}
       el.focus();
     });
-    /* 「完成」只收键盘，值留着 */
-    msPadDone.addEventListener('click', () => { msPadHide(); msPadInput().blur(); });
+    /* 「完成」只收键盘，值留着。force：PC 停靠态也要真收（收掉就回到单栏），
+       所以这里是少数几个必须传 force 的地方之一。 */
+    msPadDone.addEventListener('click', () => { msPadHide(true); msPadInput().blur(); });
   }
   msPadBind();
 
@@ -1302,13 +1446,17 @@
   /* 进卡片：收软键盘、停声音；若在选档，把难度高亮对齐 */
   document.addEventListener('tool:open', e => {
     if (!e.detail || e.detail.page !== PAGE) return;
-    msPadHide();
+    msPadHide(true);
     msStopAudio();
     plStop();
     if (msGame.hidden) {
       $$('#msTiers .ms-tier', msGameHome).forEach(b =>
         b.classList.toggle('on', b.dataset.tier === msTier.key));
     }
+    /* 上次关卡片时键盘被强制收掉了，但停在哪一页还在 —— 按当前那页重算一次
+       两栏（msShow 只是重设 hidden，不会打乱页面状态）。 */
+    const cur = MS_SECTIONS.find(s => !s.hidden);
+    if (cur) msShow(cur);
   });
 
   /* ==========================================================

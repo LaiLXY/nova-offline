@@ -1373,6 +1373,26 @@ html[data-layout="tablet"] .graph-readout { font-size: 14px; padding: 6px 11px; 
   --tool-ico-fg: #FFFFFF;
 }
 
+/* 第二层「选量」的卡片（容器 #unitSubs，卡片由 js/units.js 的 cvtRenderKids
+   现画）。和第一层是同一套 .unit-cat，唯一区别是图标块里放的是**该量的
+   单位符号**（V / Ω / Wb / mol/L…），不是 SVG —— 21 个量各画一张图标不值当，
+   符号反而认得更快。所以这里只管把文字摆正，卡片本身一条没动。 */
+.unit-kid-sym {
+  color: var(--tool-ico-fg, #FFFFFF);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+}
+/* 按符号长度分三档，不然 52px 的方块里有的顶满、有的缩成一小撮：
+   1–2 个字符（V / Ω / Wb）20px，3 个（A/m / g/L）16px，4 个以上
+   （mol/L / C/kg / Pa·s / lp/mm）12.5px。档位在 units.js 的 cvtRenderKids 里判。 */
+.unit-kid-sym.is-mid { font-size: 16px; }
+.unit-kid-sym.is-long {
+  font-size: 12.5px;
+  letter-spacing: -0.01em;
+}
+
 /* ---------- 二：换算界面 ---------- */
 .unit-conv {
   display: flex;
@@ -4539,16 +4559,116 @@ html[data-touch="1"] .ms-plsym.is-dash { width: 21px; height: 8px; }
 /* 播报途中输入框是只读的，压一下字色，避免「为什么打不进去」的错觉 */
 #msPlIn[readonly] { color: var(--muted); }
 
-/* PC 端：软键盘不全宽，居中一块（用户要求电脑端适配大小） */
-html[data-viewport="lg"] #msPad {
-  max-width: 480px;
-  margin: 0 auto;
-  border: 1px solid var(--line);
-  border-bottom: 0;
-  border-radius: 16px 16px 0 0;
-  padding-left: 14px;
-  padding-right: 14px;
+/* PC / 平板 / 手机横屏：软键盘不全宽，限宽居中（用户要求电脑端适配大小）
+   ----------------------------------------------------------
+   为什么用 480 这个断点、且不看 data-device / data-viewport：
+     · 键高是固定的 110 / 94（照设计图），键盘越宽键就越扁。手机竖屏
+       （<480）满宽时大键 ≈ 187×90（长宽比 2.1），正好；一旦再宽就失真：
+       手机横屏 664 宽 → 321×110（2.9），桌面窗口 1000 宽 → 488×110（4.4），
+       iPad 横屏 1080 → 528×110（4.8）。限宽 480 后各尺寸都稳定在 222×110（2.0）。
+     · 桌面窗口被拖窄到 744–1023 时会落到 sm 档（data-layout="tablet"、
+       data-viewport="sm"），真平板也一律是 sm 档 —— 只认 lg 一定会漏，
+       所以断点只按宽度算，不认设备档位。
+     · 手机竖屏（<480）完全不走这条，仍是原来贴着底边的满宽键盘。
+   外观做成「四角圆、四边有框」的完整面板：只圆上角、贴死视口底边时，
+     窄于窗口的键盘看起来像从屏幕下方被截断的半截。 */
+@media (min-width: 480px) {
+  #msPad {
+    max-width: 480px;
+    margin: 0 auto;
+    padding-left: 14px;
+    padding-right: 14px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 12px 34px -14px rgba(16, 24, 40, .35);
+  }
 }
+/* 窗口够高 → 离底 16px 悬浮成一张卡；矮窗口（如 1440×640 / 手机横屏）
+   贴底不动，否则上移这 16px 会把「结果」框的底边压到键盘下面
+   （gfxPadEnsureVisible 只保证输入框露出来，管不到结果框）。 */
+@media (min-width: 480px) and (min-height: 680px) {
+  #msPad { bottom: 16px; }
+}
+
+/* ---------- PC 宽屏：内容在左半屏、键盘在右半屏 ----------
+   判据 = **真 PC + 窗口 ≥1024**，和 js/morse.js 的 msPadDock() 一一对应
+   （那边是 Device.isPC() && matchMedia('(min-width:1024px)')），改一边必须改另一边：
+     · 手机竖 / 横、平板一律不走这条 —— 它们仍是上面那套贴底浮层键盘；
+     · 1024 以下（含被拖窄的桌面窗口）也还是浮层，半屏里塞两栏两边都挤。
+   实现：把 .tool-page 从「纵向 flex」临时改成网格 —— 键盘本来就是本页最后
+   一个子元素，顶栏横跨两栏、内容占左、键盘占右；不用把键盘挪出 DOM，
+   它也不会盖住左边内容（所以不必再调 gfxPadEnsureVisible 去顶输入框）。 */
+@media (min-width: 1024px) {
+  html[data-device="pc"] #toolMorse.ms-dock.show {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  html[data-device="pc"] #toolMorse.ms-dock .tool-bar  { grid-column: 1 / -1; grid-row: 1; }
+  /* min-height:0：网格子项默认 min-height:auto，内容一长就把 1fr 那行撑破 */
+  html[data-device="pc"] #toolMorse.ms-dock .tool-body {
+    grid-column: 1; grid-row: 2; min-height: 0;
+    display: flex; flex-direction: column;
+  }
+  /* 左边那张卡也和右边键盘一样纵向居中（同样用 auto 外边距，理由同上） */
+  html[data-device="pc"] #toolMorse.ms-dock .tool-body > .ms-wrap {
+    margin-top: auto; margin-bottom: auto;
+  }
+
+  /* 键盘：从「钉在底边的浮层」变成「右半屏的侧栏」 */
+  html[data-device="pc"] #toolMorse.ms-dock #msPad:not([hidden]) {
+    position: static;
+    grid-column: 2; grid-row: 2;
+    width: auto; max-width: none; max-height: none;
+    margin: 0;
+    padding: 24px clamp(16px, 3vw, 48px);
+    border: 0; border-left: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: none;
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
+  /* 键盘这一组在右栏里纵向居中。用 auto 外边距而不是
+     justify-content:center —— 内容比栏高时 auto 会归零、还能从头滚，
+     居中则会把顶上那截直接顶到滚动区外面去。 */
+  html[data-device="pc"] #toolMorse.ms-dock .gfx-pad-head { margin-top: auto; }
+  html[data-device="pc"] #toolMorse.ms-dock .ms-pad-tips  { margin-bottom: auto; }
+  /* 键面限宽 460：大键 (460 - 6) / 2 ≈ 227 × 110，长宽比 2.06（设计图是 2.0） */
+  html[data-device="pc"] #toolMorse.ms-dock .gfx-pad-head,
+  html[data-device="pc"] #toolMorse.ms-dock #msPadKeys,
+  html[data-device="pc"] #toolMorse.ms-dock .ms-pad-tips {
+    flex: 0 0 auto;
+    width: 100%; max-width: 460px;
+    margin-left: auto; margin-right: auto;
+  }
+  html[data-device="pc"] #toolMorse.ms-dock .ms-pad-tips  { display: flex; }
+  html[data-device="pc"] #toolMorse.ms-dock .ms-kbdhint   { display: block; }
+}
+
+/* 键角上的实体键盘提示（← · → - ↑ / ↓ \）：只在 PC 两栏里露出。
+   手机上根本没有方向键，露出来只会让人以为键面里多了个可点区域。 */
+#msPad .gfx-key { position: relative; }
+.ms-kbdhint {
+  display: none;
+  position: absolute; top: 6px; right: 8px;
+  font-style: normal; font-size: 11px; line-height: 1;
+  color: var(--muted);
+}
+/* 右栏键面下方的说明行（同为 PC 专用） */
+.ms-pad-tips {
+  display: none;
+  flex-wrap: wrap; gap: 6px 14px;
+  justify-content: center;
+  margin-top: 14px;
+  font-size: 12px; color: var(--muted);
+}
+.ms-pad-tips span { display: inline-flex; align-items: center; gap: 5px; }
+.ms-pad-tips kbd {
+  font-family: inherit; font-size: 11.5px; line-height: 1;
+  padding: 3px 6px; border-radius: 6px;
+  border: 1px solid var(--line-strong); background: #f8fafc; color: var(--text);
+}
+.ms-pad-tips b { font-weight: 700; color: #0369a1; }
 
 /* ---------- 5) 电脑 / 平板：整体放宽、放大 ---------- */
 @media (min-width: 768px) {

@@ -1,17 +1,23 @@
 /* ==========================================================================
    units.js —— 功能页：单位换算
 
-   三层视图，都在 #toolUnits 这一个 .tool-page 里（用 hidden 切）：
-     1. #unitCats  选类别（一张卡一个类别，现在是「长度」）
-     2. #unitConv  换算界面：上框输数值 → 下框同步显示结果；
-                   单位按钮点开是药丸弹窗（复用 app.css 那套 picker 外观）
-     3. #unitBridge 体积 ⇄ 质量：上下两栏**是两个量**（不是同一个量的两种
-                   单位），中间靠用户填的密度接起来 —— 质量 = 体积 × 密度。
-                   入口只有一处：体积 / 质量那两张换算页底下的虚线跳转
-                   （见下面「九之二、」）—— 给算到一半才想起来要换量的人，
-                   顺手把当前数值和单位带过去。
-                   ★ 它**不进类别列表**：跨量换算不是"又一类单位"，
-                     摆一张卡在那儿反而让人以为点进去是单位表。
+   ★ 视图层级（都在 #toolUnits 这一个 .tool-page 里，用 hidden 切）：
+     ① #unitCats  选领域。25 张卡写在 index.html 里，各有自己的 SVG 图标。
+     ② #unitSubs  选量 —— **只有"一个领域好几个量"的那五张卡才有这一层**
+                  （电学 / 磁学 / 放射性 / 粘度 / 浓度）。卡片由
+                  cvtRenderKids 现画，名单是 UNITS[父键].kids。
+                  角度、分辨率只有一个量，点卡片直接进第 ③ 层，不经过这里。
+     ③ #unitConv  换算界面：上框输数值 → 下框同步显示结果；
+                  单位按钮点开是药丸弹窗（复用 app.css 那套 picker 外观）。
+                  顶栏标题对子量显示成「电学-电容」（见 cvtCatTitle）。
+     #unitBridge 是 ③ 的一个岔路视图（体积 ⇄ 质量），不在这条链上：
+                  上下两栏**是两个量**（不是同一个量的两种单位），中间靠
+                  用户填的密度接起来 —— 质量 = 体积 × 密度。
+                  入口只有一处：体积 / 质量那两张换算页底下的虚线跳转
+                  （见下面「九之二、」）—— 给算到一半才想起来要换量的人，
+                  顺手把当前数值和单位带过去。
+                  ★ 它**不进类别列表**：跨量换算不是"又一类单位"，
+                    摆一张卡在那儿反而让人以为点进去是单位表。
 
    ★ 顶栏返回 / Esc 都是「先退一层」：
        换算界面 → 类别列表 → 才关掉整个功能页。
@@ -71,8 +77,9 @@
 
 /* ---------- 常用节点 ---------- */
 const UNIT_PAGE   = document.getElementById('toolUnits');
-const unitBodyEl  = $('#toolUnitsBody');      // 滚动容器（两层视图都在这一个里滚）
-const unitCatsEl  = $('#unitCats');
+const unitBodyEl  = $('#toolUnitsBody');      // 滚动容器（三层视图都在这一个里滚）
+const unitCatsEl  = $('#unitCats');           // 第一层：选领域
+const unitSubsEl  = $('#unitSubs');           // 第二层：一个领域里的量（动态渲染，只有多量领域才有）
 const unitConvEl  = $('#unitConv');
 const unitTitleEl = $('.tool-title', UNIT_PAGE);
 
@@ -143,19 +150,36 @@ const bdCopyToBtn    = $('#bdCopyTo');
      toBase / fromBase（可选）带**偏移**的类别用它，见下面温度那条；
             密度那一档的**比重刻度**也走这两个钩子（单位上挂 sg）
 
-   （图标配色不在这里 —— 18 张卡都是同一个蓝底白画，见 css/tools.css
-     的 .unit-cat；本文件只管数据和换算。）
+     ★ 多量领域（2026-10-25 起）用另外两个字段，和上面几个是二选一的两种形态：
+       kids   这个领域下面有哪几个量（键名数组）。**有 kids 就不能有 units**，
+              点卡片会先进第二层选量。
+       parent 子量挂的父键。子量的 name 会和父名拼成「电学-电容」当顶栏标题。
+       glyph  第二层卡片图标块里那个符号（V / Ω / Wb / mol/L…）。没有它就用空。
+
+   （图标配色不在这里 —— 25 张卡都是同一个蓝底白画，见 css/tools.css
+     的 .unit-cat；第二层那些量卡的符号色也是从那儿继承的。
+     本文件只管数据和换算。）
 
    基准单位每类各挑一个顺手的：
      长度 米      面积 平方米   体积 升       质量 千克
      时间 秒      速度 米/秒    温度 摄氏度   数据 字节
      压力 帕斯卡  功率 瓦       频率 赫兹     能量 焦耳
      力 牛顿      力矩 牛·米    动量 千克·米/秒   加速度 米/秒²
-     密度 千克/立方米
+     密度 千克/立方米           光学 流明
+     电压 伏      电流 安       电阻 欧       电导 西
+     电容 法      电感 亨       电荷 库仑     磁感应强度 特斯拉
+     磁通量 韦伯  磁场强度 安/米              活度 贝可
+     吸收剂量 戈瑞 剂量当量 西弗 照射量 库/千克
+     质量浓度 千克/立方米       摩尔浓度 摩尔/立方米   质量分数 1（纯比例）
+     动力粘度 帕·秒             运动粘度 平方米/秒
+     角度 度      分辨率 dpi
 
    加一个类别要动两处（和首页加功能卡片一个套路，两边靠 id 对齐）：
      · index.html 的 #unitCats 里复制一张类别卡，改 data-unit-cat / 图标 / 名字
      · 这里补一条，键名和 data-unit-cat 一致
+   ★ 但"一个领域多个量"（如电学）只给第一处加**一张**领域卡，各个量全在
+     这里写：领域条目只放 kids，量条目自己挂 parent。第二层卡片是现画的，
+     不用去 index.html 抄一遍。
    ========================================================== */
 
 /** 给一组单位统一起个组名。只为写起来干净：
@@ -349,6 +373,8 @@ const UNITS = {
       { id: 't',   label: '吨',     sym: 't',  k: 1000 },
       { id: 'kt',  label: '千吨',   sym: 'kt', k: 1e6 },
       { id: 'mtt', label: '百万吨', sym: 'Mt', k: 1e9 },
+      // 宝石：1 克拉 = 0.2 克（公制克拉，1907 年起国际通用；不是"K 金"那个 Karat）
+      { id: 'ct',  label: '克拉',   sym: 'ct', k: 0.0002 },
       // 市制：1 斤 = 500 g = 10 两 = 100 钱；1 担 = 100 斤
       { id: 'qian',  label: '钱', k: 0.005 },
       { id: 'liang', label: '两', k: 0.05 },
@@ -954,12 +980,419 @@ const UNITS = {
       return v / cvtAuxWeight(u, aux);
     },
   },
+
+  /* ==================================================================
+     2026-10-25 新增的七个领域（电学 / 磁学 / 放射性 / 粘度 / 浓度 / 角度 / 分辨率）
+
+     ★ 「一个领域好几个量」的那五个（电学、磁学、放射性、粘度、浓度）
+       在本表里是**空壳 + 一份名单**：只有 name 和 kids，没有 units。
+       点这类卡片先进第二层「选量」，再进换算页（见 cvtShowKids）。
+       ⚠ 别给它们补 units —— cvtOpenCat 会直接拦掉，写了也不生效。
+       子量的条目反过来挂 parent: '<父键>'，顶栏标题因此能拼成「电学-电容」。
+
+     ★ 角度和分辨率只有一个量，所以**不设** kids：卡片点进去就是换算页，
+       和长度、面积那些一模一样。只有真的需要选量的领域才多一层。
+
+     ★ 基准单位仍是「每类挑一个」的老规矩，见下面各条注释。
+     ================================================================== */
+
+  /* ---------- 电学 ----------
+     七个量各占一张子卡。为什么不合成一张「电学」大卡：换算页两栏只能
+     选同一个量，把伏特和安培摆在同一张单位表里，"1 伏 = ? 安" 这种
+     没有物理意义的换算会变成可选项。 */
+  electric: {
+    name: '电学',
+    kids: ['voltage', 'current', 'resistance', 'conductance',
+           'capacitance', 'inductance', 'charge'],
+  },
+
+  /* 电压（基准：伏） */
+  voltage: {
+    name: '电压',
+    parent: 'electric',
+    glyph: 'V',
+    from: 'v', to: 'mv',
+    units: [
+      { id: 'uv', label: '微伏', sym: 'µV', k: 1e-6 },
+      { id: 'mv', label: '毫伏', sym: 'mV', k: 1e-3 },
+      { id: 'v',  label: '伏',   sym: 'V',  k: 1 },
+      { id: 'kv', label: '千伏', sym: 'kV', k: 1e3 },
+      { id: 'Mv', label: '兆伏', sym: 'MV', k: 1e6 },
+    ],
+  },
+
+  /* 电流（基准：安） */
+  current: {
+    name: '电流',
+    parent: 'electric',
+    glyph: 'A',
+    from: 'a', to: 'ma',
+    units: [
+      { id: 'na', label: '纳安', sym: 'nA', k: 1e-9 },
+      { id: 'ua', label: '微安', sym: 'µA', k: 1e-6 },
+      { id: 'ma', label: '毫安', sym: 'mA', k: 1e-3 },
+      { id: 'a',  label: '安',   sym: 'A',  k: 1 },
+      { id: 'ka', label: '千安', sym: 'kA', k: 1e3 },
+    ],
+  },
+
+  /* 电阻（基准：欧） */
+  resistance: {
+    name: '电阻',
+    parent: 'electric',
+    glyph: 'Ω',
+    from: 'ohm', to: 'kohm',
+    units: [
+      { id: 'mohm', label: '毫欧', sym: 'mΩ', k: 1e-3 },
+      { id: 'ohm',  label: '欧',   sym: 'Ω',  k: 1 },
+      { id: 'kohm', label: '千欧', sym: 'kΩ', k: 1e3 },
+      { id: 'Mohm', label: '兆欧', sym: 'MΩ', k: 1e6 },
+      { id: 'Gohm', label: '吉欧', sym: 'GΩ', k: 1e9 },
+    ],
+  },
+
+  /* 电导（基准：西）—— 单独一张，不并进电阻。
+     电导与电阻互为倒数，但两个量的单位不能靠一个系数互换。 */
+  conductance: {
+    name: '电导',
+    parent: 'electric',
+    glyph: 'S',
+    from: 's', to: 'ms',
+    units: [
+      { id: 'us', label: '微西', sym: 'µS', k: 1e-6 },
+      { id: 'ms', label: '毫西', sym: 'mS', k: 1e-3 },
+      { id: 's',  label: '西',   sym: 'S',  k: 1 },
+      { id: 'ks', label: '千西', sym: 'kS', k: 1e3 },
+    ],
+    note: '电导 G = 1 / 电阻 R。它和电阻是两个量，不能在这里直接互换 —— 要换请先取倒数。',
+  },
+
+  /* 电容（基准：法） */
+  capacitance: {
+    name: '电容',
+    parent: 'electric',
+    glyph: 'F',
+    from: 'uf', to: 'nf',
+    units: [
+      { id: 'pf', label: '皮法', sym: 'pF', k: 1e-12 },
+      { id: 'nf', label: '纳法', sym: 'nF', k: 1e-9 },
+      { id: 'uf', label: '微法', sym: 'µF', k: 1e-6 },
+      { id: 'mf', label: '毫法', sym: 'mF', k: 1e-3 },
+      { id: 'f',  label: '法',   sym: 'F',  k: 1 },
+    ],
+  },
+
+  /* 电感（基准：亨） */
+  inductance: {
+    name: '电感',
+    parent: 'electric',
+    glyph: 'H',
+    from: 'mh', to: 'uh',
+    units: [
+      { id: 'nh', label: '纳亨', sym: 'nH', k: 1e-9 },
+      { id: 'uh', label: '微亨', sym: 'µH', k: 1e-6 },
+      { id: 'mh', label: '毫亨', sym: 'mH', k: 1e-3 },
+      { id: 'h',  label: '亨',   sym: 'H',  k: 1 },
+    ],
+  },
+
+  /* 电荷（基准：库仑）—— 安时、毫安时是电池上的日常写法 */
+  charge: {
+    name: '电荷',
+    parent: 'electric',
+    glyph: 'C',
+    from: 'c', to: 'mah',
+    units: [
+      { id: 'uc',  label: '微库',   sym: 'µC',  k: 1e-6 },
+      { id: 'mc',  label: '毫库',   sym: 'mC',  k: 1e-3 },
+      { id: 'c',   label: '库仑',   sym: 'C',   k: 1 },
+      { id: 'mah', label: '毫安时', sym: 'mAh', k: 3.6 },     // 0.001 A × 3600 s
+      { id: 'ah',  label: '安时',   sym: 'Ah',  k: 3600 },
+    ],
+    note: '安时 / 毫安时是电池上的电荷量写法：1 Ah = 3600 库仑，1 mAh = 3.6 库仑。',
+  },
+
+  /* ---------- 磁学 ---------- */
+  magnetism: {
+    name: '磁学',
+    kids: ['flux_density', 'magnetic_flux', 'field_strength'],
+  },
+
+  /* 磁感应强度（基准：特斯拉）—— 特斯拉与高斯不是千进制 */
+  flux_density: {
+    name: '磁感应强度',
+    parent: 'magnetism',
+    glyph: 'T',
+    from: 't', to: 'mt',
+    units: [
+      ...cvtGroup('国际单位', [
+        { id: 'nt', label: '纳特',   sym: 'nT', k: 1e-9 },
+        { id: 'ut', label: '微特',   sym: 'µT', k: 1e-6 },
+        { id: 'mt', label: '毫特',   sym: 'mT', k: 1e-3 },
+        { id: 't',  label: '特斯拉', sym: 'T',  k: 1 },
+      ]),
+      ...cvtGroup('高斯制', [
+        { id: 'kg', label: '千高斯', sym: 'kG', k: 0.1 },
+        { id: 'g',  label: '高斯',   sym: 'G',  k: 1e-4 },
+        { id: 'mg', label: '毫高斯', sym: 'mG', k: 1e-7 },
+      ]),
+    ],
+    note: '特斯拉（SI）与高斯（CGS）不是千进制：1 T = 10000 G，1 G = 0.1 mT。',
+  },
+
+  /* 磁通量（基准：韦伯） */
+  magnetic_flux: {
+    name: '磁通量',
+    parent: 'magnetism',
+    glyph: 'Wb',
+    from: 'wb', to: 'mx',
+    units: [
+      { id: 'uwb', label: '微韦',     sym: 'µWb', k: 1e-6 },
+      { id: 'mwb', label: '毫韦',     sym: 'mWb', k: 1e-3 },
+      { id: 'wb',  label: '韦伯',     sym: 'Wb',  k: 1 },
+      { id: 'mx',  label: '麦克斯韦', sym: 'Mx',  k: 1e-8 },
+    ],
+    note: '1 韦伯 = 10⁸ 麦克斯韦。',
+  },
+
+  /* 磁场强度（基准：安/米）—— 奥斯特除不尽，写算式 */
+  field_strength: {
+    name: '磁场强度',
+    parent: 'magnetism',
+    glyph: 'A/m',
+    from: 'am', to: 'oe',
+    units: [
+      { id: 'am',  label: '安/米',   sym: 'A/m',  k: 1 },
+      { id: 'kam', label: '千安/米', sym: 'kA/m', k: 1e3 },
+      { id: 'oe',  label: '奥斯特',  sym: 'Oe',   k: 1000 / (4 * Math.PI) },
+    ],
+    note: '1 奥斯特 = 1000/4π ≈ 79.5775 安/米（除不尽，这里按算式算）。',
+  },
+
+  /* ---------- 放射性 ---------- */
+  radiation: {
+    name: '放射性',
+    kids: ['activity', 'absorbed_dose', 'dose_equivalent', 'exposure'],
+  },
+
+  /* 活度（基准：贝可）—— 居里是定义值 3.7e10 */
+  activity: {
+    name: '活度',
+    parent: 'radiation',
+    glyph: 'Bq',
+    from: 'bq', to: 'ci',
+    units: [
+      { id: 'bq',  label: '贝可',   sym: 'Bq',  k: 1 },
+      { id: 'kbq', label: '千贝可', sym: 'kBq', k: 1e3 },
+      { id: 'mbq', label: '兆贝可', sym: 'MBq', k: 1e6 },
+      { id: 'gbq', label: '吉贝可', sym: 'GBq', k: 1e9 },
+      { id: 'tbq', label: '太贝可', sym: 'TBq', k: 1e12 },
+      { id: 'ci',  label: '居里',   sym: 'Ci',  k: 3.7e10 },
+      { id: 'mci', label: '毫居里', sym: 'mCi', k: 3.7e7 },
+      { id: 'uci', label: '微居里', sym: 'µCi', k: 3.7e4 },
+      { id: 'nci', label: '纳居里', sym: 'nCi', k: 37 },
+    ],
+    note: '1 居里 = 3.7×10¹⁰ 贝可（1 克镭的活度，定义值）。',
+  },
+
+  /* 吸收剂量（基准：戈瑞） */
+  absorbed_dose: {
+    name: '吸收剂量',
+    parent: 'radiation',
+    glyph: 'Gy',
+    from: 'gy', to: 'mgy',
+    units: [
+      { id: 'ugy',  label: '微戈瑞', sym: 'µGy',  k: 1e-6 },
+      { id: 'mgy',  label: '毫戈瑞', sym: 'mGy',  k: 1e-3 },
+      { id: 'gy',   label: '戈瑞',   sym: 'Gy',   k: 1 },
+      { id: 'mrad', label: '毫拉德', sym: 'mrad', k: 1e-5 },
+      { id: 'rad',  label: '拉德',   sym: 'rad',  k: 0.01 },
+    ],
+    note: '1 戈瑞 = 100 拉德。',
+  },
+
+  /* 剂量当量（基准：西弗）—— 数值与戈瑞不能互换，已乘辐射权重 */
+  dose_equivalent: {
+    name: '剂量当量',
+    parent: 'radiation',
+    glyph: 'Sv',
+    from: 'sv', to: 'msv',
+    units: [
+      { id: 'usv',  label: '微西弗', sym: 'µSv',  k: 1e-6 },
+      { id: 'msv',  label: '毫西弗', sym: 'mSv',  k: 1e-3 },
+      { id: 'sv',   label: '西弗',   sym: 'Sv',   k: 1 },
+      { id: 'mrem', label: '毫雷姆', sym: 'mrem', k: 1e-5 },
+      { id: 'rem',  label: '雷姆',   sym: 'rem',  k: 0.01 },
+    ],
+    note: '1 西弗 = 100 雷姆。吸收剂量和剂量当量是两回事，数值不能直接互当。',
+  },
+
+  /* 照射量（基准：库/千克）—— 伦琴是定义值 */
+  exposure: {
+    name: '照射量',
+    parent: 'radiation',
+    glyph: 'C/kg',
+    from: 'ckg', to: 'r',
+    units: [
+      { id: 'ckg',  label: '库/千克',   sym: 'C/kg',  k: 1 },
+      { id: 'mckg', label: '毫库/千克', sym: 'mC/kg', k: 1e-3 },
+      { id: 'r',    label: '伦琴',      sym: 'R',     k: 2.58e-4 },
+      { id: 'mr',   label: '毫伦琴',    sym: 'mR',    k: 2.58e-7 },
+    ],
+    note: '1 伦琴 = 2.58×10⁻⁴ 库/千克（定义值）。',
+  },
+
+  /* ---------- 浓度 ----------
+     三个量各占一张：质量浓度带量纲、摩尔浓度带摩尔、质量分数是无量纲
+     比例。三者都出现 ppm / % 这两个写法，但含义完全不同 —— 分成三张
+     卡正是为了让用户必须选一次"是哪个 ppm"。 */
+  concentration: {
+    name: '浓度',
+    kids: ['mass_concentration', 'molar_concentration', 'mass_fraction'],
+  },
+
+  /* 质量浓度（基准：千克/立方米）—— 1 g/L 正好 = 1 kg/m³ */
+  mass_concentration: {
+    name: '质量浓度',
+    parent: 'concentration',
+    glyph: 'g/L',
+    from: 'gl', to: 'mgl',
+    units: [
+      { id: 'kgm3', label: '千克/立方米', sym: 'kg/m³', k: 1 },
+      { id: 'gl',   label: '克/升',       sym: 'g/L',   k: 1 },
+      { id: 'gml',  label: '克/毫升',     sym: 'g/mL',  k: 1000 },
+      { id: 'mgl',  label: '毫克/升',     sym: 'mg/L',  k: 1e-3 },
+      { id: 'ugml', label: '微克/毫升',   sym: 'µg/mL', k: 1e-3 },
+      { id: 'ngml', label: '纳克/毫升',   sym: 'ng/mL', k: 1e-6 },
+      { id: 'ppm',  label: 'ppm（水溶液）', k: 1e-3 },
+      { id: 'ppb',  label: 'ppb（水溶液）', k: 1e-6 },
+      { id: 'pctwv', label: '百分浓度',   sym: '%(w/v)', k: 10 },
+    ],
+    note: 'ppm / ppb / 百分浓度按「稀水溶液、密度≈1 g/mL」折算：1 ppm ≈ 1 mg/L、1% (w/v) ≈ 10 g/L。'
+        + '溶剂不是水时这三条不成立。',
+  },
+
+  /* 摩尔浓度（基准：摩尔/立方米）—— 1 mol/L = 1000 mol/m³ */
+  molar_concentration: {
+    name: '摩尔浓度',
+    parent: 'concentration',
+    glyph: 'mol/L',
+    from: 'moll', to: 'mmoll',
+    units: [
+      { id: 'molm3', label: '摩尔/立方米', sym: 'mol/m³', k: 1 },
+      { id: 'moll',  label: '摩尔/升',     sym: 'mol/L',  k: 1000 },
+      { id: 'mmoll', label: '毫摩尔/升',   sym: 'mmol/L', k: 1 },
+      { id: 'umoll', label: '微摩尔/升',   sym: 'µmol/L', k: 1e-3 },
+      { id: 'nmoll', label: '纳摩尔/升',   sym: 'nmol/L', k: 1e-6 },
+    ],
+    note: 'mol/L 就是常写的 M，mmol/L 就是 mM（化验单上最常见的那档）。',
+  },
+
+  /* 质量分数（基准：1 = 纯物质）—— 纯比例，和上面那张带 g/L 的不是一回事 */
+  mass_fraction: {
+    name: '质量分数',
+    parent: 'concentration',
+    glyph: '%',
+    from: 'pct', to: 'ppm',
+    units: [
+      { id: 'pct',    label: '百分比', sym: '%',   k: 0.01 },
+      { id: 'permil', label: '千分比', sym: '‰',   k: 1e-3 },
+      { id: 'ppm',    label: 'ppm',    sym: 'ppm', k: 1e-6 },
+      { id: 'ppb',    label: 'ppb',    sym: 'ppb', k: 1e-9 },
+      { id: 'ppt',    label: 'ppt',    sym: 'ppt', k: 1e-12 },
+    ],
+    note: '这是无量纲的比例（溶质质量 ÷ 溶液质量），1 ppm 恒等于百万分之一，与溶剂无关。',
+  },
+
+  /* ---------- 粘度 ---------- */
+  viscosity: {
+    name: '粘度',
+    kids: ['dynamic_viscosity', 'kinematic_viscosity'],
+  },
+
+  /* 动力粘度（基准：帕·秒）—— 泊是 CGS：1 P = 0.1 Pa·s */
+  dynamic_viscosity: {
+    name: '动力粘度',
+    parent: 'viscosity',
+    glyph: 'Pa·s',
+    from: 'pas', to: 'mpas',
+    units: [
+      { id: 'upas',  label: '微帕·秒', sym: 'µPa·s', k: 1e-6 },
+      { id: 'mpas',  label: '毫帕·秒', sym: 'mPa·s', k: 1e-3 },
+      { id: 'pas',   label: '帕·秒',   sym: 'Pa·s',  k: 1 },
+      { id: 'p',     label: '泊',      sym: 'P',     k: 0.1 },
+      { id: 'cp',    label: '厘泊',    sym: 'cP',    k: 1e-3 },
+      { id: 'kgfsm2', label: '千克力·秒/平方米', sym: 'kgf·s/m²', k: 9.80665 },
+      { id: 'lbsft2', label: '磅力·秒/平方英尺', sym: 'lbf·s/ft²', k: 47.88025898033584 },
+    ],
+    note: '1 泊 = 0.1 帕·秒；1 厘泊正好等于 1 毫帕·秒（20 ℃ 的水约 1 cP）。',
+  },
+
+  /* 运动粘度（基准：平方米/秒）—— 斯是 CGS：1 St = 1 cm²/s */
+  kinematic_viscosity: {
+    name: '运动粘度',
+    parent: 'viscosity',
+    glyph: 'm²/s',
+    from: 'mm2s', to: 'cst',
+    units: [
+      { id: 'mm2s', label: '平方毫米/秒', sym: 'mm²/s', k: 1e-6 },
+      { id: 'cm2s', label: '平方厘米/秒', sym: 'cm²/s', k: 1e-4 },
+      { id: 'm2s',  label: '平方米/秒',   sym: 'm²/s',  k: 1 },
+      { id: 'st',   label: '斯',          sym: 'St',    k: 1e-4 },
+      { id: 'cst',  label: '厘斯',        sym: 'cSt',   k: 1e-6 },
+      { id: 'ft2s', label: '平方英尺/秒', sym: 'ft²/s', k: 0.09290304 },
+    ],
+    note: '1 斯 = 1 平方厘米/秒，1 厘斯正好等于 1 平方毫米/秒。',
+  },
+
+  /* ---------- 角度（基准：度） ----------
+     选「度」当基准而不是弧度：用户进来最常问的是「1 度等于多少弧度」。
+     弧度那几个用 180/π 的算式写，写成 57.29578 会带进截断误差。 */
+  angle: {
+    name: '角度',
+    from: 'deg', to: 'rad',
+    units: [
+      ...cvtGroup('度分秒', [
+        { id: 'sec', label: '角秒', sym: '″', k: 1 / 3600 },
+        { id: 'min', label: '角分', sym: '′', k: 1 / 60 },
+        { id: 'deg', label: '度',   sym: '°', k: 1 },
+      ]),
+      ...cvtGroup('弧度', [
+        { id: 'urad', label: '微弧度', sym: 'µrad', k: 180 / Math.PI / 1e6 },
+        { id: 'mrad', label: '毫弧度', sym: 'mrad', k: 180 / Math.PI / 1000 },
+        { id: 'rad',  label: '弧度',   sym: 'rad',  k: 180 / Math.PI },
+      ]),
+      ...cvtGroup('其它', [
+        { id: 'gon',  label: '百分度',       sym: 'gon', k: 0.9 },
+        { id: 'mil',  label: '密位（1/6400）', sym: 'mil', k: 360 / 6400 },
+        { id: 'turn', label: '转',            sym: 'r',   k: 360 },
+      ]),
+    ],
+    note: '密位按北约的 1/6400 周算（苏制是 1/6000，两者差 6.7%，这里没收）。1 转 = 360°。',
+  },
+
+  /* ---------- 分辨率（基准：dpi = ppi） ----------
+     dpi 和 ppi 数值完全一样，合并成一个条目，免得用户以为要二选一。
+     线对/毫米是另一个口径（1 线对 = 2 像素），按折算值收，注释里写清楚。 */
+  resolution: {
+    name: '分辨率',
+    from: 'dpi', to: 'dpcm',
+    units: [
+      { id: 'dpi',  label: '每英寸点数', sym: 'dpi',  k: 1 },
+      { id: 'dpcm', label: '每厘米点数', sym: 'dpcm', k: 2.54 },
+      { id: 'dpmm', label: '每毫米点数', sym: 'dpmm', k: 25.4 },
+      { id: 'lpmm', label: '线对/毫米',  sym: 'lp/mm', k: 50.8 },
+    ],
+    note: 'dpi 与 ppi 是同一个数（这里合并成一条）。线对/毫米按 1 线对 = 2 像素折算：'
+        + '1 lp/mm = 50.8 dpi，属近似值。',
+  },
 };
 
 const UNIT_HOME = 'length';          // 每次进来从哪一类开始
 
 /* ---------- 运行状态 ---------- */
-let cvtCat     = UNIT_HOME;              // 当前类别
+let cvtCat     = UNIT_HOME;              // 当前类别（含子量，如 voltage）
+let cvtParent  = '';                     // 当前类别所属的领域键（如 electric）；顶层类别为空串
 let cvtSel     = { from: '', to: '' };   // 上下两栏分别选中的单位 id
 let cvtPicking = null;                   // 弹窗正为哪一栏开着：'from' | 'to' | null
 
@@ -1563,16 +1996,30 @@ function cvtClosePicker() {
    六、视图切换
    ========================================================== */
 
-/* 类别列表的滚动位置。进出子页面时记一下、还回去，见下面两个函数的注释。 */
-let cvtCatsScroll = 0;
+/* 两层列表各自的滚动位置。进出时记一下、还回去 —— 类别页和「选量」页
+   都可能很长，每次退回来被弹回顶部很难受。
+   ★ 只在**那一层当前可见**时才记，否则会把换算页的 scrollTop 误记进去。 */
+let cvtCatsScroll = 0;      // 第一层：选领域
+let cvtKidsScroll = 0;      // 第二层：一个领域里选量
 
-/** 回到「选类别」那一层 */
+/** 顶栏标题。子量拼成「电学-电容」，顶层类别就是它自己的名字。
+ *  连字符是用户指定的写法（不是「/」也不是「·」），别改。 */
+function cvtCatTitle(id) {
+  const cat = UNITS[id];
+  if (!cat) return '单位换算';
+  const p = cat.parent ? UNITS[cat.parent] : null;
+  return p ? p.name + '-' + cat.name : cat.name;
+}
+
+/** 回到第一层「选领域」 */
 function cvtShowCats() {
   cvtClosePicker();
   cvtPadHide();                 // 键盘是给数值框用的，回列表就没它的事了
   unitConvEl.hidden = true;
   unitBridgeEl.hidden = true;
+  unitSubsEl.hidden = true;
   unitCatsEl.hidden = false;
+  cvtParent = '';
   unitTitleEl.textContent = '单位换算';
 
   // 把类别列表滚回进子页面之前的位置。
@@ -1608,16 +2055,89 @@ function cvtPaintBridgeLink(catId) {
   cvtBridgeNameEl.textContent = dir === 'v2m' ? '体积 → 质量' : '质量 → 体积';
 }
 
+/** 渲染一个领域下的「量」卡片（第二层）。
+ *
+ *  卡片是**现画**的，不像第一层那样写在 index.html 里：量名和顺序都在
+ *  UNITS 的 kids 名单里，抄一份到 HTML 等于同一件事写两处，加一个量要
+ *  改两个文件。第一层之所以留在 HTML，是因为那 25 张卡各有自己的 SVG 图标。
+ *
+ *  图标块里放的是该量的主单位符号（V / Ω / Wb / mol/L…），不是图形 ——
+ *  21 个量各画一张图标不值当，符号反而认得更快。4 个字符以上的降一档字号。
+ *  ⚠ 这段是 innerHTML 拼的，glyph / name 全部来自本文件的常量，没有用户输入。 */
+function cvtRenderKids(parentId) {
+  const p = UNITS[parentId];
+  if (!p || !p.kids) return;
+
+  unitSubsEl.innerHTML = p.kids.map(id => {
+    const k = UNITS[id];
+    if (!k) return '';
+    const g = k.glyph || '';
+    // 字号按符号长度分档（20 / 16 / 12.5px，见 css 的 .unit-kid-sym）
+    const cls = g.length >= 4 ? ' is-long' : g.length === 3 ? ' is-mid' : '';
+    return '<button type="button" class="tool-btn unit-cat" data-unit-kid="' + id + '">'
+         +   '<span class="tool-btn-ico unit-kid-sym' + cls + '" aria-hidden="true">' + g + '</span>'
+         +   '<span class="tool-btn-text"><span class="tool-btn-name">' + k.name + '</span></span>'
+         +   '<span class="tool-btn-go" aria-hidden="true">'
+         +     '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round"'
+         +          ' stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>'
+         +   '</span>'
+         + '</button>';
+  }).join('');
+}
+
+/** 进第二层：某个领域下的量列表。
+ *
+ *  restore，true = 从换算页退回来的（要还原上次滚到哪儿）；
+ *  从类别页点进来是"新开一页"，一律从顶部开始。 */
+function cvtShowKids(parentId, restore) {
+  const p = UNITS[parentId];
+  if (!p) return;
+  if (!p.kids) { cvtOpenCat(parentId); return; }   // 没子量的类别不该走到这儿，兜一下
+
+  // 只有从类别页点进来才记类别页的位置（从换算页退回时记的是换算页的，会污染）
+  if (restore !== true) cvtCatsScroll = unitBodyEl.scrollTop;
+  cvtParent = parentId;
+
+  cvtRenderKids(parentId);
+  cvtClosePicker();
+  cvtPadHide();
+
+  unitCatsEl.hidden = true;
+  unitConvEl.hidden = true;
+  unitBridgeEl.hidden = true;
+  unitSubsEl.hidden = false;
+  unitTitleEl.textContent = p.name;
+
+  // ★ 先让它显示出来再设 scrollTop：藏着的时候内容高度是 0，会被夹成 0
+  unitBodyEl.scrollTop = restore === true ? cvtKidsScroll : 0;
+}
+
+/** 退一层 —— 顶栏返回、Esc、系统返回键三处共用这一份判断，免得三处走岔。
+ *  返回 true 表示"这一下被页面吃掉了"；false 表示已经在第一层，
+ *  该交给 tools.js 去关整个功能页。 */
+function cvtBackOne() {
+  if (!unitBridgeEl.hidden) { bdBack(); return true; }        // 体积⇄质量 → 换算页
+  if (!unitConvEl.hidden) {                                   // 换算页 → 上一层列表
+    if (cvtParent) cvtShowKids(cvtParent, true); else cvtShowCats();
+    return true;
+  }
+  if (!unitSubsEl.hidden) { cvtShowCats(); return true; }     // 选量 → 类别页
+  return false;                                               // 已经在类别页
+}
+
 /** 进某个类别的换算界面 */
 function cvtOpenCat(id) {
   const cat = UNITS[id];
   if (!cat) return;
+  if (cat.kids) { cvtShowKids(id); return; }    // 父领域：先进选量层，别当普通类别打开
 
-  // 记下当前滚到哪儿了：退回来时还要回到这儿（类别有十来个，列表挺长，
-  // 每次退出来都被弹回顶部很难受）
-  cvtCatsScroll = unitBodyEl.scrollTop;
+  // 记下当前滚到哪儿了：退回来时还要回到这儿（列表挺长，
+  // 每次退出来都被弹回顶部很难受）。哪一层可见就记哪一层。
+  if (!unitSubsEl.hidden) cvtKidsScroll = unitBodyEl.scrollTop;
+  else cvtCatsScroll = unitBodyEl.scrollTop;
 
   cvtCat = id;
+  cvtParent = cat.parent || '';
   cvtSel = { from: cat.from, to: cat.to };
 
   // 给个 1：一进来就能看到一条换算结果，不用先自己敲一个数
@@ -1630,9 +2150,10 @@ function cvtOpenCat(id) {
   cvtSync();
 
   unitCatsEl.hidden = true;
+  unitSubsEl.hidden = true;
   unitBridgeEl.hidden = true;
   unitConvEl.hidden = false;
-  unitTitleEl.textContent = cat.name;          // 顶栏跟着变成类别名
+  unitTitleEl.textContent = cvtCatTitle(id);   // 子量显示成「电学-电容」
   unitBodyEl.scrollTop = 0;                    // 子页面自己从顶部开始
 
   /* 这里**不**自动聚焦。以前电脑上会顺手 focus + select（把示例那个 1
@@ -2208,7 +2729,7 @@ function bdOpen(dir, seed) {
 function bdBack() {
   unitBridgeEl.hidden = true;
   unitConvEl.hidden = false;
-  unitTitleEl.textContent = (UNITS[cvtCat] && UNITS[cvtCat].name) || '单位换算';
+  unitTitleEl.textContent = cvtCatTitle(cvtCat);
   // 先让它显示出来再设 scrollTop：藏着的时候内容高度是 0，设进去会被夹成 0
   unitBodyEl.scrollTop = bdConvScroll;
 }
@@ -2231,11 +2752,21 @@ function bdSwap() {
    十、事件绑定
    ========================================================== */
 
-/* ---- 选类别 ---- */
+/* ---- 选类别 / 选量 ----
+   两层列表共用同一套卡片外观，但容器不同：第一层是写死在 index.html 里的
+   #unitCats（每张卡有自己的 SVG 图标），第二层是 cvtRenderKids 现画的
+   #unitSubs。两边都靠 data-* 认卡片，点下去都进同一个 cvtOpenCat。
+   父领域（electric 之类）在 cvtOpenCat 里会被转到 cvtShowKids。 */
 unitCatsEl.addEventListener('click', e => {
   const card = e.target.closest('[data-unit-cat]');
   if (!card) return;
   cvtOpenCat(card.dataset.unitCat);
+});
+
+unitSubsEl.addEventListener('click', e => {
+  const card = e.target.closest('[data-unit-kid]');
+  if (!card) return;
+  cvtOpenCat(card.dataset.unitKid);
 });
 
 /* ---- 数值输入：先过滤字符，再判读整串 ---- */
@@ -2378,10 +2909,11 @@ unitPicker.addEventListener('click', e => {
 document.addEventListener('click', e => {
   const back = e.target.closest('[data-tool-back]');
   if (!back || back.closest('.tool-page') !== UNIT_PAGE) return;
-  if (unitConvEl.hidden && unitBridgeEl.hidden) return;   // 已经在类别列表：交给 tools.js 关掉功能页
+  // cvtBackOne 顺带把「有几层可退」判断完了：返回 false 说明已经在类别页，
+  // 那就别拦，交给 tools.js 去关掉整个功能页。
+  if (!cvtBackOne()) return;
   e.preventDefault();
   e.stopPropagation();
-  if (!unitBridgeEl.hidden) bdBack(); else cvtShowCats();
 }, true);
 
 /* ---- Esc：一次只退一层（先收键盘，再关弹窗，再退类别列表） ----
@@ -2401,9 +2933,8 @@ window.addEventListener('keydown', e => {
     return;
   }
   if (!UNIT_PAGE.classList.contains('show')) return;
-  if (unitConvEl.hidden && unitBridgeEl.hidden) return;
+  if (!cvtBackOne()) return;      // 已经在类别页：交给 tools.js 关掉功能页
   e.stopPropagation();
-  if (!unitBridgeEl.hidden) bdBack(); else cvtShowCats();
 }, true);
 
 /* ---- 返回键（js/backnav.js）：换算界面 / 体积⇄质量里先退回类别列表 ----
@@ -2412,9 +2943,7 @@ window.addEventListener('keydown', e => {
 if (typeof NovaBack !== 'undefined') {
   NovaBack.inner(top => {
     if (top !== UNIT_PAGE) return false;    // 上面还压着单位选择器时，那层先关
-    if (unitConvEl.hidden && unitBridgeEl.hidden) return false;
-    if (!unitBridgeEl.hidden) bdBack(); else cvtShowCats();
-    return true;
+    return cvtBackOne();                    // 换算页 / 选量 / 类别页三级都在里面判
   });
 }
 
