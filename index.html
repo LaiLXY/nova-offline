@@ -2606,7 +2606,7 @@
             <i class="ms-case-arrow">▾</i>
           </button>
           <div class="ms-case-opts" id="msCaseOpts" hidden>
-            <button type="button" class="ms-case-opt is-on" data-case="auto" title="句首大写 + 还原常见人名 / 地名 / 品牌（833 条词库）+ 独立的 i → I">自动</button>
+            <button type="button" class="ms-case-opt is-on" data-case="auto" title="句首大写 + 还原常见人名 / 地名 / 品牌（843 条词库）+ 独立的 i → I">自动</button>
             <button type="button" class="ms-case-opt" data-case="upper" title="整串转大写">全部大写</button>
             <button type="button" class="ms-case-opt" data-case="lower" title="整串转小写">全部小写</button>
             <button type="button" class="ms-case-opt" data-case="sentence" title="只抬句首字母，不还原专有名词">仅句子首字母大写</button>
@@ -2632,6 +2632,22 @@
       <section class="ms-card ms-player" id="msPlayer" hidden>
         <div class="ms-backrow">
           <button type="button" class="mini-btn" data-ms-back="home">‹ 返回</button>
+          <!-- 播报速度：12 / 13 / 15 / 18 / 20 wpm，默认 18。
+               换速度会先把播报停掉，再按新时长重排整条时间轴（见 js/morse.js 的 plSpeed*）。 -->
+          <div class="ms-speed" id="msPlSpeed">
+            <button type="button" class="ms-speed-btn" id="msPlSpeedBtn"
+                    aria-haspopup="listbox" aria-expanded="false" aria-label="播放速度">
+              <span class="ms-speed-cur" id="msPlSpeedCur">18 wpm</span>
+              <i class="ms-speed-arrow" aria-hidden="true">▾</i>
+            </button>
+            <div class="ms-speed-opts" id="msPlSpeedOpts" role="listbox" aria-label="播放速度" hidden>
+              <button type="button" class="ms-speed-opt" data-wpm="12" role="option">12 wpm</button>
+              <button type="button" class="ms-speed-opt" data-wpm="13" role="option">13 wpm</button>
+              <button type="button" class="ms-speed-opt" data-wpm="15" role="option">15 wpm</button>
+              <button type="button" class="ms-speed-opt is-on" data-wpm="18" role="option" aria-selected="true">18 wpm</button>
+              <button type="button" class="ms-speed-opt" data-wpm="20" role="option">20 wpm</button>
+            </div>
+          </div>
           <span class="ms-dir-tag">电码 → 文字</span>
         </div>
         <div class="field">
@@ -2684,7 +2700,7 @@
             <button type="button" class="rm-copy" id="msPlCopyOut">复制</button>
           </div>
         </div>
-        <p class="ms-note" id="msPlNote">/ 分隔字母 · \ 分隔单词 · 空格也当词间隔 · 12 wpm 播报，播报中锁住输入框</p>
+        <p class="ms-note" id="msPlNote">/ 分隔字母 · \ 分隔单词 · 空格也当词间隔 · 按右上角所选速度播报（默认 18 wpm），播报中锁住输入框</p>
       </section>
 
       <!-- ============ 三级 A3：电码对照表（0–9 / A–Z / 常用标点） ============ -->
@@ -3612,7 +3628,7 @@
 <script src="js/queen.js"></script>
 <script src="js/fourcolor.js"></script>
 <script src="js/bash.js"></script>
-<!-- 异语道破的词库数据（833 条专名 + 同形词邻词表），由名词库脚本生成；
+<!-- 异语道破的词库数据（843 条词条 + 11 条同形/语境规则），由名词库脚本生成；
      必须在 morse.js 之前加载。 -->
 <script src="js/morse-terms.js"></script>
 <script src="js/morse.js"></script>

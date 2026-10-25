@@ -4455,6 +4455,40 @@ html[data-viewport="lg"] .ms-key { height: 50px; font-size: 17px; }
 /* ---------- 电码播放（电码 → 文字 + 逐符号播报） ----------
    纸带「字母一格、格内一个符号」，播到哪个亮哪个；色系沿用本卡天蓝。
    输入框 / 结果框 / 大小写栏全部复用上面的 .rm-* / .ms-case-*，不另起一套。 */
+/* 播报速度（返回键右边）：药丸按钮 + 绝对定位的小下拉，样式对齐 .ms-dir-tag */
+/* 播报页的顶栏：返回 + 速度挨在左边，方向标签推去右边 */
+#msPlayer .ms-backrow { justify-content: flex-start; }
+#msPlayer .ms-backrow .ms-dir-tag { margin-left: auto; }
+.ms-speed { position: relative; flex: 0 0 auto; }
+.ms-speed-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--line); background: #fff; color: var(--text);
+  font-family: inherit; font-size: 12.5px; line-height: 1.5; cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.ms-speed-btn:hover { background: #f8fafc; border-color: var(--line-strong); }
+.ms-speed-btn[aria-expanded="true"] { border-color: #7dd3fc; background: #f0f9ff; color: #0369a1; }
+.ms-speed-cur { font-variant-numeric: tabular-nums; }
+.ms-speed-arrow { font-style: normal; font-size: 10px; color: var(--muted); }
+.ms-speed-btn[aria-expanded="true"] .ms-speed-arrow { color: #0369a1; }
+.ms-speed-opts {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 8;
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 104px; padding: 6px;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 10px 26px -12px rgba(16, 24, 40, .3);
+}
+.ms-speed-opt {
+  padding: 7px 10px; border: 0; border-radius: 8px; background: transparent;
+  font-family: inherit; font-size: 13px; color: var(--text);
+  text-align: left; cursor: pointer; font-variant-numeric: tabular-nums;
+}
+.ms-speed-opt:hover { background: #f1f5f9; }
+.ms-speed-opt.is-on { background: #f0f9ff; color: #0369a1; font-weight: 600; }
+html[data-touch="1"] .ms-speed-btn { padding: 6px 11px; }
+html[data-touch="1"] .ms-speed-opt { padding: 10px 12px; font-size: 13.5px; }
+
 .ms-playbar { display: flex; align-items: stretch; gap: 10px; margin-top: 4px; }
 .ms-playbtn {
   flex: 1 1 auto; min-width: 0; height: 46px; padding: 0 16px;

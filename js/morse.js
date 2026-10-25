@@ -106,6 +106,8 @@
   const msPlTape = $('#msPlTape'), msPlProg = $('#msPlProg');
   const msPlToggle = $('#msPlToggle'), msPlRestart = $('#msPlRestart');
   const msPlCopyIn = $('#msPlCopyIn'), msPlCopyOut = $('#msPlCopyOut');
+  const msPlSpeed = $('#msPlSpeed'), msPlSpeedBtn = $('#msPlSpeedBtn');
+  const msPlSpeedOpts = $('#msPlSpeedOpts'), msPlSpeedCur = $('#msPlSpeedCur');
 
   const msTiersEl = $('#msTiers'), msStart = $('#msStart');
   const msRoundEl = $('#msRound'), msMeta = $('#msMeta');
@@ -301,7 +303,8 @@
      数据在 js/morse-terms.js（由名词库脚本从 terms.py 生成，别手改）。
      链路：全小写 → 句首大写 → 整词换回正确写法 → 独立 i→I。
      ⚠ 顺序不能反：先替换再跑句首大写，iOS 会被抬成 IOS。
-     同形词（china 中国 / 瓷器）靠紧邻的一个邻词判，规则表见 NOVA_MORSE_HOMO。 */
+     同形词（china 中国 / 瓷器）靠紧邻的一个邻词判，规则表见 NOVA_MORSE_HOMO。
+     语境大写（provincial：前一个是 23 个省之一才写 Provincial）也走同一张表。 */
   const MS_TERMS = new Map();
   const MS_HOMO = (typeof NOVA_MORSE_HOMO !== 'undefined' && NOVA_MORSE_HOMO) || {};
   const MS_WORD_RE = /[A-Za-z]+(?:'[A-Za-z]+)?/g;
@@ -327,13 +330,31 @@
             tail ? tail[0].toLowerCase() : ''];
   }
 
-  /* 同形词判大小写：判小写的邻词优先 → 判大写的邻词 → 默认写回 */
-  function msHomograph(key, before, after) {
+  /* 句首判断：从 start 往前跳过空白，遇开头或 . ! ? 即句首 */
+  function msAtSentenceStart(text, start) {
+    for (let i = start - 1; i >= 0; i--) {
+      const code = text.charCodeAt(i);
+      if (code === 32 || code === 9 || code === 10 || code === 13) continue;   /* 空格 tab LF CR */
+      const c = text.charAt(i);
+      return c === '.' || c === '!' || c === '?';
+    }
+    return true;
+  }
+
+  /* 被判成小写的词落在句首时仍要抬首字母：polish the shoes → Polish the shoes。
+     只作用在「判小写」这条路上；词库写法本身带大写的（iPhone / eBay）不走这里。 */
+  function msSoftLower(word, atStart) {
+    return atStart ? word.charAt(0).toUpperCase() + word.slice(1) : word;
+  }
+
+  /* 同形词判大小写：判小写的邻词优先 → 判大写的邻词 → 默认写回
+     ub 也可以装普名词（provincial：前一个是 23 个省之一才大写） */
+  function msHomograph(key, before, after, atStart) {
     const h = MS_HOMO[key];
     if (!h) return MS_TERMS.get(key);
-    if (h.la.indexOf(after) >= 0 || h.lb.indexOf(before) >= 0) return key;
+    if (h.la.indexOf(after) >= 0 || h.lb.indexOf(before) >= 0) return msSoftLower(key, atStart);
     if (h.ua.indexOf(after) >= 0 || h.ub.indexOf(before) >= 0) return MS_TERMS.get(key);
-    return h.d;
+    return msSoftLower(h.d, atStart);
   }
 
   function msTermsApply(text) {
@@ -343,7 +364,7 @@
       if (!MS_TERMS.has(key)) return m;
       const start = offset + pre.length;
       const nb = msNeighbors(text, start, start + word.length);
-      return pre + msHomograph(key, nb[0], nb[1]);
+      return pre + msHomograph(key, nb[0], nb[1], msAtSentenceStart(text, start));
     });
   }
 
@@ -822,7 +843,8 @@
      ★ 退出页面（返回箭头 / 返回键 / Esc / 浏览器后退）一律 plStop()，
        见下面的 MutationObserver 与各导航分支。
      ========================================================== */
-  const MS_PLAY_WPM = 12;            /* 播报速度：1200/wpm = 一「点」的毫秒数 */
+  const MS_PLAY_WPM_DEFAULT = 18;    /* 播报速度默认 18 wpm：1200/wpm = 一「点」的毫秒数 */
+  let plWpm = MS_PLAY_WPM_DEFAULT;   /* 当前速度，可选 12 / 13 / 15 / 18 / 20（#msPlSpeed） */
   const MS_PLAY_LOOKAHEAD = 220;     /* 音频预排窗口（毫秒） */
   const MS_PLAY_LEAD = 0.02;         /* 给音频线程留的余量（秒） */
 
@@ -874,7 +896,7 @@
       return;
     }
 
-    const u = 1200 / MS_PLAY_WPM;    /* 点 = 1 单位，划 = 3 单位 */
+    const u = 1200 / plWpm;          /* 点 = 1 单位，划 = 3 单位 */
     let t = 0, li = 0;
     words.forEach((w, wi) => {
       if (wi > 0) t += 7 * u;        /* 词间隔 7 单位 */
@@ -1066,7 +1088,25 @@
     if (plOn) { plOn.classList.remove('is-on'); plOn = null; }
     plSetLetter(-1);
     if (msPlProg) msPlProg.style.width = '0%';
+    plSpeedClose();                    /* 停下也把速度下拉收掉，别留在页面上 */
     plPaint();
+  }
+
+  /* ---------- 播放速度（返回键右边的下拉；12 / 13 / 15 / 18 / 20 wpm） ---------- */
+  function plSpeedSync() {
+    msPlSpeedCur.textContent = plWpm + ' wpm';
+    $$('.ms-speed-opt', msPlSpeedOpts).forEach(b => {
+      const on = Number(b.dataset.wpm) === plWpm;
+      b.classList.toggle('is-on', on);
+      b.setAttribute('aria-selected', String(on));
+    });
+  }
+
+  function plSpeedClose() {
+    if (!msPlSpeedOpts || msPlSpeedOpts.hidden) return false;
+    msPlSpeedOpts.hidden = true;
+    msPlSpeedBtn.setAttribute('aria-expanded', 'false');
+    return true;
   }
 
   /* ==========================================================
@@ -1105,6 +1145,40 @@
     if (!plEvents.length) return;
     plStart(0);
   });
+
+  /* ---------- 播报速度：换速 → 先停，再按新时长重排整条时间轴 ---------- */
+  msPlSpeedBtn.addEventListener('click', () => {
+    const willOpen = msPlSpeedOpts.hidden;
+    msPlSpeedOpts.hidden = !willOpen;
+    msPlSpeedBtn.setAttribute('aria-expanded', String(willOpen));
+  });
+
+  $$('.ms-speed-opt', msPlSpeedOpts).forEach(b => b.addEventListener('click', () => {
+    plSpeedClose();
+    const w = Number(b.dataset.wpm);
+    if (!w || w === plWpm) return;
+    const wasPlaying = plState === 'playing';
+    plWpm = w;
+    plSpeedSync();
+    if (!plEvents.length) return;       /* 还没敲电码：只记住这个速度 */
+    plStop();                            /* 时间轴要按新单位重算，先停下来 */
+    msPlRender();
+    plPaint();
+    if (wasPlaying) toast('info', '已换成 ' + w + ' wpm', '播报从头开始', 'morse-wpm');
+  }));
+
+  /* 点别处收下拉（按钮自己的 click 已先展开，contains 判定会放行） */
+  document.addEventListener('click', e => {
+    if (!msPlSpeed.contains(e.target)) plSpeedClose();
+  });
+
+  /* Esc 先收下拉：window 捕获早于 tools.js 的 document 捕获，收得掉就吃掉这一下 */
+  window.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (!plSpeedClose()) return;
+    e.stopPropagation();
+    e.preventDefault();
+  }, true);
 
   /* 播报途中把功能页关掉（返回箭头 / Esc / 浏览器后退）→ 当场静音。
      closeTool 不广播事件，所以盯 .show 这个类。 */
@@ -1242,6 +1316,7 @@
      ========================================================== */
   msBuildTable();
   msSetDir('enc');
+  plSpeedSync();
   msPlRender();
   plPaint();
   /* 播报页的输入框同样只认自绘软键盘（触摸设备屏蔽系统键盘） */

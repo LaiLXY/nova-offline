@@ -6,7 +6,7 @@
    ========================================================================== */
 
 /* ★ 发版时只改这两行，其他地方都读它们 */
-const APP_VERSION = '1.1.4';
+const APP_VERSION = '1.1.3';
 const APP_UPDATED = '2026.10.25';
 
 const btnSettings  = $('#btnSettings');
