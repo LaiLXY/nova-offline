@@ -173,6 +173,44 @@ html[data-viewport="lg"][data-aspect="wide"] .home-main {
   overflow-y: auto;
 }
 
+/* ======================================================
+   PC 大屏（1920×1080 / 2560×1440）：功能入口改多列网格
+   ------------------------------------------------------
+   为什么要单开一档：PC 分栏之后右栏固定一列 520px，
+   在 2560 宽里只占五分之一，一屏能放下十几张卡却还是要滚，
+   左右两边的留白比内容还宽。
+     · 1600 起三列 —— 1920×1080 正好三列七行，一屏放下不用滚；
+       1440 上三列每张只剩 ~350，标题和说明要折行，所以那一档不掺和；
+     · 2200 起三列（更宽）—— 21 张卡正好七行排满；试过四列，
+       每张 430 会剩最后一行只挂一张，看着缺一块。
+   ====================================================== */
+@media (min-width: 1600px) {
+  html[data-viewport="lg"][data-aspect="wide"] .home-main {
+    padding: 44px 120px 44px 56px;
+    /* safe：卡片多到一屏放不下时归零成「从头排」，
+       不会被居中把顶部那几张推到滚动区外面 */
+    justify-content: safe center;
+  }
+  html[data-viewport="lg"][data-aspect="wide"] .home-tools {
+    max-width: 1260px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    align-content: start;
+  }
+}
+@media (min-width: 2200px) {
+  html[data-viewport="lg"][data-aspect="wide"] .home-tools {
+    max-width: 1680px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+  /* 2560 上蓝区不再只占 22%，稍微放宽一点跟着内容走 */
+  html[data-viewport="lg"][data-aspect="wide"] .home-hero {
+    width: clamp(360px, 24%, 620px);
+  }
+}
+
 /* 保存按钮：普通流式布局，放在表单最下面 */
 .sub-save {
   width: 100%;

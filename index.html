@@ -1862,20 +1862,25 @@
 
       <!-- ---------- 1) 开局：选几个操作盘 ---------- -->
       <section class="xo-card xo-setup" id="xoSetup">
-        <div class="xo-setup-title">选几个操作盘</div>
 
-        <div class="xo-counts" id="xoCounts">
-          <button type="button" class="xo-count" data-count="2">2 个操作盘</button>
-          <button type="button" class="xo-count on" data-count="3">3 个操作盘</button>
-          <button type="button" class="xo-count" data-count="4">4 个操作盘</button>
-          <button type="button" class="xo-count" data-count="5">5 个操作盘</button>
-          <button type="button" class="xo-count" data-count="6">6 个操作盘</button>
-          <button type="button" class="xo-count" data-count="7">7 个操作盘</button>
+        <div class="xo-setup-main">
+          <div class="xo-setup-title">选几个操作盘</div>
+
+          <div class="xo-counts" id="xoCounts">
+            <button type="button" class="xo-count" data-count="2">2 个操作盘</button>
+            <button type="button" class="xo-count on" data-count="3">3 个操作盘</button>
+            <button type="button" class="xo-count" data-count="4">4 个操作盘</button>
+            <button type="button" class="xo-count" data-count="5">5 个操作盘</button>
+            <button type="button" class="xo-count" data-count="6">6 个操作盘</button>
+            <button type="button" class="xo-count" data-count="7">7 个操作盘</button>
+          </div>
+          <button type="button" class="sub-save xo-start" id="xoStart">开 始</button>
+          <p class="xo-setup-note">盘数选定之后，这一局里就不能再改了。</p>
+
+          <!-- 玩法说明。规则就这么几条，摆在「开始」下面，想先看再玩 -->
+        
         </div>
-        <button type="button" class="sub-save xo-start" id="xoStart">开 始</button>
-        <p class="xo-setup-note">盘数选定之后，这一局里就不能再改了。</p>
 
-        <!-- 玩法说明。规则就这么几条，摆在「开始」下面，想先看再玩 -->
         <div class="xo-rules">
           <div class="xo-rules-title">玩法规则</div>
           <ul class="xo-rules-list">
@@ -2144,20 +2149,25 @@
 
       <!-- 1) 开局：选难度 + 玩法说明（规则垫在下面） -->
       <section class="bs-card bs-setup" id="bsSetup">
-        <div class="bs-setup-title">选择难度</div>
-        <div class="bs-tiers" id="bsTiers">
-          <button type="button" class="bs-tier on" data-tier="easy">
-            <b>入门</b><span>12–20 颗 · 显刻度</span>
-          </button>
-          <button type="button" class="bs-tier" data-tier="normal">
-            <b>进阶</b><span>20–35 颗 · 仅刻度</span>
-          </button>
-          <button type="button" class="bs-tier" data-tier="hard">
-            <b>困难</b><span>30–50 颗 · 无刻度</span>
-          </button>
+
+        <div class="bs-setup-main">
+          <div class="bs-setup-title">选择难度</div>
+          <div class="bs-tiers" id="bsTiers">
+            <button type="button" class="bs-tier on" data-tier="easy">
+              <b>入门</b><span>12–20 颗 · 显刻度</span>
+            </button>
+            <button type="button" class="bs-tier" data-tier="normal">
+              <b>进阶</b><span>20–35 颗 · 仅刻度</span>
+            </button>
+            <button type="button" class="bs-tier" data-tier="hard">
+              <b>困难</b><span>30–50 颗 · 无刻度</span>
+            </button>
+          </div>
+          <button type="button" class="sub-save bs-start" id="bsStart">开 始</button>
+          <p class="bs-setup-note">每一局都让你有必胜策略——只要你找得对。</p>
+
+        
         </div>
-        <button type="button" class="sub-save bs-start" id="bsStart">开 始</button>
-        <p class="bs-setup-note">每一局都让你有必胜策略——只要你找得对。</p>
 
         <div class="bs-rules">
           <div class="bs-rules-title">玩法规则</div>
@@ -2278,25 +2288,30 @@
 
       <!-- ---------- 1) 开局：选择阶数 ---------- -->
       <section class="bh-card bh-setup" id="bhSetup">
-        <div class="bh-setup-title">选择阶数</div>
 
-        <!-- 几阶 = 几个盘。3–9 同 js/brahma.js 的 BH_ORDERS；
-             默认那一档（3）先把 on 写上，免得进来一瞬间没有选中的样子 -->
-        <div class="bh-orders" id="bhOrders" role="radiogroup" aria-label="阶数">
-          <button type="button" class="bh-order on" data-order="3">3</button>
-          <button type="button" class="bh-order" data-order="4">4</button>
-          <button type="button" class="bh-order" data-order="5">5</button>
-          <button type="button" class="bh-order" data-order="6">6</button>
-          <button type="button" class="bh-order" data-order="7">7</button>
-          <button type="button" class="bh-order" data-order="8">8</button>
-          <button type="button" class="bh-order" data-order="9">9</button>
+        <div class="bh-setup-main">
+          <div class="bh-setup-title">选择阶数</div>
+
+          <!-- 几阶 = 几个盘。3–9 同 js/brahma.js 的 BH_ORDERS；
+               默认那一档（3）先把 on 写上，免得进来一瞬间没有选中的样子 -->
+          <div class="bh-orders" id="bhOrders" role="radiogroup" aria-label="阶数">
+            <button type="button" class="bh-order on" data-order="3">3</button>
+            <button type="button" class="bh-order" data-order="4">4</button>
+            <button type="button" class="bh-order" data-order="5">5</button>
+            <button type="button" class="bh-order" data-order="6">6</button>
+            <button type="button" class="bh-order" data-order="7">7</button>
+            <button type="button" class="bh-order" data-order="8">8</button>
+            <button type="button" class="bh-order" data-order="9">9</button>
+          </div>
+          <button type="button" class="sub-save bh-start" id="bhStart">开 始</button>
+          <p class="bh-setup-note">阶数一经选定，本局之内不再更改。</p>
+
+          <!-- 玩法说明，摆在「开始」下面，想先看再玩。
+               文案走"说明书"那一路：条目短、动词准、少感叹号 ——
+               别写成"大盘绝对不能压上去！"那种吆喝腔。 -->
+        
         </div>
-        <button type="button" class="sub-save bh-start" id="bhStart">开 始</button>
-        <p class="bh-setup-note">阶数一经选定，本局之内不再更改。</p>
 
-        <!-- 玩法说明，摆在「开始」下面，想先看再玩。
-             文案走"说明书"那一路：条目短、动词准、少感叹号 ——
-             别写成"大盘绝对不能压上去！"那种吆喝腔。 -->
         <div class="bh-rules">
           <div class="bh-rules-title">玩法规则</div>
           <ul class="bh-rules-list">
@@ -2541,25 +2556,30 @@
       <!-- ---------- 1) 开局：选难度 + 玩法规则 ----------
            对齐「数字桥屿 / 梵天汉诺 / 异或法则」：先选、再开始、规则垫在下面。 -->
       <section class="fc-card fc-setup" id="fcSetup">
-        <div class="fc-setup-title">选择难度</div>
 
-        <div class="fc-tiers" id="fcTiers">
-          <button type="button" class="fc-tier on" data-tier="easy">
-            <b>6 块</b><span>入门</span>
-          </button>
-          <button type="button" class="fc-tier" data-tier="normal">
-            <b>10 块</b><span>进阶</span>
-          </button>
-          <button type="button" class="fc-tier" data-tier="hard">
-            <b>16 块</b><span>困难</span>
-          </button>
-          <button type="button" class="fc-tier" data-tier="master">
-            <b>24 块</b><span>大师</span>
-          </button>
+        <div class="fc-setup-main">
+          <div class="fc-setup-title">选择难度</div>
+
+          <div class="fc-tiers" id="fcTiers">
+            <button type="button" class="fc-tier on" data-tier="easy">
+              <b>6 块</b><span>入门</span>
+            </button>
+            <button type="button" class="fc-tier" data-tier="normal">
+              <b>10 块</b><span>进阶</span>
+            </button>
+            <button type="button" class="fc-tier" data-tier="hard">
+              <b>16 块</b><span>困难</span>
+            </button>
+            <button type="button" class="fc-tier" data-tier="master">
+              <b>24 块</b><span>大师</span>
+            </button>
+          </div>
+
+          <button type="button" class="sub-save fc-start" id="fcStart">开 始</button>
+          <p class="fc-setup-note">每一局都保证有解，且四种颜色足够。</p>
+
+        
         </div>
-
-        <button type="button" class="sub-save fc-start" id="fcStart">开 始</button>
-        <p class="fc-setup-note">每一局都保证有解，且四种颜色足够。</p>
 
         <div class="fc-rules">
           <div class="fc-rules-title">玩法规则</div>
@@ -3108,28 +3128,33 @@
            —— 选盘这件事点开就要做，放最上面；规则是选完顺手往下看的那一段。
            选完点开始，这一页 hidden，换到游戏那一页；「改尺寸」再换回来。 -->
       <section class="br-card br-setup" id="brSetup">
-        <div class="br-setup-title">选一张盘</div>
-        <div class="br-sizes" id="brSizes">
-          <button type="button" class="br-size on" data-size="5">
-            <b>5 × 5</b><span>入门</span>
-          </button>
-          <button type="button" class="br-size" data-size="7">
-            <b>7 × 7</b><span>进阶</span>
-          </button>
-          <button type="button" class="br-size" data-size="9">
-            <b>9 × 9</b><span>困难</span>
-          </button>
-          <button type="button" class="br-size" data-size="11">
-            <b>11 × 11</b><span>专家</span>
-          </button>
-          <button type="button" class="br-size" data-size="13">
-            <b>13 × 13</b><span>大师</span>
-          </button>
-        </div>
-        <button type="button" class="sub-save br-start" id="brStart">开 始</button>
-        <p class="br-setup-note">每一局都有解，而且解只有一种。</p>
 
-        <!-- 玩法说明：规则就这么五条，摆在「开始」下面，想先看再玩 -->
+        <div class="br-setup-main">
+          <div class="br-setup-title">选一张盘</div>
+          <div class="br-sizes" id="brSizes">
+            <button type="button" class="br-size on" data-size="5">
+              <b>5 × 5</b><span>入门</span>
+            </button>
+            <button type="button" class="br-size" data-size="7">
+              <b>7 × 7</b><span>进阶</span>
+            </button>
+            <button type="button" class="br-size" data-size="9">
+              <b>9 × 9</b><span>困难</span>
+            </button>
+            <button type="button" class="br-size" data-size="11">
+              <b>11 × 11</b><span>专家</span>
+            </button>
+            <button type="button" class="br-size" data-size="13">
+              <b>13 × 13</b><span>大师</span>
+            </button>
+          </div>
+          <button type="button" class="sub-save br-start" id="brStart">开 始</button>
+          <p class="br-setup-note">每一局都有解，而且解只有一种。</p>
+
+          <!-- 玩法说明：规则就这么五条，摆在「开始」下面，想先看再玩 -->
+        
+        </div>
+
         <div class="br-rules">
           <div class="br-rules-title">玩法规则</div>
           <ul class="br-rules-list">
@@ -3252,14 +3277,19 @@
 
       <!-- 1) 第一页：选尺寸 + 玩法规则 -->
       <section class="sl-card sl-setup" id="slSetup">
-        <div class="sl-setup-title">选一张盘</div>
-        <div class="sl-sizes" id="slSizes">
-          <button type="button" class="sl-size on" data-size="5"><b>5 × 5</b><span>入门</span></button>
-          <button type="button" class="sl-size" data-size="7"><b>7 × 7</b><span>进阶</span></button>
-          <button type="button" class="sl-size" data-size="10"><b>10 × 10</b><span>困难</span></button>
+
+        <div class="sl-setup-main">
+          <div class="sl-setup-title">选一张盘</div>
+          <div class="sl-sizes" id="slSizes">
+            <button type="button" class="sl-size on" data-size="5"><b>5 × 5</b><span>入门</span></button>
+            <button type="button" class="sl-size" data-size="7"><b>7 × 7</b><span>进阶</span></button>
+            <button type="button" class="sl-size" data-size="10"><b>10 × 10</b><span>困难</span></button>
+          </div>
+          <button type="button" class="sub-save sl-start" id="slStart">开 始</button>
+          <p class="sl-setup-note">沿格线画一条单一自闭环，让每个数字格恰好有那么多条边在环上。</p>
+        
         </div>
-        <button type="button" class="sub-save sl-start" id="slStart">开 始</button>
-        <p class="sl-setup-note">沿格线画一条单一自闭环，让每个数字格恰好有那么多条边在环上。</p>
+
         <div class="sl-rules">
           <div class="sl-rules-title">玩法规则</div>
           <ul class="sl-rules-list">
@@ -3340,15 +3370,20 @@
 
       <!-- 1) 第一页：选棋盘 + 玩法规则 -->
       <section class="qn-card qn-setup" id="qnSetup">
-        <div class="qn-setup-title">选一张棋盘</div>
-        <div class="qn-sizes" id="qnSizes">
-          <button type="button" class="qn-size" data-size="5"><b>5×5</b><span>入门</span></button>
-          <button type="button" class="qn-size" data-size="6"><b>6×6</b><span>进阶</span></button>
-          <button type="button" class="qn-size on" data-size="8"><b>8×8</b><span>经典</span></button>
-          <button type="button" class="qn-size" data-size="10"><b>10×10</b><span>挑战</span></button>
+
+        <div class="qn-setup-main">
+          <div class="qn-setup-title">选一张棋盘</div>
+          <div class="qn-sizes" id="qnSizes">
+            <button type="button" class="qn-size" data-size="5"><b>5×5</b><span>入门</span></button>
+            <button type="button" class="qn-size" data-size="6"><b>6×6</b><span>进阶</span></button>
+            <button type="button" class="qn-size on" data-size="8"><b>8×8</b><span>经典</span></button>
+            <button type="button" class="qn-size" data-size="10"><b>10×10</b><span>挑战</span></button>
+          </div>
+          <button type="button" class="sub-save qn-start" id="qnStart">开 始</button>
+          <p class="qn-setup-note">在棋盘上摆下同样多的皇后，让它们谁也吃不到谁。</p>
+        
         </div>
-        <button type="button" class="sub-save qn-start" id="qnStart">开 始</button>
-        <p class="qn-setup-note">在棋盘上摆下同样多的皇后，让它们谁也吃不到谁。</p>
+
         <div class="qn-rules">
           <div class="qn-rules-title">玩法规则</div>
           <ul class="qn-rules-list">
@@ -3693,15 +3728,20 @@
 
       <!-- 1) 第一页：选盘面 + 玩法规则 -->
       <section class="lt-card lt-setup" id="ltSetup">
-        <div class="lt-setup-title">选一张盘面</div>
-        <div class="lt-sizes" id="ltSizes">
-          <button type="button" class="lt-size" data-size="4"><b>4×4</b><span>入门</span></button>
-          <button type="button" class="lt-size on" data-size="5"><b>5×5</b><span>进阶</span></button>
-          <button type="button" class="lt-size" data-size="6"><b>6×6</b><span>经典</span></button>
-          <button type="button" class="lt-size" data-size="7"><b>7×7</b><span>挑战</span></button>
+
+        <div class="lt-setup-main">
+          <div class="lt-setup-title">选一张盘面</div>
+          <div class="lt-sizes" id="ltSizes">
+            <button type="button" class="lt-size" data-size="4"><b>4×4</b><span>入门</span></button>
+            <button type="button" class="lt-size on" data-size="5"><b>5×5</b><span>进阶</span></button>
+            <button type="button" class="lt-size" data-size="6"><b>6×6</b><span>经典</span></button>
+            <button type="button" class="lt-size" data-size="7"><b>7×7</b><span>挑战</span></button>
+          </div>
+          <button type="button" class="sub-save lt-start" id="ltStart">开 始</button>
+          <p class="lt-setup-note">开局盘面是一张打乱的灯阵，想办法把它们全部关掉。</p>
+        
         </div>
-        <button type="button" class="sub-save lt-start" id="ltStart">开 始</button>
-        <p class="lt-setup-note">开局盘面是一张打乱的灯阵，想办法把它们全部关掉。</p>
+
         <div class="lt-rules">
           <div class="lt-rules-title">玩法规则</div>
           <ul class="lt-rules-list">

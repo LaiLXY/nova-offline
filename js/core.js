@@ -42,15 +42,30 @@ const Device = (() => {
     if (/iPad|Tablet|PlayBook|Silk/i.test(ua) || isIPad) return 'tablet';
     if (/Android/i.test(ua)) return /Mobile/i.test(ua) ? 'mobile' : 'tablet';
     if (/iPhone|iPod|Windows Phone|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua)) return 'mobile';
-    if (touch > 1 && /Macintosh|Windows/i.test(ua)) return 'tablet';  // 触屏电脑
+    // 触屏 Windows 电脑（二合一 / 触屏笔记本）：maxTouchPoints 常 >1，但多数
+    // 仍配鼠标或触控板，本质是 PC。若一律判 tablet，data-viewport 会被强制
+    // 成 sm，1600/2200 的宽屏布局在 2560 大屏上会整片失效（工具卡缩成手机版）。
+    // 判据：精细指针，或视口本身够宽（≥1600）→ PC；否则（纯触/窄屏）→ 平板。
+    // （Macintosh + touch>1 已在上面按 iPadOS 判成平板，这里只剩 Windows。）
+    if (touch > 1 && /Windows/i.test(ua)) {
+      const finePointer = !!(window.matchMedia && window.matchMedia('(pointer: fine)').matches);
+      return (finePointer || window.innerWidth >= 1600) ? 'pc' : 'tablet';
+    }
     return 'pc';
   }
 
   function snapshot() {
     const w = window.innerWidth, h = window.innerHeight;
+    // 大屏兜底：CSS 视口 ≥1600 时，无视 UA 自报的设备类型（DevTools 移动模拟、
+    // 移动 UA 伪装、触屏二合一…），一律按 PC 处理。否则所有挂在
+    // html[data-device="pc"] 上的 1600/2200 宽屏规则会整片失效，大屏上工具卡
+    // 缩成手机版。真机 CSS 宽：手机 ≤480、平板 ≤1500（iPad Pro 12.9 横屏 1366），
+    // 够不到 1600，不会被误判。
+    let device = deviceOf();
+    if (w >= 1600) device = 'pc';
     return {
       viewport: viewportOf(w),
-      device: deviceOf(),
+      device,
       width: w,
       height: h,
       touch: (navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window,

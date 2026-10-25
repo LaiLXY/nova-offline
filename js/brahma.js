@@ -162,17 +162,37 @@ let bhDhCap    = 0;              // 本局盘厚的上限（0 = 不限制），�
 /** 盘厚。阶数越高越薄：9 个盘摞起来要是按 3 阶那么厚，手机端三行能顶出屏幕。
  *  系数 2.2 是照着手机竖屏调的 —— 9 阶端到端算下来盘面约 664px，
  *  加顶栏和提示正好一屏放得下，不用滚着玩。
- *  ★ 屏幕再矮一点（小屏手机）时会由 bhFitBoard 再压一道，见 bhDhCap。 */
-function bhNaturalDh() { return Math.max(14, Math.round(30 - (bhN - 3) * 2.2)); }
+ *  ★ 屏幕再矮一点（小屏手机）时会由 bhFitBoard 再压一道，见 bhDhCap。
+ *  ★ 电脑宽屏（viewport=lg，三根柱子并排、横向纵向都有富余）另算一套：
+ *    照手机那套出来 3 阶柱子只有 110px 高，1920/2560 上整个盘面像一张贴纸。
+ *    这里让盘厚跟着视口高度走（1080 高≈65px、1440 高≈86px），
+ *    每多一阶薄 3.4px（比手机快一点，9 阶不至于顶破一屏）；
+ *    真放不下时照样由 bhFitBoard 压薄，兜底逻辑一点没动。 */
+function bhNaturalDh() {
+  const big = document.documentElement.dataset.viewport === 'lg';
+  if (!big) return Math.max(14, Math.round(30 - (bhN - 3) * 2.2));
+  /* 倒着算：先定「一摞盘大约占半屏」（460 左右），再按阶数反推盘厚。
+     这样 3 阶和 9 阶的柱子高度接近，换阶时盘面不会忽高忽低。
+     ★ 上限 58 不是随便定的：盘的直径是**柱宽的百分比**，3 阶最小那只
+       在宽屏上也才 70px 宽；盘厚一旦超过它，那只盘就变成竖着的胖椭圆
+       （第一版给到 104，最小的盘直接立起来了）。58 让最薄的那只还看得出是盘。 */
+  const gap = bhN <= 5 ? 7 : 5;
+  const avail = Math.max(600, window.innerHeight - 160);
+  const target = Math.min(520, Math.max(300, avail * 0.5));
+  const dh = (target - (bhN - 1) * gap - 14) / bhN;
+  return Math.max(24, Math.min(58, Math.round(dh)));
+}
 function bhDiskH() {
   const nat = bhNaturalDh();
   return bhDhCap ? Math.max(BH_DH_MIN, Math.min(nat, bhDhCap)) : nat;
 }
 /** 盘与盘之间的缝。盘一多就收一收，不然整摞虚高。
  *  横屏时纵向只剩"竖屏时的宽度"，比竖屏还挤，再收一格 ——
- *  9 阶就是靠这一格加下面那个柱尖，把整摞盘收进一屏的。 */
+ *  9 阶就是靠这一格加下面那个柱尖，把整摞盘收进一屏的。
+ *  电脑宽屏同理放宽一点：盘大了缝还按 3px 会显得挤成一坨。 */
 function bhDiskGap() {
   if (bhLandOn()) return bhN <= 5 ? 3 : 2;
+  if (document.documentElement.dataset.viewport === 'lg') return bhN <= 5 ? 7 : 5;
   return bhN <= 5 ? 4 : 3;
 }
 
