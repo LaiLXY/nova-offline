@@ -744,13 +744,34 @@
 
   </main>
 
-  <!-- 底部栏：离线版只留一个「设置」齿轮
-       （站内信 / 好友 / 个人主页那几个都在离线版里砍掉了） -->
+  <!-- 底部栏：离线版只剩两颗 ——「彩蛋墙」和「设置」
+       （站内信 / 好友 / 个人主页那几个都在离线版里砍掉了）
+       ★ 彩蛋墙排在齿轮后面是有意的：这层是 row-reverse，先写的贴右边，
+         所以顺序反过来才对——手机上是「彩蛋墙 | 齿轮」，
+         宽屏（.home-footer 转成竖排贴右上角）则是齿轮在上、彩蛋墙在下。 -->
   <div class="home-footer">
     <button type="button" class="home-gear" id="btnSettings" aria-label="设置" title="设置">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="3" />
         <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
+      </svg>
+    </button>
+
+    <!-- 彩蛋墙：图标就是一颗**彩蛋** —— 蛋形轮廓 + 一道横贯全宽的锯齿裂纹。
+         走过两版冤路：砖墙（21px 下糊成一块黑）、奖牌（圆牌 + 空心绶带，绶带要么像金牛座 ♉，
+         要么两条带子 30° 分开后四条边组成一个 W）。最后还是蛋最省事：轮廓自带辨识度，
+         一道裂缝就够破题，而且"彩蛋墙"配一颗蛋，不用解释。
+         ★ 蛋形用「上半段 S 曲线 + 下半段半圆」拼，不是纯椭圆：
+           椭圆的顶和底一样圆，看着像胶囊；S 曲线让上半段更瘦更高（2.8→14.2），
+           半圆（r7.2，圆心 y=14.2）负责那个偏低的鼓肚子。
+         ★ 裂纹两端必须**落在轮廓上**（最宽处 y=14.2 的 x=4.8 / 19.2），不能悬在蛋里 ——
+           悬空就变成"蛋里画了条波浪线"，接上轮廓才读成"裂开的缝"。
+         ★ 幅度定在 2.6（峰谷差）。再大（3.2）是锯齿太尖，再小（1.5）21px 下糊成一道平横线。
+         按钮仍是 46px 描边方钮（复用 .home-gear），点它进 #toolArchive（js/archive.js）。 -->
+    <button type="button" class="home-gear" id="btnArchive" data-tool="archive" aria-label="彩蛋墙" title="彩蛋墙">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19.2 14.2C19.2 9 15.9 2.8 12 2.8S4.8 9 4.8 14.2a7.2 7.2 0 0 0 14.4 0Z" />
+        <path d="M4.85 14.2 L7.9 15.9 L10.9 13.2 L13.9 15.7 L16.9 13.4 L19.15 15" />
       </svg>
     </button>
   </div>
@@ -3841,6 +3862,68 @@
 <div class="toasts" id="toasts"></div>
 
 <!-- ============================================================
+     彩蛋墙
+     收的是「规则之外」的东西：现在只有囚徒困境的两条结局，
+     由 js/archive.js 按本地存档现算 —— 这一页自己不存任何状态。
+
+     两块永远是「解锁一块、锁着一块」：囚徒困境从设计之初就是
+     二者不可兼得（通关的人再答不出错，答错的人再也通不了关），
+     所以这面墙在任何一台设备上永远缺一格。
+
+     格子不是按钮：未解锁点了没有任何反应（连提示都不给），
+     解锁了也没地方可去 —— 它只是账本。未解锁的格子里是一个白问号。
+
+     ★ 排列从左上角开始（不居中）：见 css/tools.css 第二十五节。
+     ============================================================ -->
+<div class="tool-page" id="toolArchive">
+  <div class="tool-bar">
+    <button type="button" class="tool-back" data-tool-back aria-label="返回" title="返回">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h3 class="tool-title">彩蛋墙</h3>
+  </div>
+
+  <div class="tool-body">
+    <div class="arc-grid">
+
+      <!-- 越狱者：通关（nova_prisoner_clear = '1'） -->
+      <div class="arc-card is-locked" data-arc="escape">
+        <div class="arc-top"><span class="arc-tile">
+          <!-- 未解锁：白问号（解锁后由 js/archive.js 换成囚徒困境的卡片图标） -->
+          <svg class="arc-glyph-q" viewBox="0 0 24 24" fill="none" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.6 9.3a3.4 3.4 0 116.8 0c0 2.4-3.4 2.8-3.4 5.4" />
+            <circle cx="12" cy="18.7" r="1.15" fill="#fff" stroke="none" />
+          </svg>
+        </span></div>
+        <div class="arc-bot">
+          <b class="arc-name">？？？</b>
+          <span class="arc-sub"></span>
+        </div>
+      </div>
+
+      <!-- 碎裂的囚笼：损坏（nova_prisoner_spoil > 0，封死到几级都算） -->
+      <div class="arc-card is-locked" data-arc="shatter">
+        <div class="arc-top"><span class="arc-tile">
+          <svg class="arc-glyph-q" viewBox="0 0 24 24" fill="none" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.6 9.3a3.4 3.4 0 116.8 0c0 2.4-3.4 2.8-3.4 5.4" />
+            <circle cx="12" cy="18.7" r="1.15" fill="#fff" stroke="none" />
+          </svg>
+        </span></div>
+        <div class="arc-bot">
+          <b class="arc-name">？？？</b>
+          <span class="arc-sub"></span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
      设置：齿轮菜单 → 更改称呼 / 关于 Nova / 清空缓存
      离线版没有账号体系，设置里就这三项（逻辑见 js/settings.js）
      ============================================================ -->
@@ -3961,5 +4044,7 @@
 <script src="js/lights.js"></script>
 <!-- 囚徒困境：藏起来的三关问答（卡片本身是灰的「开发中」，见 js/prisoner.js） -->
 <script src="js/prisoner.js"></script>
+<!-- 彩蛋墙（#toolArchive）：按囚徒困境的存档现算格子状态，入口在主页底栏（见 js/archive.js） -->
+<script src="js/archive.js"></script>
 </body>
 </html>

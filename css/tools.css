@@ -7299,3 +7299,148 @@ html[data-device="pc"][data-aspect="wide"] #unitPicker .picker-head .x {
   font-size: var(--cvt-small);
 }
 
+/* ======================================================
+   二十五、彩蛋墙
+   主页底栏「奖牌」按钮 → #toolArchive（逻辑见 js/archive.js）。
+
+   格子是竖长方形（3:4），上下按 2:1 分：上 2/3 一块圆角图标，
+   下 1/3 主标题 + 副标题。未解锁的图标是黑底白问号，
+   主标题只剩三个问号、副标题留空 —— 所以底部那半块会显得很轻，
+   这是故意的：空位看得出来是空位。
+
+   ★ 一律**从左上角开始排**，不居中（Roy 定稿）：
+     · 行内 justify-content: flex-start —— 不满一行时靠左，不是居中
+     · 宽屏还要把 .tool-body 第二十节给的 `justify-content: safe center`
+       顶掉，否则整面墙会浮在屏幕正中
+   ★ 用 flex 换行，不用 grid：格子的宽度是死的（宽屏 240/280/320），
+     grid 的 auto-fit 会按容器拉伸出几个等分轨道，多余轨道留白、
+     条目一多又变扁；flex 只管从左往右排、排满换行。
+   ★ 宽屏只改三样：格子宽、间距、字号（内容跟着一起长），
+     和本项目其它功能页一个口径 —— 只拉宽会变成"框大内容小"。
+   ====================================================== */
+.arc-grid {
+  /* ★ width:100% 不能省：宽屏下 .tool-body 是 flex 列，
+     子项一有横向 auto 外边距就按内容宽度收缩。 */
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-content: flex-start;
+  gap: 14px;
+}
+
+.arc-card {
+  /* 一行两个：减去中间那道缝再对半分 */
+  width: calc((100% - 14px) / 2);
+  aspect-ratio: 3 / 4;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* 上 2/3：图标居中；下 1/3：文字居中。min-height:0 让 flex 比例说了算 */
+.arc-top {
+  flex: 2 1 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+.arc-bot {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 10px 10px;
+  text-align: center;
+}
+
+/* 图标底块：尺寸跟卡片宽度走，圆角用百分比，大小屏幕都不是死数 */
+.arc-tile {
+  width: 58%;
+  aspect-ratio: 1;
+  border-radius: 22%;
+  display: grid;
+  place-items: center;
+  background: #c8ced8;          /* 兜底：损坏那种灰 */
+}
+.arc-tile svg {
+  width: 54%;
+  height: 54%;
+  /* 两条描线图标（栏杆 / 页面）都靠这条上色；
+     卡片那边颜色来自 --tool-ico-fg，克隆过来没有内联色，正好由这里统一给白 */
+  stroke: #fff;
+  fill: none;
+}
+
+/* 通关：绿底白栏杆 —— 和囚徒困境那张卡恢复彩色后的底色一致 */
+.arc-card[data-arc="escape"] .arc-tile { background: #1DB994; }
+/* 损坏：灰底白栏杆 —— 和卡片「维护中」是同一族颜色，但比卡片那档 (#c8ced8)
+   压深一点：卡片只有 52px，浅灰底看着"停用"就够了；墙上的图标有 160px，
+   照抄那个浅灰会让白栏杆糊成一片，读不出形状。 */
+.arc-card[data-arc="shatter"] .arc-tile { background: #a9b2c0; }
+/* 未解锁：黑底白问号（整面墙唯一的深色块） */
+.arc-card.is-locked .arc-tile { background: #14161a; }
+
+.arc-name {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+}
+.arc-sub {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+/* 未解锁时副标题是空串 —— 别让 gap 把主标题顶偏 */
+.arc-sub:empty { display: none; }
+/* 问号别用正文黑，压成灰的才像"待填" */
+.arc-card.is-locked .arc-name {
+  color: var(--muted);
+  letter-spacing: .06em;
+}
+
+/* 平板：两列照旧，只是别让格子撑成巨幅（手机那套百分比宽度在大平板上会太宽） */
+html[data-layout="tablet"] .arc-grid { max-width: 620px; }
+
+/* ---------- 宽屏：一行四个 ----------
+   手机两列、电脑四列是定死的；这里只是让格子跟着屏一起长大。
+   ★ #toolArchive .tool-body 那条必须留着：第二十节给 PC 的 .tool-body
+     加了 `justify-content: safe center`（对局页要纵向居中），
+     照抄到这儿就变成"墙浮在屏幕中间" —— 这面墙是从左上角起排的。 */
+@media (min-width: 1024px) {
+  html[data-device="pc"][data-aspect="wide"] #toolArchive .tool-body {
+    justify-content: flex-start;
+    padding: 28px 32px 40px;
+  }
+  html[data-device="pc"][data-aspect="wide"] .arc-grid { gap: 18px; }
+  html[data-device="pc"][data-aspect="wide"] .arc-card { width: 240px; }
+  html[data-device="pc"][data-aspect="wide"] .arc-name { font-size: 16px; }
+  html[data-device="pc"][data-aspect="wide"] .arc-sub  { font-size: 12.5px; }
+}
+@media (min-width: 1600px) {
+  html[data-device="pc"][data-aspect="wide"] #toolArchive .tool-body {
+    padding: 36px 40px 48px;
+  }
+  html[data-device="pc"][data-aspect="wide"] .arc-grid { gap: 20px; }
+  html[data-device="pc"][data-aspect="wide"] .arc-card { width: 280px; }
+  html[data-device="pc"][data-aspect="wide"] .arc-name { font-size: 18px; }
+  html[data-device="pc"][data-aspect="wide"] .arc-sub  { font-size: 14px; }
+}
+@media (min-width: 2200px) {
+  html[data-device="pc"][data-aspect="wide"] #toolArchive .tool-body {
+    padding: 44px 56px 56px;
+  }
+  html[data-device="pc"][data-aspect="wide"] .arc-grid { gap: 24px; }
+  html[data-device="pc"][data-aspect="wide"] .arc-card { width: 320px; }
+  html[data-device="pc"][data-aspect="wide"] .arc-name { font-size: 20px; }
+  html[data-device="pc"][data-aspect="wide"] .arc-sub  { font-size: 15.5px; }
+}
+
+
