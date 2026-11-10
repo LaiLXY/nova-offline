@@ -14,7 +14,12 @@
        · 可暂停 / 停止；停止就停在半路，顶栏留「演示答案」可以续播；
        · 演示不算玩家步数、不进撤销栈。
 
-   纯本地、无后端；样式走 css/tools.css 的 .lt-*（结构对齐互不相犯 .qn-*）。
+   ★ 彩蛋「群灯俱寂」：**一局用最少步走完**（steps === minSteps，最少步随
+     棋盘大小走，不写死数字）就点亮，只兑现一次（nova_lights_silent）。
+     正式版还会报给后端（users.l_silent），见 js/prisoner.js 的同步。
+
+   游戏本身纯本地；只有那枚彩蛋的上报会走后端（离线版连上报都没有）。
+   样式走 css/tools.css 的 .lt-*（结构对齐互不相犯 .qn-*）。
    ========================================================================== */
 
 (function () {
@@ -52,6 +57,7 @@
   const ltGame = $('#ltGame');
   const ltSetup = $('#ltSetup');
   const ltOverlay = $('#ltOverlay');
+  const ltSilentLayer = $('#ltSilentLayer');   /* 彩蛋「群灯俱寂」的演出层 */
   const ltOvTitle = $('#ltOvTitle');
   const ltOvText = $('#ltOvText');
   const ltOvOk = $('#ltOvOk');
@@ -299,13 +305,74 @@
     ltGame.classList.add('is-done');
     ltRender();
     ltSyncHead();
+    ltPause();
+
+    /* 彩蛋「群灯俱寂」：这一局用**最少步**走完（步数正好等于本局最优）。
+       先演一段，演完才弹过关浮层 —— 灯刚全灭，先让场上安静一会儿。 */
+    if (!ltSilentShown() && steps > 0 && steps === minSteps) {
+      ltSilentFound();
+      return;
+    }
+    ltShowWinOverlay();
+  }
+
+  /* 过关结算（彩蛋演出之后也走这里） */
+  function ltShowWinOverlay() {
     ltOvTitle.textContent = '过关！';
     ltOvText.textContent = N + ' × ' + N + ' · 用时 ' + ltTime.textContent +
       ' · ' + steps + ' 步（最少 ' + minSteps + ' 步）';
     ltOvOk.hidden = false;
     ltOvAnswer.hidden = true;
     ltOverlay.classList.add('show');
-    ltPause();
+  }
+
+  /* ---------- 彩蛋「群灯俱寂」 ----------
+     条件：**这一局用最少步走完** —— steps === minSteps，最少步随棋盘大小走
+     （4×4 的 4 步和 7×7 的 12 步都算），不写死某个数字。
+     ★ 演示答案不计玩家步数（见「答案演示」一节），所以刷不出来；
+       撤销会连步数一起回退，也不增加步数，那是游戏自带的重试，不算作弊。
+     ★ 只兑现一次：nova_lights_silent = '1' 之后就是普通过关，不再演。
+     ★ 演出 2.6s（css 里那三条 keyframes 要与这里的时长对齐），
+       演完才弹过关浮层；中途换题 / 退出就作废。 */
+  const K_SILENT = 'nova_lights_silent';
+  let silentTimer = 0;
+
+  function ltSilentShown() {
+    try { return localStorage.getItem(K_SILENT) === '1'; } catch (e) { return false; }
+  }
+
+  /* 收起演出（换局 / 重开 / 改尺寸 / 卸载时都要走） */
+  function ltSilentClear() {
+    clearTimeout(silentTimer);
+    silentTimer = 0;
+    page.classList.remove('is-silent');
+    const layer = ltSilentLayer;
+    if (layer) { layer.classList.remove('show'); layer.hidden = true; }
+  }
+
+  function ltSilentFound() {
+    try { localStorage.setItem(K_SILENT, '1'); } catch (e) { /* 存不了就只演这一遍 */ }
+    /* 正式版把这枚彩蛋交给后台记账；离线版没有这个全局，本机记着就够 */
+    if (typeof pushPrisonerState === 'function') pushPrisonerState();
+
+    const r = round;                    /* 记住是哪一局：中途换题了就别再弹浮层 */
+    ltSilentClear();                    /* 先收拾残留（顺手清掉旧 timer） */
+    void page.offsetWidth;              /* 强制重排，动画才会重放 */
+    page.classList.add('is-silent');
+    if (ltSilentLayer) {
+      ltSilentLayer.hidden = false;
+      void ltSilentLayer.offsetWidth;
+      ltSilentLayer.classList.add('show');
+    }
+
+    silentTimer = setTimeout(() => {
+      silentTimer = 0;
+      page.classList.remove('is-silent');
+      if (ltSilentLayer) { ltSilentLayer.classList.remove('show'); ltSilentLayer.hidden = true; }
+      /* 换了题 / 已经退出这一页，就别再往隐藏的页面上弹结算 */
+      if (round !== r || !page.classList.contains('show')) return;
+      ltShowWinOverlay();
+    }, 2600);
   }
   function ltSolvedView() {
     ltOverlay.classList.remove('show');
@@ -426,6 +493,7 @@
     lights = s.lights;
     steps = s.steps;
     over = false; gaveUp = false;
+    ltSilentClear();                    /* 撤销会把局面拉回来，演出也就不该留着 */
     ltPlayStopNow();
     ltOverlay.classList.remove('show');
     ltGame.classList.remove('is-done');
@@ -433,6 +501,7 @@
     ltSyncHead();
   }
   function ltResetAll() {
+    ltSilentClear();
     lights = initial.slice();
     steps = 0; over = false; gaveUp = false;
     undoStack = [];
@@ -444,6 +513,7 @@
     ltStartClock();
   }
   function ltNewRound(size) {
+    ltSilentClear();
     N = size;
     const out = genFor(size);
     lights = out.lights;
@@ -464,6 +534,7 @@
     ltStartClock();
   }
   function ltToSetup() {
+    ltSilentClear();
     ltGame.hidden = true;
     ltSetup.hidden = false;
     ltGame.classList.remove('is-done');
@@ -557,6 +628,13 @@
     if (!e.detail || e.detail.page !== 'toolLights') return;
     paintSizeButtons();
     ltSyncPause();
+  });
+
+  /* 退出这一页就把演出收掉（detail.page 是关掉的那个功能页元素）——
+     否则遮罩会留给下一次进来的人，或者结算弹在已经隐藏的页面上。 */
+  document.addEventListener('tool:close', e => {
+    if (e.detail && e.detail.page && e.detail.page !== page) return;
+    ltSilentClear();
   });
 
   /* Esc：确认框 → 演示中（停止）→ 才交给 backnav / tools.js。

@@ -2993,6 +2993,14 @@
           </div>
         </div>
         <p class="ms-note" id="msPlNote">/ 分隔字母 · \ 分隔单词 · · 与 . 都算点 · 空格也当词间隔 · 按右上角所选速度播报（默认 18 wpm），播报中锁住输入框</p>
+
+        <!-- 彩蛋「欢迎回家」的演出层：平时 hidden，整段听完命中的那一刻由
+             js/morse.js 挂上 .show 演一遍（扫描线 + 字浮上来）。它在卡片里
+             绝对定位，不占布局；3.8 秒后自己收掉。 -->
+        <div class="ms-homelayer" id="msHomeLayer" hidden aria-hidden="true">
+          <i class="ms-homeline"></i>
+          <b class="ms-homeword">欢迎回家</b>
+        </div>
       </section>
 
       <!-- ============ 三级 A3：电码对照表（0–9 / A–Z / 常用标点） ============ -->
@@ -3841,6 +3849,13 @@
       </div>
     </div>
   </div>
+
+  <!-- 彩蛋「群灯俱寂」的演出：完美解那一刻灯全灭，整页跟着暗下来。
+       平时 hidden，由 js/lights.js 挂上 .show 演 2.6 秒，演完才弹过关浮层。 -->
+  <div class="lt-silentlayer" id="ltSilentLayer" hidden aria-hidden="true">
+    <i class="lt-silentglow"></i>
+    <b class="lt-silentword">群灯俱寂</b>
+  </div>
 </div>
 
 <!-- 单位选择的悬浮窗（单位换算用）
@@ -3906,6 +3921,38 @@
 
       <!-- 碎裂的囚笼：损坏（nova_prisoner_spoil > 0，封死到几级都算） -->
       <div class="arc-card is-locked" data-arc="shatter">
+        <div class="arc-top"><span class="arc-tile">
+          <svg class="arc-glyph-q" viewBox="0 0 24 24" fill="none" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.6 9.3a3.4 3.4 0 116.8 0c0 2.4-3.4 2.8-3.4 5.4" />
+            <circle cx="12" cy="18.7" r="1.15" fill="#fff" stroke="none" />
+          </svg>
+        </span></div>
+        <div class="arc-bot">
+          <b class="arc-name">？？？</b>
+          <span class="arc-sub"></span>
+        </div>
+      </div>
+
+      <!-- 欢迎回家：异语道破的「电码播放」（nova_morse_home = '1'）
+           得把 I am Roy. 的摩斯敲进去、点播放、听完整段才亮 -->
+      <div class="arc-card is-locked" data-arc="home">
+        <div class="arc-top"><span class="arc-tile">
+          <svg class="arc-glyph-q" viewBox="0 0 24 24" fill="none" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.6 9.3a3.4 3.4 0 116.8 0c0 2.4-3.4 2.8-3.4 5.4" />
+            <circle cx="12" cy="18.7" r="1.15" fill="#fff" stroke="none" />
+          </svg>
+        </span></div>
+        <div class="arc-bot">
+          <b class="arc-name">？？？</b>
+          <span class="arc-sub"></span>
+        </div>
+      </div>
+
+      <!-- 群灯俱寂：关灯游戏（nova_lights_silent = '1'）
+           一局用最少步走完才亮；最少步跟着棋盘大小走，不写死数字 -->
+      <div class="arc-card is-locked" data-arc="silent">
         <div class="arc-top"><span class="arc-tile">
           <svg class="arc-glyph-q" viewBox="0 0 24 24" fill="none" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round">

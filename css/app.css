@@ -528,6 +528,8 @@ html[data-layout="tablet"] .chip .sym { font-size: 20px; }
   color: var(--muted);
   cursor: pointer;
   flex: 0 0 auto;
+  /* 小红点是绝对定位的，锚在按钮上（见下面的 .is-dot） */
+  position: relative;
   transition: background .15s, border-color .15s, color .15s;
 }
 .home-gear:hover { background: #f8f9fb; border-color: #b9c0cb; color: var(--text); }
@@ -537,6 +539,21 @@ html[data-layout="tablet"] .chip .sym { font-size: 20px; }
   box-shadow: 0 0 0 3px var(--brand-glow);
 }
 .home-gear svg { width: 21px; height: 21px; stroke: currentColor; }
+
+/* 彩蛋墙「有新条目」的小红点
+   压在按钮右上角外面一点（负偏移），白圈让它落在任何底色上都读得出来；
+   只有 9px，不打字、不加数字 —— 条目永远是"有新东西"，不是待办数量。
+   ★ 用 --danger 而不是自己调一个红：清空缓存 / 报错 / 这里，同一个红。 */
+.home-gear.is-dot::after {
+  content: "";
+  position: absolute;
+  top: -4px; right: -4px;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 0 2px #fff;
+  pointer-events: none;
+}
 
 /* ======================================================
    设置菜单（齿轮弹出）

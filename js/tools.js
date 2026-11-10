@@ -32,7 +32,7 @@ const TOOLS = {
      卡片照旧挂「开发中」，但点得进来（三关问答 + 彩蛋，见 js/prisoner.js）。
      所以它不能留在下面的 WIP_TOOLS 里：那一层是捕获阶段拦截，会把点击吃掉。 */
   prisoner: 'toolPrisoner',
-  /* 彩蛋墙：首页没有它的卡片 —— 入口是底栏齿轮左边那颗奖牌按钮。
+  /* 彩蛋墙：首页没有它的卡片 —— 入口是底栏齿轮左边那颗彩蛋按钮。
      登记在这里只是为了复用现成的一套（打开 / 返回箭头 / Esc / backnav
      都认 .tool-page），别误以为漏了一张卡。 */
   archive: 'toolArchive',
@@ -81,7 +81,11 @@ function openTool(key) {
 /** 关闭功能页；不传就关掉当前打开的那个 */
 function closeTool(page) {
   const target = page || currentToolPage();
-  if (target) target.classList.remove('show');
+  if (!target) return;
+  target.classList.remove('show');
+  // 和 tool:open 对称：关页之后才方便判断"这一趟有没有留下东西"
+  // （彩蛋墙靠它在从囚徒困境回来时亮小红点）
+  document.dispatchEvent(new CustomEvent('tool:close', { detail: { page: target } }));
 }
 
 /* ---------- 入口按钮：点 .tool-btn 进入对应功能页 ---------- */

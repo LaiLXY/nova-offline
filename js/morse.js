@@ -1011,6 +1011,58 @@
     msPlOut.value = v.trim() ? msApplyCase(msDecode(msPlSrc())) : '';
   }
 
+  /* ---------- 彩蛋「欢迎回家」 ----------
+     ★ 只认「电码 → 文字」这条路：玩家得自己把 I am Roy. 的摩斯敲进来、
+       点播放、听完整段，门才开。文字→电码那边不算 —— 打一句英文太便宜，
+       而且那一边的输入框提示本来就写着这句话。
+     ★ 不能比字面：解码结果受「输出大小写」影响（全部大写 / 全部小写 /
+       自动），撇号可能是 ' 或 ’（后者进不了 MS_CODE，会被静默丢掉），
+       句号是独立成段的 ·-·-·-，几乎没人会去敲。所以两边都归一到
+       「字母指纹」再比 —— 四种大小写 × 三种撇号写法 × 有无句号 全都能中。
+     ★ 只兑现一次：nova_morse_home = '1' 之后这段电码就只是普通播放。
+       键带 nova_ 前缀 —— 设置里的「清空缓存」会把它一起删掉（墙自己回空）。 */
+  const K_HOME = 'nova_morse_home';
+  const HOME_FP = 'IAMROY';    /* "I am Roy." 与 "I'm Roy." 去掉非字母后同一个指纹 */
+  let homePending = false;     /* 点了播放、命中了、等整段播完才兑现 */
+  let homeTimer = 0;
+
+  function homeFound() {
+    try { return localStorage.getItem(K_HOME) === '1'; } catch (e) { return false; }
+  }
+
+  function msHomeHit() {
+    return String(msPlOut.value || '').toUpperCase().replace(/[^A-Z]/g, '') === HOME_FP;
+  }
+
+  /* 演出一遍（整段播完那一刻）。
+     3.8s 后收干净 —— css/tools.css 里那三条动画的时长要和这里对齐，改一处得改另一处。 */
+  function msHomeStage() {
+    const layer = $('#msHomeLayer');
+    msPlayer.classList.remove('is-home');
+    void msPlayer.offsetWidth;               /* 强制重排，动画才会重放 */
+    msPlayer.classList.add('is-home');
+    if (layer) {
+      layer.hidden = false;
+      layer.classList.remove('show');
+      void layer.offsetWidth;
+      layer.classList.add('show');
+    }
+    clearTimeout(homeTimer);
+    homeTimer = setTimeout(() => {
+      msPlayer.classList.remove('is-home');
+      if (layer) { layer.classList.remove('show'); layer.hidden = true; }
+    }, 3800);
+  }
+
+  function msHomeFire() {
+    if (homeFound()) return;
+    try { localStorage.setItem(K_HOME, '1'); } catch (e) { /* 存不了就只演这一遍 */ }
+    msHomeStage();
+    /* 「欢迎回家」不再另弹 toast：画面里已经写着这四个字了，说第二遍是抢戏。
+       正式版把这枚彩蛋交给后台记账；离线版没有这个全局，本机记着就够。 */
+    if (typeof pushPrisonerState === 'function') pushPrisonerState();
+  }
+
   /* 拆词 → 字母 → 符号，顺手把纸带铺出来（每个符号一个 <i> 供高亮） */
   function msPlRender() {
     const src = msPlSrc();
@@ -1114,7 +1166,12 @@
     if (plTotal > 0) {
       msPlProg.style.width = (Math.min(1, pos / plTotal) * 100).toFixed(2) + '%';
     }
-    if (pos >= plTotal) { plStop(); return; }
+    if (pos >= plTotal) {
+      plStop();
+      /* 彩蛋挂在「听完」上，不是挂在「打出来」上：整段播完才开门 */
+      if (homePending) { homePending = false; msHomeFire(); }
+      return;
+    }
     plRaf = requestAnimationFrame(plFrame);
   }
 
@@ -1257,7 +1314,7 @@
      ========================================================== */
   $('#msGoTrans').addEventListener('click', () => msShow(msTransHome));
   $('#msGoGame').addEventListener('click', () => msShow(msGameHome));
-  $('#msGoPlay').addEventListener('click', () => { plStop(); msShow(msPlayer); });
+  $('#msGoPlay').addEventListener('click', () => { plStop(); homePending = false; msShow(msPlayer); });
   $('#msGoChart').addEventListener('click', () => { msBuildChart(); msShow(msChart); });
   $('#msGoEnc').addEventListener('click', () => { msSetDir('enc'); msShow(msTrans); });
   $('#msGoDec').addEventListener('click', () => { msSetDir('dec'); msShow(msTrans); });
@@ -1265,6 +1322,7 @@
   /* ---------- 播报页：输入 → 结果 + 时间轴 ---------- */
   msPlIn.addEventListener('input', () => {
     plStop();                 /* 电码变了，原来的时间轴作废 */
+    homePending = false;      /* 挂起的那次彩蛋也一并作废（得重新听完） */
     msPlRender();
     msPlSyncOut();
     plPaint();
@@ -1281,6 +1339,9 @@
       toast('info', '还没有电码可播放', '先在上面敲几个 · 与 -', 'morse-play');
       return;
     }
+    /* 彩蛋：从头发起、还没点亮过、解出来的正是那句话 → 先挂起，播完再开门。
+       暂停后点「继续播放」不重复判定（pending 已经挂着了）。 */
+    if (plState === 'idle' && !homeFound() && msHomeHit()) homePending = true;
     plStart(plState === 'paused' ? plPos : 0);
   });
 

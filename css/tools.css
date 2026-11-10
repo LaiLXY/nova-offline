@@ -4573,6 +4573,75 @@ html[data-touch="1"] .ms-plsym.is-dash { width: 21px; height: 8px; }
 /* 播报途中输入框是只读的，压一下字色，避免「为什么打不进去」的错觉 */
 #msPlIn[readonly] { color: var(--muted); }
 
+/* ---------- 彩蛋「欢迎回家」的演出 ----------
+   整段电码播完、且解出来的正是那句话时才演（js/morse.js 的 msHomeStage）。
+   三层同时发生：卡片泛一圈天蓝光、一条扫描线从上扫到下、四个字从模糊里浮上来再散掉。
+   总时长 3.8s —— 和 js 里那个 setTimeout 对齐，改一处得改另一处。
+   ★ 只演一次：存进 nova_morse_home 之后，这段电码就只是普通播放。
+   ★ 配色是暖蓝（#0369A1 / #0EA5E9），不上 --brand：这张卡的播报纸带、
+     播放键本来就是这套海蓝，演出跟着它们才不会像另一件主题的东西。 */
+.ms-player { position: relative; }            /* 演出层是绝对定位的，得有个锚 */
+.ms-player.is-home { animation: msHomeCard 3.8s ease-out both; }
+
+.ms-homelayer {
+  position: absolute; inset: 0; z-index: 3;
+  border-radius: 14px; overflow: hidden;
+  display: grid; place-items: center;
+  pointer-events: none;                       /* 演出不挡任何操作 */
+  background: radial-gradient(120% 90% at 50% 45%,
+              rgba(240, 249, 255, .9), rgba(224, 242, 254, .68) 55%, rgba(240, 249, 255, .34) 100%);
+  -webkit-backdrop-filter: blur(1.5px);
+  backdrop-filter: blur(1.5px);
+  opacity: 0;
+  transition: opacity .26s ease;
+}
+.ms-homelayer.show { opacity: 1; }
+
+/* 扫描线：像一条电波从上往下走一遍。
+   在浅蓝的毛玻璃底上要压得住，所以线本身 3px 且走「亮芯 + 晕」两层。 */
+.ms-homeline {
+  position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, #0284c7 18%, #7dd3fc 50%, #0284c7 82%, transparent);
+  box-shadow: 0 0 18px 4px rgba(14, 165, 233, .7), 0 0 4px 1px rgba(255, 255, 255, .9);
+  opacity: 0;
+}
+.ms-homelayer.show .ms-homeline { animation: msHomeScan 1.15s cubic-bezier(.4, 0, .2, 1) both; }
+
+/* 四个字：先糊着浮上来，字距由松到紧落定，最后散掉。
+   text-indent 补掉末字后面那点字距，整体才落在正中。 */
+.ms-homeword {
+  position: relative;
+  font-size: 27px; font-weight: 700; line-height: 1.2;
+  letter-spacing: .3em; text-indent: .3em;
+  color: #0369a1;
+  text-shadow: 0 1px 0 #fff, 0 6px 24px rgba(255, 255, 255, .95);
+  opacity: 0;
+}
+.ms-homelayer.show .ms-homeword { animation: msHomeWord 3.4s cubic-bezier(.2, .7, .2, 1) both; }
+
+@keyframes msHomeCard {
+  0%, 100% { border-color: var(--line);
+             box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16); }
+  14%      { border-color: #7dd3fc;
+             box-shadow: 0 0 0 3px rgba(125, 211, 252, .4), 0 0 42px rgba(14, 165, 233, .3); }
+  72%      { border-color: #7dd3fc;
+             box-shadow: 0 0 0 3px rgba(125, 211, 252, .22), 0 0 26px rgba(14, 165, 233, .18); }
+}
+@keyframes msHomeScan {
+  0%   { top: 0;    opacity: 0; }
+  10%  {            opacity: 1; }
+  90%  {            opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+@keyframes msHomeWord {
+  0%   { opacity: 0; filter: blur(7px); letter-spacing: .62em;
+         transform: translateY(12px) scale(.97); }
+  20%  { opacity: 1; filter: blur(0); }
+  34%  { letter-spacing: .3em; transform: translateY(0) scale(1); }
+  78%  { opacity: 1; filter: blur(0); }
+  100% { opacity: 0; filter: blur(4px); transform: translateY(-6px); }
+}
+
 /* PC / 平板 / 手机横屏：软键盘不全宽，限宽居中（用户要求电脑端适配大小）
    ----------------------------------------------------------
    为什么用 480 这个断点、且不看 data-device / data-viewport：
@@ -5216,6 +5285,66 @@ html[data-layout="tablet"] .qn-overlay-box p { font-size: 15.5px; }
 .lt-hit:hover { fill: rgba(37, 99, 235, .08); }
 .lt-game.is-done .lt-hit { cursor: default; }
 .lt-game.is-done .lt-hit:hover { fill: transparent; }
+
+/* ---------- 彩蛋「群灯俱寂」的演出 ----------
+   一局用最少步走完、且还没点亮过时才演（js/lights.js 的 ltSilentFound）。
+   意象是「最后一片灯熄掉」：亮灯色（--yellow）的那团光从外往里收，收到没有，
+   四个字才从模糊里浮出来。z-index 压过过关浮层（252）—— 演出演完，
+   js 才把结算浮层放出来。
+   ★ 总时长 2.6s，和 js 里那个 setTimeout 对齐，改一处得改另一处。
+   ★ pointer-events:none：这 2.6 秒里按钮仍可点（只是被暗场盖着）。 */
+.lt-silentlayer {
+  position: absolute; inset: 0; z-index: 300;
+  display: grid; place-items: center;
+  pointer-events: none; overflow: hidden;
+  background:
+    radial-gradient(46% 34% at 50% 46%, rgba(255, 217, 0, .16), transparent 68%),
+    rgba(10, 8, 20, .93);
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+.lt-silentlayer.show { opacity: 1; }
+/* 那团黄光：先亮着，然后一路缩到没有 —— 灯就是在这里熄灭的。
+   1.5s 收完，字要等它收干净（.95s 之后）才浮出来，两层不抢戏。 */
+.lt-silentglow {
+  position: absolute; left: 50%; top: 50%;
+  width: 46vmin; height: 46vmin; margin: -23vmin 0 0 -23vmin;
+  border-radius: 50%;
+  background: radial-gradient(closest-side,
+              rgba(255, 217, 0, .5), rgba(255, 217, 0, .12) 58%, transparent 74%);
+  opacity: 0;
+}
+.lt-silentlayer.show .lt-silentglow { animation: ltSilentGlow 1.5s ease-in both; }
+.lt-silentword {
+  position: relative;
+  font-size: 30px; font-weight: 700; line-height: 1.2;
+  letter-spacing: .3em; text-indent: .3em;
+  color: #fffdf2;
+  text-shadow: 0 0 18px rgba(255, 217, 0, .3), 0 2px 26px rgba(0, 0, 0, .8);
+  opacity: 0;
+}
+.lt-silentlayer.show .lt-silentword { animation: ltSilentWord 1.6s ease-out .95s both; }
+
+@keyframes ltSilentGlow {
+  0%   { opacity: .85; transform: scale(1.3); }
+  35%  { opacity: .5;  transform: scale(.95); }
+  100% { opacity: 0;   transform: scale(.1); }
+}
+@keyframes ltSilentWord {
+  0%   { opacity: 0; filter: blur(9px); letter-spacing: .62em;
+         transform: translateY(10px) scale(.97); }
+  22%  { opacity: 1; filter: blur(0); }
+  40%  { letter-spacing: .3em; transform: translateY(0) scale(1); }
+  78%  { opacity: 1; filter: blur(0); }
+  100% { opacity: 0; filter: blur(4px); transform: translateY(-5px); }
+}
+/* 这块黑底是铺满整屏的，字得跟着屏长大，否则 2560 上就是一小行 */
+@media (min-width: 1600px) {
+  html[data-device="pc"][data-aspect="wide"] .lt-silentword { font-size: 40px; }
+}
+@media (min-width: 2200px) {
+  html[data-device="pc"][data-aspect="wide"] .lt-silentword { font-size: 52px; }
+}
 
 .lt-tip {
   font-size: 12.5px; color: var(--muted); text-align: center;
@@ -6884,6 +7013,7 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
   html[data-device="pc"][data-aspect="wide"] .ms-stat { font-size: 16px; }
   html[data-device="pc"][data-aspect="wide"] :is(.ms-case-opt, .ms-case-cur, .ms-speed-opt) { font-size: 16px; }
   html[data-device="pc"][data-aspect="wide"] .ms-dir-tag { font-size: 16px; }
+  html[data-device="pc"][data-aspect="wide"] .ms-homeword { font-size: 34px; }
   html[data-device="pc"][data-aspect="wide"] .ms-ti { font-size: 16px; }
   html[data-device="pc"][data-aspect="wide"] .ms-head { font-size: 18px; }
   html[data-device="pc"][data-aspect="wide"] .ms-start { font-size: 19px; }
@@ -6973,6 +7103,7 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
   html[data-device="pc"][data-aspect="wide"] .ms-stat { font-size: 18px; }
   html[data-device="pc"][data-aspect="wide"] :is(.ms-case-opt, .ms-case-cur, .ms-speed-opt) { font-size: 18px; }
   html[data-device="pc"][data-aspect="wide"] .ms-dir-tag { font-size: 18px; }
+  html[data-device="pc"][data-aspect="wide"] .ms-homeword { font-size: 40px; }
   html[data-device="pc"][data-aspect="wide"] .ms-ti { font-size: 18px; }
   html[data-device="pc"][data-aspect="wide"] .ms-head { font-size: 20px; }
   html[data-device="pc"][data-aspect="wide"] .ms-start { font-size: 21px; }
@@ -7301,7 +7432,7 @@ html[data-device="pc"][data-aspect="wide"] #unitPicker .picker-head .x {
 
 /* ======================================================
    二十五、彩蛋墙
-   主页底栏「奖牌」按钮 → #toolArchive（逻辑见 js/archive.js）。
+   主页底栏「彩蛋」按钮 → #toolArchive（逻辑见 js/archive.js）。
 
    格子是竖长方形（3:4），上下按 2:1 分：上 2/3 一块圆角图标，
    下 1/3 主标题 + 副标题。未解锁的图标是黑底白问号，
@@ -7384,6 +7515,18 @@ html[data-device="pc"][data-aspect="wide"] #unitPicker .picker-head .x {
    压深一点：卡片只有 52px，浅灰底看着"停用"就够了；墙上的图标有 160px，
    照抄那个浅灰会让白栏杆糊成一片，读不出形状。 */
 .arc-card[data-arc="shatter"] .arc-tile { background: #a9b2c0; }
+/* 欢迎回家：天蓝底白电码 —— 和「异语道破」那张卡同一个色号（#0CBAEF）。
+   摩斯的图标是「点 + 杠」两种上色（点走 fill、杠走 stroke），archive.js
+   克隆时把内联 style 摘掉了，这里按 SVG 的原意补回来。 */
+.arc-card[data-arc="home"] .arc-tile { background: #0CBAEF; }
+.arc-card[data-arc="home"] .arc-tile svg circle { fill: #fff; stroke: none; }
+.arc-card[data-arc="home"] .arc-tile svg path { stroke: #fff; stroke-width: 2.7; }
+/* 群灯俱寂：紫底白灯格 —— 和「关灯游戏」那张卡同色（#6947F5）。
+   那张卡的图标是两组 <g>：四个描线角 + 五个实心格，各自带内联 style 上色。
+   archive.js 克隆时把内联 style 摘掉了，描线组靠 .arc-tile svg 的 stroke 还行，
+   实心组得在这里补回 fill —— 否则九个格子全变成描线空心，读不出"灯亮着"。 */
+.arc-card[data-arc="silent"] .arc-tile { background: #6947F5; }
+.arc-card[data-arc="silent"] .arc-tile svg g:nth-child(2) rect { fill: #fff; stroke: none; }
 /* 未解锁：黑底白问号（整面墙唯一的深色块） */
 .arc-card.is-locked .arc-tile { background: #14161a; }
 
