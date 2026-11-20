@@ -139,6 +139,36 @@ const cvtAuxOmegaEl   = $('#cvtAuxOmega');
 const cvtAuxAreaEl    = $('#cvtAuxArea');
 const cvtAuxOmegaChips = $('#cvtAuxOmegaChips');
 
+/* 通用单套选择辅助栏（pH 温度 Kw / 声压级参考介质） */
+const cvtChoiceAuxEl   = $('#cvtChoiceAux');
+const cvtChoiceHead    = $('#cvtChoiceHead');
+const cvtChoiceLbl     = $('#cvtChoiceLbl');
+const cvtChoiceChips   = $('#cvtChoiceChips');
+
+/** 当前选中的 choice 值（每个类别一个，切类别不重置；换单位不动）。 */
+let cvtChoiceVal = {};
+
+
+/* 比重刻度的标定温度：上下两套（温度值 + 温标 + 物质），见 cvtTempAux* 那节 */
+const cvtTempAuxEl      = $('#cvtTempAux');
+const cvtTempAuxHead    = $('#cvtTempAuxHead');
+const cvtTempSets = {
+  from: {
+    set:    $('#cvtTempFromSet'),
+    title:  $('#cvtTempFromTitle'),
+    val:    $('#cvtTempFromVal'),
+    scale:  $('#cvtTempFromScale'),
+    matter: $('#cvtTempFromMatter'),
+  },
+  to: {
+    set:    $('#cvtTempToSet'),
+    title:  $('#cvtTempToTitle'),
+    val:    $('#cvtTempToVal'),
+    scale:  $('#cvtTempToScale'),
+    matter: $('#cvtTempToMatter'),
+  },
+};
+
 /* 软键盘（数值输入用，键位和取舍见下面 cvtPad 那一节） */
 const cvtPad     = $('#cvtPad');
 const cvtPadKeys = $('#cvtPadKeys');
@@ -266,6 +296,89 @@ const CVT_K_PREFIX = {
      不往表尾堆。补档时按 k 找位置插入，别 append。
    ★ 温度是例外：开尔文的词头条目不带 k（仿射刻度装不下零点偏移），
      系数在上面那个 CVT_K_PREFIX 里，由 temp.toBase / fromBase 现查。 */
+/* 纯水密度（kg/m³）—— 比重刻度换算的参考液体 w 随温度变时用。
+   Kell(1975) 拟合式，0–40 °C 内误差 < 1e-5；60 °F(15.556 °C) 回归到
+   999.016、20 °C 回归到 998.207，正好对上注释里那两个标定水重。
+   ★ 只算**常压纯水**；糖液密度取决于浓度（=读数本身），没有脱离
+   读数的单值曲线，所以「物质」是预填快捷项，w 仍只按温度算。 */
+function cvtWaterDensity(tC) {
+  const t = Math.max(0, Math.min(40, tC));   // 超出拟合区间就夹住，别让高次项爆掉
+  return (999.83952 + 16.945176 * t - 7.9870401e-3 * t * t
+          - 46.170461e-6 * t ** 3 + 105.56302e-9 * t ** 4 - 280.54253e-12 * t ** 5)
+         / (1 + 16.879850e-3 * t);
+}
+/** 温标 → 摄氏度。°F 按 (F−32)×5/9；°C 原样。 */
+function cvtTempToC(v, scale) {
+  return scale === 'F' ? (v - 32) * 5 / 9 : v;
+}
+/** 比重刻度换算用的参考液体密度 w：aux 给了有效温度就按纯水曲线实算，
+ *  否则退回单位自带的标定水重。cvtConvert 会把上下两套 aux 分别传进来。 */
+function cvtDensityW(u, aux) {
+  if (aux && aux.t != null && isFinite(aux.t)) {
+    return cvtWaterDensity(cvtTempToC(aux.t, aux.scale));
+  }
+  return u.sg.w;
+}
+
+
+/* ---------- 三张新卡（声学 / 酸碱度 / 地震）的辅助函数 ----------
+   放在 UNITS 之前：函数声明不能写进对象字面量。 */
+
+/** 声压级的参考声压 p0（Pa）：空气 20 µPa、水下 1 µPa。
+ *  声压级 = 20·log10(p/p0)，换 p0 就是换 0 dB 的锚点。 */
+function cvtSplRef(aux) {
+  return (aux && aux.medium === 'water') ? 1e-6 : 20e-6;
+}
+
+/** 电平的参考电压（V）：dBu/dBm 用 0.7745966692（= √(1mW×600Ω)），dBV 用 1 V。 */
+function cvtLevelRef(id) {
+  return id === 'dbv' ? 1 : 0.7745966691956227;
+}
+
+/** 水的离子积 Kw 表（25 °C = 1.0e-14）。pKw = −log10 Kw。
+ *  数据取自 CRC Handbook 的常用表；中间温度用线性插值，够教学用。 */
+const CVT_KW_TABLE = {
+  0: 1.14e-15, 10: 2.92e-15, 20: 6.81e-15, 25: 1.008e-14,
+  30: 1.47e-14, 40: 2.92e-14, 50: 5.476e-14, 60: 9.6e-14,
+  70: 1.55e-13, 80: 2.5e-13, 90: 3.8e-13, 100: 5.13e-13,
+};
+function cvtKwOf(aux) {
+  const t = aux && aux.temp != null ? Number(aux.temp) : 25;
+  if (CVT_KW_TABLE[t] != null) return CVT_KW_TABLE[t];
+  // 区间内线性插值（温度档都是 10 度整，只有 20/25/30 是 5 度）
+  const ks = Object.keys(CVT_KW_TABLE).map(Number).sort((a, b) => a - b);
+  for (let i = 1; i < ks.length; i++) {
+    if (t >= ks[i - 1] && t <= ks[i]) {
+      const r = (t - ks[i - 1]) / (ks[i] - ks[i - 1]);
+      return CVT_KW_TABLE[ks[i - 1]] * (1 - r) + CVT_KW_TABLE[ks[i]] * r;
+    }
+  }
+  return CVT_KW_TABLE[25];
+}
+
+/** 地震能量 E（J）的单位 → 焦耳系数。E 与 M0 是不同物理量，必须分开查表。 */
+const CVT_QUAKE_E = {
+  e: 1, j: 1, kj2: 1e3, mj3: 1e6, gj: 1e9, tj: 1e12, pj: 1e15,
+};
+
+/** 烈度 → 典型 Mw（麦氏 MMI / 中国烈度 CSIS，取各级别的中值）。 */
+const CVT_INTENSITY_MMI = [2, 2.5, 3.2, 4, 4.7, 5.5, 6.3, 7, 7.7, 8.4, 9.1, 9.9];
+const CVT_INTENSITY_CSIS = [2, 2.6, 3.3, 4.1, 4.9, 5.7, 6.5, 7.2, 7.9, 8.6, 9.3, 10];
+function cvtIntensityToMw(v, scale) {
+  const arr = scale === 'csis' ? CVT_INTENSITY_CSIS : CVT_INTENSITY_MMI;
+  const i = Math.max(1, Math.min(12, Math.round(v))) - 1;
+  return arr[i];
+}
+function cvtMwToIntensity(v, scale) {
+  const arr = scale === 'csis' ? CVT_INTENSITY_CSIS : CVT_INTENSITY_MMI;
+  let best = 0, d = Infinity;
+  for (let i = 0; i < arr.length; i++) {
+    const dd = Math.abs(arr[i] - v);
+    if (dd < d) { d = dd; best = i; }
+  }
+  return best + 1;
+}
+
 const UNITS = {
   /* ---------- 长度（基准：米） ----------
      四组按「公制 → 市制 → 英制 → 天文」排：
@@ -1841,6 +1954,7 @@ const UNITS = {
       ...cvtGroup('比重刻度', [
         {
           id: 'api', label: 'API度', sym: '°API',
+          cal: { t: 60, scale: 'F', matter: 'water' },
           sg: {
             to: v => 141.5 / (v + 131.5),
             from: sg => 141.5 / sg - 131.5,
@@ -1854,6 +1968,7 @@ const UNITS = {
            于是分了两个刻度。两套的符号都是 °Bé，靠中文名（重/轻）区分。 */
         {
           id: 'be', label: '重波美度', sym: '°Bé',
+          cal: { t: 60, scale: 'F', matter: 'water' },
           sg: {
             to: v => 145 / (145 - v),
             from: sg => 145 - 145 / sg,
@@ -1862,6 +1977,7 @@ const UNITS = {
         },
         {
           id: 'bel', label: '轻波美度', sym: '°Bé',
+          cal: { t: 60, scale: 'F', matter: 'water' },
           sg: {
             to: v => 140 / (v + 130),
             from: sg => 140 / sg - 130,
@@ -1870,6 +1986,7 @@ const UNITS = {
         },
         {
           id: 'tw', label: '特威德尔度', sym: '°Tw',
+          cal: { t: 60, scale: 'F', matter: 'water' },
           sg: {
             to: v => 1 + v / 200,
             from: sg => (sg - 1) * 200,
@@ -1878,6 +1995,7 @@ const UNITS = {
         },
         {
           id: 'plato', label: '柏拉图度', sym: '°P',
+          cal: { t: 20, scale: 'C', matter: 'sugar' },
           sg: {
             to: v => 1 + v / (258.6 - 0.8795 * v),
             from: sg => { const x = sg - 1; return 258.6 * x / (1 + 0.8795 * x); },
@@ -1890,6 +2008,7 @@ const UNITS = {
            后第五位 —— 两套刻度本来就同源，Bx ⇄ °P 基本 1:1（见上面的长注释）。 */
         {
           id: 'brix', label: '白利度', sym: '°Bx',
+          cal: { t: 20, scale: 'C', matter: 'sugar' },
           sg: {
             to: v => 1 + v / (258.6 - v * 227.1 / 258.2),
             from: sg => { const x = sg - 1; return 258.6 * x / (1 + 227.1 / 258.2 * x); },
@@ -1904,6 +2023,7 @@ const UNITS = {
            别拿「1 °Bx = 5 °Oe」这种简化去推，量程一大就偏。 */
         {
           id: 'oech', label: '欧克斯勒度', sym: '°Oe',
+          cal: { t: 20, scale: 'C', matter: 'sugar' },
           sg: {
             to: v => 1 + v / 1000,
             from: sg => (sg - 1) * 1000,
@@ -1912,17 +2032,35 @@ const UNITS = {
         },
       ]),
     ],
-    /** 该单位的值 → 千克/立方米（普通单位乘 k，刻度单位先翻成比重再乘水重） */
-    toBase(v, id) {
+    /** 该单位的值 → 千克/立方米（普通单位乘 k，刻度单位先翻成比重再乘水重）。
+     *  aux = { t, scale, matter }：给了温度就按实算水重，没给就用刻度自带的
+     *  标定水重 w（保持旧调用链不变）。matter 不参与计算，w 只跟温度走。 */
+    toBase(v, id, aux) {
       const u = this.units.find(x => x.id === id);
       if (!u) return v;
-      return u.sg ? u.sg.to(v) * u.sg.w : v * u.k;
+      if (!u.sg) return v * u.k;
+      const w = cvtDensityW(u, aux);
+      return u.sg.to(v) * w;
     },
     /** 千克/立方米 → 该单位的值 */
-    fromBase(v, id) {
+    fromBase(v, id, aux) {
       const u = this.units.find(x => x.id === id);
       if (!u) return v;
-      return u.sg ? u.sg.from(v / u.sg.w) : v / u.k;
+      if (!u.sg) return v / u.k;
+      const w = cvtDensityW(u, aux);
+      return u.sg.from(v / w);
+    },
+    /* 这套刻度的参考液体密度：给了有效温度就按纯水曲线实算，否则退回标定值。
+       ★ 上框 / 下框各传各的 aux —— 两边温度不同时，中间用 kg/m³ 衔接，
+       不要求一致（见 cvtConvert 对 aux.from / aux.to 的拆分）。 */
+    aux: {
+      from: { label: '原刻度的标定条件' },
+      to:   { label: '目标刻度的标定条件' },
+      matterNames: { water: '水', sugar: '糖液' },
+      presets: {
+        water: { t: 60, scale: 'F' },
+        sugar: { t: 20, scale: 'C' },
+      },
     },
   },
 
@@ -2962,6 +3100,470 @@ const UNITS = {
       return v / u.k;
     },
   },
+  /* ================= 声学 =================
+     四个量各占一张子卡。dB 是**对数比**，不是线性刻度：
+       dB SPL = 20·log10(p/p0)，p0 = 20 µPa（空气）/ 1 µPa（水下）
+       dB IL  = 10·log10(I/I0)，I0 = 1 pW/m²
+       dB SWL = 10·log10(P/P0)，P0 = 1 pW
+     每个量的主单位是对应的 Pa / W/m² / W —— dB 与线性值互转，
+     dB 与 dB 之间也互转（基准相同），所以放同一张卡是严格的。
+     ★ dB(A) 带了 A 计权，要从频谱算，这里给不了单一 Pa 值 → 只在 note 里说明。
+     ★ 电平单独一张：dBu(0.775V) / dBV(1V) / dBm(1mW@600Ω) 都是电压比，
+       按 600Ω 约定 dBm 与 dBu 同值（1mW@600Ω = 0.7746V）—— 同值并存。
+     ★ 对数单位给的 k 只是**排序代理**（asc 档要有个大小），
+       实际换算一律走各自的 toBase/fromBase，k 不参与计算。 */
+  acoustics: {
+    name: '声学',
+    note: '注：分贝是对数比；dB(A) 需频谱计权，本表只收未计权声级',
+    kids: ['spl', 'sil', 'swl', 'level'],
+  },
+
+  /* 声压级：基准 = 帕（Pa），dB SPL 参考声压可选空气 20µPa / 水下 1µPa */
+  spl: {
+    name: '声压级',
+    parent: 'acoustics',
+    glyph: 'dB',
+    from: 'db', to: 'pa',
+    choice: {
+      key: 'medium', label: '参考介质', default: 'air',
+      options: [
+        { v: 'air',   label: '空气 20 µPa' },
+        { v: 'water', label: '水下 1 µPa' },
+      ],
+    },
+    units: [
+      { id: 'db', label: '分贝（声压级）', sym: 'dB SPL', k: 20e-6, needChoice: 1 },
+      /* @break 分贝对数单位 → 线性词头链 */
+      { id: 'qpa', label: '亏帕', sym: 'qPa', k: 1e-30 },
+      { id: 'rpa', label: '柔帕', sym: 'rPa', k: 1e-27 },
+      { id: 'ypa', label: '幺帕', sym: 'yPa', k: 1e-24 },
+      { id: 'zpa', label: '仄帕', sym: 'zPa', k: 1e-21 },
+      { id: 'apa', label: '阿帕', sym: 'aPa', k: 1e-18 },
+      { id: 'fpa', label: '飞帕', sym: 'fPa', k: 1e-15 },
+      { id: 'ppa', label: '皮帕', sym: 'pPa', k: 1e-12 },
+      { id: 'npa', label: '纳帕', sym: 'nPa', k: 1e-9 },
+      { id: 'upa', label: '微帕', sym: 'µPa', k: 1e-6 },
+      { id: 'mpa2', label: '毫帕', sym: 'mPa', k: 1e-3 },
+      { id: 'cpa', label: '厘帕', sym: 'cPa', k: 0.01 },
+      { id: 'dpa', label: '分帕', sym: 'dPa', k: 0.1 },
+      { id: 'pa', label: '帕斯卡', sym: 'Pa', k: 1 },
+      { id: 'dapa', label: '十帕', sym: 'daPa', k: 10 },
+      { id: 'hpa', label: '百帕', sym: 'hPa', k: 100 },
+      { id: 'kpa', label: '千帕', sym: 'kPa', k: 1e3 },
+      { id: 'Mpa', label: '兆帕', sym: 'MPa', k: 1e6 },
+      { id: 'Gpa', label: '吉帕', sym: 'GPa', k: 1e9 },
+      { id: 'Tpa', label: '太帕', sym: 'TPa', k: 1e12 },
+      { id: 'Ppa', label: '拍帕', sym: 'PPa', k: 1e15 },
+      { id: 'Epa', label: '艾帕', sym: 'EPa', k: 1e18 },
+      { id: 'Zpa', label: '泽帕', sym: 'ZPa', k: 1e21 },
+      { id: 'Ypa', label: '尧帕', sym: 'YPa', k: 1e24 },
+      { id: 'Rpa', label: '容帕', sym: 'RPa', k: 1e27 },
+      { id: 'Qpa', label: '昆帕', sym: 'QPa', k: 1e30 },
+    ],
+    toBase(v, id, aux) {
+      if (id === 'db') {
+        const p0 = cvtSplRef(aux) * Math.pow(10, v / 20);
+        return p0;
+      }
+      const u = this.units.find(x => x.id === id);
+      return u ? v * u.k : v;
+    },
+    fromBase(v, id, aux) {
+      if (id === 'db') {
+        const p0 = cvtSplRef(aux);
+        return p0 > 0 ? 20 * Math.log10(v / p0) : 0;
+      }
+      const u = this.units.find(x => x.id === id);
+      return u ? v / u.k : v;
+    },
+  },
+
+  /* 声强级：基准 = W/m²（复合单位，不铺词头链，只留几个常用的） */
+  sil: {
+    name: '声强级',
+    parent: 'acoustics',
+    glyph: 'dB',
+    from: 'db', to: 'wm2',
+    units: [
+      { id: 'db', label: '分贝（声强级）', sym: 'dB IL', k: 1e-12 },
+      /* @break 分贝对数单位 → 线性词头链 */
+      { id: 'pwm2', label: '皮瓦每平方米', sym: 'pW/m²', k: 1e-12 },
+      { id: 'nwm2', label: '纳瓦每平方米', sym: 'nW/m²', k: 1e-9 },
+      { id: 'uwm2', label: '微瓦每平方米', sym: 'µW/m²', k: 1e-6 },
+      { id: 'mwm2', label: '毫瓦每平方米', sym: 'mW/m²', k: 1e-3 },
+      { id: 'uwcm2', label: '微瓦每平方厘米', sym: 'µW/cm²', k: 1e-2 },
+      { id: 'wm2', label: '瓦每平方米', sym: 'W/m²', k: 1 },
+    ],
+    toBase(v, id) {
+      if (id === 'db') return 1e-12 * Math.pow(10, v / 10);
+      const u = this.units.find(x => x.id === id);
+      return u ? v * u.k : v;
+    },
+    fromBase(v, id) {
+      if (id === 'db') return v > 0 ? 10 * Math.log10(v / 1e-12) : 0;
+      const u = this.units.find(x => x.id === id);
+      return u ? v / u.k : v;
+    },
+  },
+
+  /* 声功率级：基准 = 瓦（W），词头链 24 档 */
+  swl: {
+    name: '声功率级',
+    parent: 'acoustics',
+    glyph: 'dB',
+    from: 'db', to: 'w',
+    units: [
+      { id: 'db', label: '分贝（声功率级）', sym: 'dB SWL', k: 1e-12 },
+      /* @break 分贝对数单位 → 线性词头链 */
+      { id: 'qw', label: '亏瓦', sym: 'qW', k: 1e-30 },
+      { id: 'rw', label: '柔瓦', sym: 'rW', k: 1e-27 },
+      { id: 'yw', label: '幺瓦', sym: 'yW', k: 1e-24 },
+      { id: 'zw', label: '仄瓦', sym: 'zW', k: 1e-21 },
+      { id: 'aw', label: '阿瓦', sym: 'aW', k: 1e-18 },
+      { id: 'fw', label: '飞瓦', sym: 'fW', k: 1e-15 },
+      { id: 'pw', label: '皮瓦', sym: 'pW', k: 1e-12 },
+      { id: 'nw', label: '纳瓦', sym: 'nW', k: 1e-9 },
+      { id: 'uw', label: '微瓦', sym: 'µW', k: 1e-6 },
+      { id: 'mw', label: '毫瓦', sym: 'mW', k: 1e-3 },
+      { id: 'cw', label: '厘瓦', sym: 'cW', k: 0.01 },
+      { id: 'dw', label: '分瓦', sym: 'dW', k: 0.1 },
+      { id: 'w', label: '瓦特', sym: 'W', k: 1 },
+      { id: 'daw', label: '十瓦', sym: 'daW', k: 10 },
+      { id: 'hw', label: '百瓦', sym: 'hW', k: 100 },
+      { id: 'kw', label: '千瓦', sym: 'kW', k: 1e3 },
+      { id: 'Mw', label: '兆瓦', sym: 'MW', k: 1e6 },
+      { id: 'Gw', label: '吉瓦', sym: 'GW', k: 1e9 },
+      { id: 'Tw', label: '太瓦', sym: 'TW', k: 1e12 },
+      { id: 'Pw', label: '拍瓦', sym: 'PW', k: 1e15 },
+      { id: 'Ew', label: '艾瓦', sym: 'EW', k: 1e18 },
+      { id: 'Zw', label: '泽瓦', sym: 'ZW', k: 1e21 },
+      { id: 'Yw', label: '尧瓦', sym: 'YW', k: 1e24 },
+      { id: 'Rw', label: '容瓦', sym: 'RW', k: 1e27 },
+      { id: 'Qw', label: '昆瓦', sym: 'QW', k: 1e30 },
+    ],
+    toBase(v, id) {
+      if (id === 'db') return 1e-12 * Math.pow(10, v / 10);
+      const u = this.units.find(x => x.id === id);
+      return u ? v * u.k : v;
+    },
+    fromBase(v, id) {
+      if (id === 'db') return v > 0 ? 10 * Math.log10(v / 1e-12) : 0;
+      const u = this.units.find(x => x.id === id);
+      return u ? v / u.k : v;
+    },
+  },
+
+  /* 电平（音频）：基准 = 伏（V）。dBu/dBV/dBm 都是电压比。
+     dBu 参考 0.775 V，dBV 参考 1 V，dBm 按 600Ω 约定 = 0.7746 V。
+     ★ 1 mW@600Ω = √(0.001×600) = 0.7745966692 V，所以 dBm 与 dBu 严格同值。 */
+  level: {
+    name: '电平',
+    parent: 'acoustics',
+    glyph: 'dB',
+    from: 'dbu', to: 'v',
+    note: '注：dBm 按 600 Ω 负载约定，故与 dBu 同值；非 600 Ω 时需另算',
+    units: [
+      { id: 'dbu', label: '分贝（非平衡）', sym: 'dBu', k: 0.7745966692 },
+      { id: 'dbm', label: '分贝毫瓦', sym: 'dBm', k: 0.7745966692 },
+      { id: 'dbv', label: '分贝伏', sym: 'dBV', k: 1 },
+      /* @break 电平 → 电压词头链 */
+      { id: 'qv', label: '亏伏', sym: 'qV', k: 1e-30 },
+      { id: 'rv', label: '柔伏', sym: 'rV', k: 1e-27 },
+      { id: 'yv', label: '幺伏', sym: 'yV', k: 1e-24 },
+      { id: 'zv', label: '仄伏', sym: 'zV', k: 1e-21 },
+      { id: 'av', label: '阿伏', sym: 'aV', k: 1e-18 },
+      { id: 'fv', label: '飞伏', sym: 'fV', k: 1e-15 },
+      { id: 'pv', label: '皮伏', sym: 'pV', k: 1e-12 },
+      { id: 'nv', label: '纳伏', sym: 'nV', k: 1e-9 },
+      { id: 'uv', label: '微伏', sym: 'µV', k: 1e-6 },
+      { id: 'mv', label: '毫伏', sym: 'mV', k: 1e-3 },
+      { id: 'cv', label: '厘伏', sym: 'cV', k: 0.01 },
+      { id: 'dv', label: '分伏', sym: 'dV', k: 0.1 },
+      { id: 'v', label: '伏特', sym: 'V', k: 1 },
+      { id: 'dav', label: '十伏', sym: 'daV', k: 10 },
+      { id: 'hv', label: '百伏', sym: 'hV', k: 100 },
+      { id: 'kv', label: '千伏', sym: 'kV', k: 1e3 },
+      { id: 'Mv', label: '兆伏', sym: 'MV', k: 1e6 },
+      { id: 'Gv', label: '吉伏', sym: 'GV', k: 1e9 },
+      { id: 'Tv', label: '太伏', sym: 'TV', k: 1e12 },
+      { id: 'Pv', label: '拍伏', sym: 'PV', k: 1e15 },
+      { id: 'Ev', label: '艾伏', sym: 'EV', k: 1e18 },
+      { id: 'Zv', label: '泽伏', sym: 'ZV', k: 1e21 },
+      { id: 'Yv', label: '尧伏', sym: 'YV', k: 1e24 },
+      { id: 'Rv', label: '容伏', sym: 'RV', k: 1e27 },
+      { id: 'Qv', label: '昆伏', sym: 'QV', k: 1e30 },
+    ],
+    toBase(v, id) {
+      if (id === 'dbu' || id === 'dbm' || id === 'dbv') {
+        return cvtLevelRef(id) * Math.pow(10, v / 20);
+      }
+      const u = this.units.find(x => x.id === id);
+      return u ? v * u.k : v;
+    },
+    fromBase(v, id) {
+      if (id === 'dbu' || id === 'dbm' || id === 'dbv') {
+        const r = cvtLevelRef(id);
+        return r > 0 ? 20 * Math.log10(v / r) : 0;
+      }
+      const u = this.units.find(x => x.id === id);
+      return u ? v / u.k : v;
+    },
+  },
+
+  /* ================= 酸碱度 =================
+     pH = −log10[H⁺]，基准 = 氢离子浓度（mol/L）。
+     pOH = pKw − pH，pKw = −log10 Kw 随温度变（Kw 表见 CVT_KW）。
+     ★ 只有 pOH 参与时才需要选温度（pH↔[H⁺] 与温度无关）—— 由 needChoice 决定。 */
+  ph: {
+    name: '酸碱度',
+    glyph: 'pH',
+    from: 'ph', to: 'mol_l',
+    choice: {
+      key: 'temp', label: '温度（Kw）', default: '25',
+      options: [
+        { v: '0', label: '0 °C' }, { v: '10', label: '10 °C' },
+        { v: '20', label: '20 °C' }, { v: '25', label: '25 °C' },
+        { v: '30', label: '30 °C' }, { v: '40', label: '40 °C' },
+        { v: '50', label: '50 °C' }, { v: '60', label: '60 °C' },
+        { v: '70', label: '70 °C' }, { v: '80', label: '80 °C' },
+        { v: '90', label: '90 °C' }, { v: '100', label: '100 °C' },
+      ],
+    },
+    units: [
+      { id: 'ph', label: 'pH', k: 1 },
+      { id: 'poh', label: 'pOH', k: 1, needChoice: 1 },
+      /* @break 酸碱度 → 浓度链 */
+      { id: 'pmol_l', label: '皮摩尔每升', sym: 'pmol/L', k: 1e-12 },
+      { id: 'nmol_l', label: '纳摩尔每升', sym: 'nmol/L', k: 1e-9 },
+      { id: 'umol_l', label: '微摩尔每升', sym: 'µmol/L', k: 1e-6 },
+      { id: 'mmol_l', label: '毫摩尔每升', sym: 'mmol/L', k: 1e-3 },
+      { id: 'cmol_l', label: '厘摩尔每升', sym: 'cmol/L', k: 0.01 },
+      { id: 'mol_l', label: '摩尔每升', sym: 'mol/L', k: 1 },
+      { id: 'kmol_l', label: '千摩尔每升', sym: 'kmol/L', k: 1e3 },
+    ],
+    toBase(v, id, aux) {
+      if (id === 'ph') return Math.pow(10, -v);
+      if (id === 'poh') {
+        const kw = cvtKwOf(aux);
+        return kw * Math.pow(10, v);   // [H⁺] = Kw / [OH⁻] = Kw × 10^pOH
+      }
+      const u = this.units.find(x => x.id === id);
+      return u ? v * u.k : v;
+    },
+    fromBase(v, id, aux) {
+      if (id === 'ph') return v > 0 ? -Math.log10(v) : 0;
+      if (id === 'poh') {
+        const kw = cvtKwOf(aux);
+        return v > 0 ? Math.log10(v / kw) : 0;
+      }
+      const u = this.units.find(x => x.id === id);
+      return u ? v / u.k : v;
+    },
+  },
+
+  /* ================= 地震震级 =================
+     基准 = 矩震级 Mw（无量纲）。严格关系只有两条（Hanks & Kanamori）：
+       Mw = (2/3)·log10(M0) − 6.07       M0 单位 N·m
+       log10 E = 1.5·Mw + 4.8            E 单位 J（表观应力 ~3 MPa）
+     ML / Ms / mb 之间是**经验回归**，各台网公式不同 —— 这里取常用近似：
+       Ms ≈ Mw（6 级以上）；mb ≈ 0.67·Mw + 2.07；ML ≈ Mw（7 级以下）
+     ★ 烈度（MMI / 中国烈度）**不是震级**：是地面 shaking 的定性分级，
+       同震级因深度/距离/场地可差好几度 —— 只做典型值对照，不做严格换算。 */
+  quake: {
+    name: '地震',
+    glyph: 'Mw',
+    from: 'mw', to: 'nm',
+    note: '注：烈度≠震级，MMI / 中国烈度只做典型值对照；ML/Ms/mb 为经验近似',
+    units: [
+      { id: 'mmi2',      label: '麦氏烈度',       sym: 'MMI',  k: 1 },
+      { id: 'csis',      label: '中国烈度',       sym: 'CSIS', k: 1 },
+      { id: 'ml',        label: '里氏震级',       sym: 'ML',   k: 1 },
+      { id: 'mb',        label: '体波震级',       sym: 'mb',   k: 1 },
+      { id: 'ms',        label: '面波震级',       sym: 'Ms',   k: 1 },
+      { id: 'mw',        label: '矩震级',         sym: 'Mw',   k: 1 },
+      { id: 'j',         label: '焦耳',           sym: 'J',    k: 1 },
+      { id: 'kj2',       label: '千焦',           sym: 'kJ',   k: 1e3 },
+      { id: 'mj3',       label: '兆焦',           sym: 'MJ',   k: 1e6 },
+      { id: 'gj',        label: '吉焦',           sym: 'GJ',   k: 1e9 },
+      { id: 'tj',        label: '太焦',           sym: 'TJ',   k: 1e12 },
+      { id: 'pj',        label: '拍焦',           sym: 'PJ',   k: 1e15 },
+      /* @break 能量 E → 地震矩 M0 */
+      /* 地震矩 M0（N·m），与能量 J 是不同物理量 */
+      { id: 'nm',        label: '牛·米',          sym: 'N·m',  k: 1 },
+      { id: 'knm',       label: '千牛·米',        sym: 'kN·m', k: 1e3 },
+      { id: 'mnm',       label: '兆牛·米',        sym: 'MN·m', k: 1e6 },
+      { id: 'gnm',       label: '吉牛·米',        sym: 'GN·m', k: 1e9 },
+      { id: 'tnm',       label: '太牛·米',        sym: 'TN·m', k: 1e12 },
+      { id: 'pnm',       label: '拍牛·米',        sym: 'PN·m', k: 1e15 },
+      { id: 'enm',       label: '艾牛·米',        sym: 'EN·m', k: 1e18 },
+    ],
+    toBase(v, id) {
+      if (id === 'mw') return v;
+      if (id === 'm0') return v > 0 ? (2 / 3) * Math.log10(v) - 6.07 : -99;
+      if (id === 'e')  return v > 0 ? (Math.log10(v) - 4.8) / 1.5 : -99;
+      if (id === 'ms') return v;
+      if (id === 'ml') return v;
+      if (id === 'mb') return (v - 2.07) / 0.67;
+      if (id === 'mmi2') return cvtIntensityToMw(v, 'mmi');
+      if (id === 'csis') return cvtIntensityToMw(v, 'csis');
+      const u = this.units.find(x => x.id === id);
+      if (!u) return v;
+      if (CVT_QUAKE_E[id]) {
+        const j = v * u.k;
+        return j > 0 ? (Math.log10(j) - 4.8) / 1.5 : -99;
+      }
+      const m0 = v * u.k;
+      return m0 > 0 ? (2 / 3) * Math.log10(m0) - 6.07 : -99;
+    },
+    fromBase(v, id) {
+      if (id === 'mw') return v;
+      if (id === 'm0') return Math.pow(10, 1.5 * (v + 6.07));
+      if (id === 'e')  return Math.pow(10, 4.8 + 1.5 * v);
+      if (id === 'ms') return v;
+      if (id === 'ml') return v;
+      if (id === 'mb') return 0.67 * v + 2.07;
+      if (id === 'mmi2') return cvtMwToIntensity(v, 'mmi');
+      if (id === 'csis') return cvtMwToIntensity(v, 'csis');
+      const u = this.units.find(x => x.id === id);
+      if (!u) return v;
+      if (CVT_QUAKE_E[id]) return Math.pow(10, 4.8 + 1.5 * v) / u.k;
+      return Math.pow(10, 1.5 * (v + 6.07)) / u.k;
+    },
+  },
+
+
+/* 语义排序(fam)映射表：仅列有制式区分的量；sem 档按 FAM_ORDER 分段、段内数值升序。
+   生成脚本 .build/gen-fam-map.py；勿手改。其他量无表 → sem 原样返回。 */
+};
+const UNIT_FAM = {
+  length: {
+    planck:'普朗克', qm:'SI米', rm:'SI米', ym:'SI米', zm:'SI米', am:'SI米',
+    fm:'SI米', pm:'SI米', bohr:'普朗克', ang:'SI米', nm:'SI米', um:'SI米',
+    cmm:'SI米', dmm:'SI米', mm:'SI米', cm:'SI米', dm:'SI米', m:'SI米',
+    dam:'SI米', hm:'SI米', km:'SI米', Mm:'SI米', Gm:'SI米', Tm:'SI米',
+    Pm:'SI米', Em:'SI米', fen:'市制', cun:'市制', fu:'市制', zhi:'市制',
+    chi:'市制', kui:'市制', shizhi:'市制', ji:'市制', bu:'市制', ren:'市制',
+    xun:'市制', gui:'市制', yan:'市制', zhang:'市制', chang:'市制', zhiniao:'市制',
+    yin:'市制', li:'市制', gongli:'公制', twip:'其他', thou:'其他', px:'其他',
+    pt:'其他', pica:'其他', in:'英制', link:'英制', span:'英制', ft:'英制',
+    yd:'英制', fath:'英制', rod:'英制', chain:'英制', furlong:'英制', mi:'英制',
+    nmi:'其他', au:'宇宙级', ly:'宇宙级', pc:'宇宙级', kpc:'宇宙级', Zm:'SI米',
+    Mpc:'宇宙级', Ym:'SI米', Rm:'SI米', Qm:'SI米',
+  },
+  area: {
+    planck2:'普朗克', ym2:'SI米', zm2:'SI米', am2:'SI米', fm2:'SI米', barn:'公制',
+    pm2:'SI米', bohr2:'普朗克', ang2:'SI米', nm2:'SI米', um2:'SI米', cmm2:'SI米',
+    dmm2:'SI米', mm2:'SI米', cm2:'SI米', dm2:'SI米', m2:'SI米', km2:'SI米',
+    Mm2:'SI米', Gm2:'SI米', Tm2:'SI米', Pm2:'SI米', Em2:'SI米', are:'公制',
+    mu:'市制', ha:'公制', qing:'市制', fen2:'市制', cun2:'市制', fu2:'市制',
+    zhi2:'市制', chi2:'市制', kui2:'市制', shizhi2:'市制', ji2:'市制', bu2:'市制',
+    ren2:'市制', xun2:'市制', gui2:'市制', yan2:'市制', zhang2:'市制', chang2:'市制',
+    zhiniao2:'市制', yin2:'市制', li2:'市制', gongli2:'公制', jing:'市制', yi:'市制',
+    qiu:'市制', dian:'市制', cheng:'市制', xian:'市制', du:'市制', jpshaku:'日制',
+    jpgou:'日制', jpbu:'日制', tsubo:'日制', krpy:'韩制', taihao:'台制', taili:'台制',
+    jpmu:'日制', krmu:'韩制', taifen:'台制', tan:'市制', taijia:'台制', chou:'市制',
+    twip2:'其他', mil2:'其他', thou2:'其他', px2:'其他', pt2:'其他', pica2:'其他',
+    in2:'英制', link2:'英制', span2:'英制', ft2:'英制', yd2:'英制', fath2:'英制',
+    rod2:'英制', chain2:'英制', rood:'英制', acre:'英制', furlong2:'英制', hide:'英制',
+    limen:'英制', mi2:'其他', section:'英制', nmi2:'其他', township:'英制', au2:'宇宙级',
+    ly2:'宇宙级', pc2:'宇宙级', kpc2:'宇宙级', Mpc2:'宇宙级',
+  },
+  volume: {
+    planck3:'普朗克', ym3:'SI米', zm3:'SI米', am3:'SI米', fm3:'SI米', pm3:'SI米',
+    bohr3:'普朗克', ang3:'SI米', nm3:'SI米', um3:'SI米', cmm3:'SI米', twip3:'其他',
+    thou3:'其他', dmm3:'SI米', px3:'其他', pt3:'其他', mm3:'SI米', fen3:'市制',
+    pica3:'其他', cm3:'SI米', cc:'公制', in3:'英制', cun3:'市制', dm3:'SI米',
+    bdft:'英制', fu3:'市制', link3:'英制', span3:'英制', zhi3:'市制', ft3:'英制',
+    chi3:'市制', yd3:'英制', m3:'SI米', kui3:'市制', shizhi3:'市制', ji3:'市制',
+    regton:'英制', fath3:'英制', bu3:'市制', ren3:'市制', xun3:'市制', gui3:'市制',
+    yan3:'市制', zhang3:'市制', rod3:'英制', chang3:'市制', zhiniao3:'市制', acreft:'英制',
+    chain3:'英制', yin3:'市制', furlong3:'英制', li3:'市制', km3:'SI米', gongli3:'公制',
+    mi3:'英制', nmi3:'其他', Mm3:'SI米', Gm3:'SI米', au3:'宇宙级', Tm3:'SI米',
+    Pm3:'SI米', ly3:'宇宙级', pc3:'宇宙级', Em3:'SI米', kpc3:'宇宙级', Mpc3:'宇宙级',
+    fl:'SI米', pl:'SI米', nl:'SI米', ul:'SI米', gt:'市制', minimuk:'英制',
+    minimus:'美制', guizhi:'市制', ml:'SI米', cuo:'市制', fldruk:'英制', fldrus:'美制',
+    tsp:'美制', cl:'SI米', shao:'市制', tbsp:'美制', jpshaku:'日制', flozuk:'英制',
+    flozus:'美制', ge:'市制', dl:'SI米', gius:'美制', giuk:'英制', jpgou:'日制',
+    cupus:'美制', cupuk:'英制', ptus:'美制', ptdrus:'美制', ptuk:'英制', qtus:'美制',
+    l:'SI米', qtdrus:'美制', qtuk:'英制', jpsho:'日制', galus:'美制', qidou:'其他',
+    galusdry:'美制', galuk:'英制', peckus:'美制', peckuk:'英制', dou:'市制', qiqu:'其他',
+    jpto:'日制', bushelus:'美制', busheluk:'英制', firkin:'美制', hu:'市制', qifu:'其他',
+    shi:'市制', hl:'SI米', bbldry:'美制', bblbeer:'美制', bbl:'美制', bbluk:'英制',
+    jpkoku:'日制', hogshead:'美制', qizhong:'其他', kl:'SI米',
+  },
+  mass: {
+    qg:'SI米', rg:'SI米', yg:'SI米', u:'公制', Da:'公制', zg:'SI米',
+    ag:'SI米', fg:'SI米', pg:'SI米', ng:'SI米', ug:'SI米', planck_m:'普朗克',
+    mg:'SI米', cg:'SI米', dg:'SI米', g:'SI米', dag:'SI米', hg:'SI米',
+    kg:'SI米', gongjin:'公制', q:'公制', t:'SI米', Mg:'SI米', kt:'SI米',
+    Gg:'SI米', mtt:'SI米', ct:'公制', zhu:'市制', qian:'市制', zi:'市制',
+    liang:'市制', jin:'市制', yi:'市制', jun:'市制', dan:'市制', sijin:'市制',
+    siliang:'市制', mina:'市制', talent:'市制', gr:'美制', oz:'美制', ozt:'美制',
+    lb:'美制', st:'英制', qr:'美制', slug:'美制', shcwt:'美制', cwt:'英制',
+    uston:'美制', ukton:'英制', pood:'美制', Tg:'SI米', Pg:'SI米', Eg:'SI米',
+    Zg:'SI米', Yg:'SI米', Rg:'SI米', mearth:'宇宙级', Qg:'SI米', mjup:'宇宙级',
+    msun:'宇宙级',
+  },
+  time: {
+    planck:'普朗克', qs:'SI米', rs:'SI米', ys:'SI米', zs:'SI米', as:'SI米',
+    fs:'SI米', ps:'SI米', ns:'SI米', shake:'其他', us:'SI米', ms:'SI米',
+    cs:'SI米', ds:'SI米', s:'SI米', das:'SI米', min:'其他', hs:'SI米',
+    ke:'市制', ks:'SI米', h:'其他', shichen:'市制', geng:'市制', sday:'其他',
+    d:'其他', wk:'其他', xun:'市制', Ms:'SI米', fort:'其他', smon:'其他',
+    mon28:'其他', mon29:'其他', mon29l:'其他', synmon:'其他', mon:'其他', qtr:'其他',
+    yr:'其他', tryr:'其他', jyr:'其他', syr:'其他', yrl:'其他', dec:'其他',
+    saros:'其他', Gs:'SI米', cen:'其他', mln:'其他', mil2:'其他', Ts:'SI米',
+    Ps:'SI米', hubble:'宇宙级', Es:'SI米', Zs:'SI米', Ys:'SI米', Rs:'SI米',
+    Qs:'SI米',
+  },
+  power: {
+    qw:'SI米', rw:'SI米', yw:'SI米', zw:'SI米', aw:'SI米', fw:'SI米',
+    pw:'SI米', nw:'SI米', ergs:'其他', uw:'SI米', mw:'SI米', cw:'SI米',
+    dw:'SI米', btuh:'美制', w:'SI米', va:'其他', var:'其他', kcah:'其他',
+    ftlbs:'美制', cals:'其他', daw:'SI米', hw:'SI米', ps:'公制', hp:'美制',
+    kw:'SI米', rtu:'美制', rtm:'公制', rtj:'其他', rti:'英制', bhp:'美制',
+    megaw:'SI米', gw:'SI米', Tw:'SI米', Pw:'SI米', Ew:'SI米', Zw:'SI米',
+    Yw:'SI米', Rw:'SI米', Qw:'SI米', planck_pw:'普朗克',
+  },
+  force: {
+    qn:'SI米', rn:'SI米', yn:'SI米', zn:'SI米', an:'SI米', fn:'SI米',
+    pn:'SI米', nn:'SI米', un:'SI米', dyn:'公制', mn:'SI米', gf:'市制',
+    cn:'SI米', dn:'SI米', pdl:'美制', ozf:'美制', liangf:'市制', n:'SI米',
+    lbf:'美制', jinf:'市制', kgf:'市制', dan:'SI米', hn:'SI米', slugf:'美制',
+    shcwtf:'美制', cwtf:'英制', kn:'SI米', kip:'美制', tonfs:'美制', tf:'市制',
+    tonfl:'英制', mnn:'SI米', Gn:'SI米', Tn:'SI米', Pn:'SI米', En:'SI米',
+    Zn:'SI米', Yn:'SI米', Rn:'SI米', Qn:'SI米', planck_f:'普朗克',
+  },
+  speed: {
+    mms:'公制', ftmin:'英制', cms:'公制', mmin:'公制', ins:'英制', kmh:'公制',
+    fts:'英制', mph:'英制', kn:'其他', yds:'英制', ms:'公制', kmmin:'公制',
+    mimin:'英制', mach:'宇宙级', kms:'公制', mis:'英制', c0:'宇宙级',
+  },
+  charge: {
+    qc:'SI米', rc:'SI米', yc:'SI米', zc:'SI米', ac:'SI米', planck_q:'普朗克',
+    fc:'SI米', pc:'SI米', nc:'SI米', uc:'SI米', mc:'SI米', cc:'SI米',
+    dc:'SI米', c:'SI米', mah:'其他', dac:'SI米', hc:'SI米', kc:'SI米',
+    ah:'其他', Mc:'SI米', Gc:'SI米', Tc:'SI米', Pc:'SI米', Ec:'SI米',
+    Zc:'SI米', Yc:'SI米', Rc:'SI米', Qc:'SI米',
+  },
+};
+const FAM_ORDER = ["普朗克", "SI米", "美制", "英制", "公制", "市制", "台制", "港制", "日制", "韩制", "其他", "宇宙级"];
+const FAM_RANK = FAM_ORDER.reduce(function (m, f, i) { m[f] = i; return m; }, {});
+
+/* 语义档的「带英前置」：长度三兄弟的英制段里，英寸 / 英尺 / 英寻 / 英里
+   这四个名字带「英」的字散在段首到段尾，搜「英」得跳着找。名字含「英」
+   的排到本 fam 段最前，段内仍按数值升序。只作用于 sem 档 —— 源码表序、
+   check-order.js、asc/desc 三样都不受影响；别的量（含液量那堆「英制XX」
+   不在这三张表里）也不沾。 */
+const SEM_YING_FIRST = { length: 1, area: 1, volume: 1 };
+
+/* 语义档的「光学老单位沉尾」：光学四组各是一条 24 档 SI 词头刻度，
+   13 个老单位按数值插在词头中间，把「毫厘分 / 十百千」的节奏打断。
+   sem 档里把它们沉到本组段尾，词头链连成干净的一条；lm/lx/cd/nit
+   是主单位不沉。asc/desc 的按数值插位、源码表序都不受影响。 */
+const OPTICS_LEGACY = {
+  lms: 1, nox: 1, ftcd: 1, phot: 1, hefner: 1, candle: 1, ic: 1,
+  asb: 1, blondel: 1, ftlam: 1, cdf2: 1, L: 1, sb: 1,
 };
 
 /* ---------- 单位的「俗称」与「常用」标记 ----------
@@ -3731,6 +4333,54 @@ const UNIT_META = {
     lpmm:     { alias: ['线对每毫米', 'lp/mm'] },
     pitch:    { alias: ['点距', '像素间距', 'dot pitch'] },
   },
+
+  /* ---------- 声学 ---------- */
+  spl: {
+    db:    { common: 1, alias: ['声压级', '分贝声压级', 'decibel', 'db spl'] },
+    pa:    { common: 1, alias: ['帕斯卡', '帕', 'pascal'] },
+    upa:   { common: 1, alias: ['微帕', '参考声压'] },
+  },
+  sil: {
+    db:    { common: 1, alias: ['声强级', '分贝声强级', 'db il'] },
+    wm2:   { common: 1, alias: ['瓦每平方米', '声强'] },
+    uwcm2: { alias: ['微瓦每平方厘米'] },
+  },
+  swl: {
+    db:    { common: 1, alias: ['声功率级', '分贝声功率级', 'db swl'] },
+    w:     { common: 1, alias: ['瓦特', '瓦', 'watt'] },
+    pw:    { alias: ['皮瓦'] },
+  },
+  level: {
+    dbu:   { common: 1, alias: ['分贝非平衡', 'dbu'] },
+    dbm:   { common: 1, alias: ['分贝毫瓦', 'dbm'] },
+    dbv:   { common: 1, alias: ['分贝伏', 'dbv'] },
+    v:     { common: 1, alias: ['伏特', '伏', 'volt'] },
+    mv:    { common: 1, alias: ['毫伏'] },
+  },
+
+  /* ---------- 酸碱度 ---------- */
+  ph: {
+    ph:      { common: 1, alias: ['酸碱度', '氢离子浓度指数', 'ph value', 'ph值'] },
+    poh:     { common: 1, alias: ['碱度', 'poh value'] },
+    mol_l:   { common: 1, alias: ['摩尔每升', '摩尔/升', 'mol/l', 'molarity'] },
+    mmol_l:  { common: 1, alias: ['毫摩尔每升', 'mmol/l'] },
+    umol_l:  { alias: ['微摩尔每升', 'µmol/l'] },
+    nmol_l:  { alias: ['纳摩尔每升', 'nmol/l'] },
+  },
+
+  /* ---------- 地震 ---------- */
+  quake: {
+    mw:   { common: 1, alias: ['矩震级', 'moment magnitude', 'momentum magnitude'] },
+    ml:   { common: 1, alias: ['里氏震级', '里氏', 'local magnitude', 'richter'] },
+    ms:   { common: 1, alias: ['面波震级', 'surface wave magnitude'] },
+    mb:   { common: 1, alias: ['体波震级', 'body wave magnitude'] },
+    mmi2: { common: 1, alias: ['麦氏烈度', '麦加利烈度', 'mercalli', 'modified mercalli'] },
+    csis: { common: 1, alias: ['中国烈度', '中国地震烈度', 'csis'] },
+    nm:   { common: 1, alias: ['牛·米', '牛米', 'newton meter'] },
+    j:    { common: 1, alias: ['焦耳', '焦', 'joule'] },
+    tj:   { alias: ['太焦'] },
+  },
+
 };
 
 const UNIT_HOME = 'length';          // 每次进来从哪一类开始
@@ -4012,7 +4662,11 @@ function cvtConvert(v, aux) {
   if (!f || !t) return null;
 
   if (cat && typeof cat.toBase === 'function' && typeof cat.fromBase === 'function') {
-    return cat.fromBase(cat.toBase(v, f.id, aux), t.id, aux);
+    /* 密度比重刻度：上下两套标定温度各自独立（aux = { from, to }）。
+       光学等类别仍是一个 aux 同时给两边，行为不变。 */
+    const auxF = (aux && aux.from) ? aux.from : aux;
+    const auxT = (aux && aux.to)   ? aux.to   : aux;
+    return cat.fromBase(cat.toBase(v, f.id, auxF), t.id, auxT);
   }
   return v * f.k / t.k;
 }
@@ -4026,6 +4680,11 @@ function cvtSync() {
   const need = cvtAuxNeed();
   cvtPaintAux(need);
   cvtAuxClearNotes();
+  const tempNeed = cvtTempAuxNeed();
+  cvtTempAuxPaint(tempNeed);
+  cvtTempAuxClearNotes();
+  const choiceNeed = cvtChoiceNeed();
+  cvtChoicePaint(choiceNeed);
 
   const raw = cvtFrom.value;
   if (!raw) {
@@ -4033,6 +4692,7 @@ function cvtSync() {
     clearError(cvtFrom);
     // 主框空着也要把副输入摆好：用户可能先填几何量、再回来填数值
     cvtDemandAux(need);
+    if (tempNeed.from || tempNeed.to) cvtTempAuxNote(cvtTempAuxRead(tempNeed));
     return;
   }
 
@@ -4041,6 +4701,7 @@ function cvtSync() {
     cvtTo.value = '';
     setError(cvtFrom, p.msg);
     cvtDemandAux(need);
+    if (tempNeed.from || tempNeed.to) cvtTempAuxNote(cvtTempAuxRead(tempNeed));
     return;
   }
   // 位数多到 Number 也接不住（几百位数字）——单独说一句，别让它静默变成 Infinity
@@ -4048,6 +4709,7 @@ function cvtSync() {
     cvtTo.value = '';
     setError(cvtFrom, '这个数字太大了');
     cvtDemandAux(need);
+    if (tempNeed.from || tempNeed.to) cvtTempAuxNote(cvtTempAuxRead(tempNeed));
     return;
   }
   clearError(cvtFrom);
@@ -4061,8 +4723,22 @@ function cvtSync() {
     cvtAuxNote(aux);
     return;
   }
+  // 比重刻度的两套标定温度：任何一套没填 / 填错都先不出结果
+  let convertAux = aux.values;
+  if (tempNeed.from || tempNeed.to) {
+    const temp = cvtTempAuxRead(tempNeed);
+    if (temp.msg) {
+      cvtTo.value = '';
+      cvtTempAuxNote(temp);
+      return;
+    }
+    convertAux = temp.values;   // { from:{t,scale,matter}, to:{...} }
+  }
 
-  const out = cvtConvert(p.value, aux.values);
+  const choice = cvtChoiceRead(choiceNeed);
+  if (choice) convertAux = Object.assign({}, convertAux, choice);
+
+  const out = cvtConvert(p.value, convertAux);
   cvtTo.value = out === null ? '' : cvtFmt(out);
 }
 
@@ -4225,6 +4901,204 @@ function cvtReadAux(need) {
  *  用户很可能是先填立体角、再回头填数值的，提示不该等他填完数值才出现。 */
 function cvtDemandAux(need) {
   cvtAuxNote(cvtReadAux(need));
+}
+
+/* 记住每套栏上次是按哪个单位预填的（换单位才重填，换温标/物质不冲掉用户输入）。 */
+let cvtTempAuxUnit = { from: null, to: null };
+
+/* ----------------------------------------------------------
+   四之三、比重刻度的标定温度（上下两套，各自独立）
+   ----------------------------------------------------------
+   密度档的 API / 波美 / 白利 等刻度是按某个温度下的一杯液体标定的：
+   换温度 → 参考液体密度 w 变 → 结果变。上下两栏可能是两种刻度，
+   各自的标定温度不同，所以这里的 aux 是 { from, to } 两套。
+
+   · 物质是**预填快捷项**：点「水」→ 60 °F，点「糖液」→ 20 °C，
+     用户还能改温度；w 只跟温度走（糖液密度 = 浓度的函数 = 读数本身，
+     没有脱离读数的单值曲线，见 cvtWaterDensity 的注释）。
+   · 预填只在「该套对应的单位变了」时发生，不覆盖用户手填的温度 ——
+     否则一换温标就重置，用户填的值会被冲掉。
+   ---------------------------------------------------------- */
+
+/** 当前这对上下单位，哪几边是比重刻度（要显示标定温度栏）。 */
+function cvtTempAuxNeed() {
+  const cat = UNITS[cvtCat];
+  if (!cat || !cat.aux || !cat.aux.from) return { from: false, to: false };
+  const f = cvtUnit(cvtSel.from);
+  const t = cvtUnit(cvtSel.to);
+  return { from: !!(f && f.sg), to: !!(t && t.sg) };
+}
+
+/** 一套栏的当前值（DOM → 对象）。scale / matter 从被点亮的 chip 读。 */
+function cvtTempAuxReadOne(which) {
+  const s = cvtTempSets[which];
+  const scaleChip = s.scale.querySelector('[aria-checked="true"]');
+  const matterChip = s.matter.querySelector('[aria-checked="true"]');
+  return {
+    tText: s.val.value,
+    scale: scaleChip ? scaleChip.dataset.val : 'C',
+    matter: matterChip ? matterChip.dataset.val : 'water',
+  };
+}
+
+/** 把一套栏的值写回 DOM（预填 / 物质快捷项都走这里）。 */
+function cvtTempAuxWriteOne(which, v) {
+  const s = cvtTempSets[which];
+  s.val.value = v.tText != null ? String(v.tText) : '';
+  [s.scale, s.matter].forEach(group => {
+    const key = group === s.scale ? 'scale' : 'matter';
+    $$('[data-val]', group).forEach(chip => {
+      chip.setAttribute('aria-checked', String(chip.dataset.val === v[key]));
+    });
+  });
+}
+
+/** 按单位自带的 cal 给一套栏预填默认值（只在单位变化时调用）。 */
+function cvtTempAuxPresetFromUnit(which) {
+  const u = cvtUnit(cvtSel[which]);
+  if (!u || !u.cal) return;
+  cvtTempAuxWriteOne(which, { tText: u.cal.t, scale: u.cal.scale, matter: u.cal.matter });
+}
+
+/** 物质快捷项：点水 → 60 °F、糖液 → 20 °C（W→C 串），并保留在框里给用户改。 */
+function cvtTempAuxApplyMatter(which, matterId) {
+  const cat = UNITS[cvtCat];
+  const preset = cat && cat.aux && cat.aux.presets && cat.aux.presets[matterId];
+  if (!preset) return;
+  cvtTempAuxWriteOne(which, { tText: preset.t, scale: preset.scale, matter: matterId });
+  clearError(cvtTempSets[which].val);
+}
+
+/** 摆整个温度辅助块：整体显隐、两套各自的显隐、标题、单位变了才预填。
+ *  ★ 用户手填后换温标/物质不重置：靠 lastUnit 记住这套上次是按哪个单位填的。 */
+function cvtTempAuxPaint(need) {
+  const cat = UNITS[cvtCat];
+  const want = !!(cat && cat.aux && (need.from || need.to));
+  cvtTempAuxEl.hidden = !want;
+  if (!want) { cvtTempAuxUnit = { from: null, to: null }; return; }
+
+  ['from', 'to'].forEach(which => {
+    const s = cvtTempSets[which];
+    s.set.hidden = !need[which];
+    if (!need[which]) return;
+    s.title.textContent = (which === 'from' ? '原刻度' : '目标刻度') + '：'
+      + (cvtUnit(cvtSel[which]) ? cvtUnit(cvtSel[which]).label : '');
+    const uid = cvtSel[which];
+    if (cvtTempAuxUnit[which] !== uid) {
+      cvtTempAuxPresetFromUnit(which);
+      clearError(s.val);
+      cvtSoftHint(s.val, '');
+      cvtTempAuxUnit[which] = uid;
+    }
+  });
+
+  cvtTempAuxHead.textContent = need.from && need.to
+    ? '两套刻度的标定条件各自独立，改温度会改变换算结果'
+    : '这套刻度的标定温度会影响换算结果';
+}
+
+/** 读两套温度值并校验，返回 { values:{from,to} } 或 { which, el, msg, hard }。
+ *  隐藏的那套不读；空着给灰提示，非数字给红提示。 */
+function cvtTempAuxRead(need) {
+  const values = {};
+  for (const which of ['from', 'to']) {
+    if (!need[which]) continue;
+    const s = cvtTempSets[which];
+    const one = cvtTempAuxReadOne(which);
+    if (!one.tText) {
+      return { which, el: s.val, msg: '填好标定温度才能换算', hard: false };
+    }
+    const v = Number(one.tText);
+    if (!isFinite(v)) {
+      return { which, el: s.val, msg: '温度得是个数字', hard: true };
+    }
+    values[which] = { t: v, scale: one.scale, matter: one.matter };
+  }
+  return { values };
+}
+
+/** 把读取结果挂到对应的框上（红/灰提示，和光学那套一个套路）。 */
+function cvtTempAuxNote(r) {
+  if (!r || !r.msg) return;
+  const wrap = r.el.closest('[data-field]');
+  const hint = wrap && wrap.nextElementSibling;
+  if (hint && hint.classList.contains('hint')) hint.classList.remove('soft');
+  if (r.hard) setError(r.el, r.msg);
+  else cvtSoftHint(r.el, r.msg);
+}
+
+/** 每次 cvtSync 开头清掉两套的旧提示。 */
+function cvtTempAuxClearNotes() {
+  ['from', 'to'].forEach(which => {
+    clearError(cvtTempSets[which].val);
+    cvtSoftHint(cvtTempSets[which].val, '');
+  });
+}
+
+
+
+/* ----------------------------------------------------------
+   四之四、通用单套选择辅助栏（pH 温度 / 声压级介质）
+   ----------------------------------------------------------
+   UNITS[cat].choice = { key, label, options:[{v,label}], default }。
+   单位带 needChoice:1 时，当前这对单位里有一个需要它 → 显示。
+   选择值存 cvtChoiceVal[cat]，随 aux 一起传给 toBase/fromBase。 */
+
+/** 当前这对单位里有没有需要 choice 的。 */
+function cvtChoiceNeed() {
+  const cat = UNITS[cvtCat];
+  if (!cat || !cat.choice) return false;
+  const f = cvtUnit(cvtSel.from), t = cvtUnit(cvtSel.to);
+  return !!(f && f.needChoice) || !!(t && t.needChoice);
+}
+
+/** 取当前类别的 choice 值（没选过就用 default）。 */
+function cvtChoiceValue(cat) {
+  const spec = cat && cat.choice;
+  if (!spec) return null;
+  if (cvtChoiceVal[cvtCat] == null) return spec.default;
+  return cvtChoiceVal[cvtCat];
+}
+
+/** 摆显隐、说明和 chip 组（选项由 choice.options 动态生成）。 */
+function cvtChoicePaint(need) {
+  const cat = UNITS[cvtCat];
+  const spec = cat && cat.choice;
+  const want = !!(need && spec);
+  cvtChoiceAuxEl.hidden = !want;
+  if (!want) return;
+
+  const f = cvtUnit(cvtSel.from), t = cvtUnit(cvtSel.to);
+  cvtChoiceHead.textContent = spec.key === 'temp'
+    ? '温度决定水的离子积 Kw，改温度会改变 pH 与 pOH 的关系'
+    : '参考介质决定 0 dB 对应的声压，改介质会改变换算结果';
+  cvtChoiceLbl.textContent = spec.label + '：'
+    + (spec.key === 'temp' ? '（pOH ↔ pH 用）' : '（dB SPL ↔ Pa 用）');
+  void f; void t;
+
+  const cur = cvtChoiceValue(cat);
+  if (!cvtChoiceChips.dataset.for || cvtChoiceChips.dataset.for !== cvtCat) {
+    cvtChoiceChips.dataset.for = cvtCat;
+    cvtChoiceChips.innerHTML = spec.options.map(o =>
+      '<button type="button" class="chip" role="radio" aria-checked="false" data-val="'
+      + cvtEsc(o.v) + '">' + cvtEsc(o.label) + '</button>'
+    ).join('');
+  }
+  $$('[data-val]', cvtChoiceChips).forEach(chip => {
+    chip.setAttribute('aria-checked', String(chip.dataset.val === cur));
+  });
+}
+
+/** 读当前选中值 → { [key]: value }，直接并进 convertAux。 */
+function cvtChoiceRead(need) {
+  if (!need) return null;
+  const cat = UNITS[cvtCat];
+  const spec = cat && cat.choice;
+  if (!spec) return null;
+  const v = cvtChoiceValue(cat);
+  const out = {};
+  out[spec.key] = v;
+  return out;
 }
 
 /** 药丸的选中态：框里的字正好等于某个常用值（4π / 2π / π）就点亮它。
@@ -5502,10 +6376,12 @@ function cvtUnitSize(catKey, u) {
   return null;
 }
 
-/** 按当前设置排一遍（'sem' 原样返回 —— 表内顺序本来就是语义顺序）。 */
+/** 按当前设置排一遍。
+ *  asc/desc：按 group 分段、段内按数值。
+ *  sem：有 UNIT_FAM 表的量按 fam（制式/体系）分组、段内保持数值升序；无表则原样返回。 */
 function cvtSortUnits(catKey, list) {
-  if (cvtView.sort !== 'asc' && cvtView.sort !== 'desc') return list;
-  const dir = cvtView.sort === 'desc' ? -1 : 1;
+  const mode = cvtView.sort;
+  const famMap = UNIT_FAM[catKey];
 
   /* 先按 group 切成连续的段（同一个组名出现两次算两段，本来就该各排各的） */
   const segs = [];
@@ -5517,6 +6393,51 @@ function cvtSortUnits(catKey, list) {
   });
 
   const out = [];
+
+  if (mode === 'sem') {
+    /* 光学没有 fam 表，但 13 个老单位要沉到各组段尾 —— 单独走一条。 */
+    if (catKey === 'optics') {
+      segs.forEach(s => {
+        s.arr
+          .map((u, i) => ({ u: u, i: i, legacy: OPTICS_LEGACY[u.id] ? 1 : 0, s: cvtUnitSize(catKey, u) }))
+          .sort(function (a, b) {
+            if (a.legacy !== b.legacy) return a.legacy - b.legacy;   // 老单位沉尾
+            if (a.s === b.s) return a.i - b.i;      // 同值保持原表序
+            const an = a.s === null, bn = b.s === null;
+            if (an !== bn) return an ? 1 : -1;
+            if (an || bn) return a.i - b.i;
+            return a.s - b.s;
+          })
+          .forEach(x => out.push(x.u));
+      });
+      return out;
+    }
+    if (!famMap) return list;                    // 其余量保持表内语义序
+    segs.forEach(s => {
+      s.arr
+        .map((u, i) => ({ u: u, i: i, fam: famMap[u.id] || '其他', s: cvtUnitSize(catKey, u) }))
+        .sort(function (a, b) {
+          const fa = FAM_RANK[a.fam], fb = FAM_RANK[b.fam];
+          if (fa !== fb) return fa - fb;          // 先按制式/体系
+          /* 长度三兄弟的英制段：名字带「英」的提到段首，内部仍按数值升序 */
+          if (SEM_YING_FIRST[catKey] && a.fam === '英制' && b.fam === '英制') {
+            const ya = /英/.test(a.u.label || '') ? 0 : 1;
+            const yb = /英/.test(b.u.label || '') ? 0 : 1;
+            if (ya !== yb) return ya - yb;
+          }
+          if (a.s === b.s) return a.i - b.i;      // 同制式内保持原表序(=数值升序)
+          const an = a.s === null, bn = b.s === null;
+          if (an !== bn) return an ? 1 : -1;
+          if (an || bn) return a.i - b.i;
+          return a.s - b.s;
+        })
+        .forEach(x => out.push(x.u));
+    });
+    return out;
+  }
+
+  if (mode !== 'asc' && mode !== 'desc') return list;
+  const dir = mode === 'desc' ? -1 : 1;
   segs.forEach(s => {
     s.arr
       .map((u, i) => ({ u: u, i: i, s: cvtUnitSize(catKey, u) }))
@@ -6181,6 +7102,47 @@ cvtAuxOmegaChips.addEventListener('click', e => {
   // 点药丸就是"点一下就完事"：手机、电脑都**不要**弹软键盘（focus 会触发键盘）。
   // 真要接着敲（比如 4π → 4π/3），去点输入框，键盘自然就出来。
   cvtPadHide();
+});
+
+/* ---- 比重刻度的标定温度：两套各自的输入与 chip ---- */
+['from', 'to'].forEach(which => {
+  const s = cvtTempSets[which];
+  s.val.addEventListener('input', () => {
+    cvtFilter(s.val);
+    cvtSync();
+  });
+  [s.scale, s.matter].forEach(group => {
+    group.addEventListener('click', e => {
+      const chip = e.target.closest('[data-val]');
+      if (!chip) return;
+      const key = (group === s.scale) ? 'scale' : 'matter';
+      $$('[data-val]', group).forEach(c => c.setAttribute('aria-checked', String(c === chip)));
+      // 点「物质」才触发预填（水→60°F、糖液→20°C）；点温标只切换单位不改数值
+      if (key === 'matter') {
+        const cat = UNITS[cvtCat];
+        const preset = cat && cat.aux && cat.aux.presets && cat.aux.presets[chip.dataset.val];
+        if (preset) {
+          s.val.value = String(preset.t);
+          // 温标也跟着物质预设走（水→F、糖液→C），再把那组点亮
+          $$('[data-val]', s.scale).forEach(c => c.setAttribute('aria-checked', String(c.dataset.val === preset.scale)));
+        }
+      }
+      clearError(s.val);
+      cvtSync();
+      cvtPadHide();   // 点 chip 就是点一下就完事，别弹软键盘
+    });
+  });
+});
+
+/* ---- 通用选择 chip（pH 温度 / 声压级介质） ---- */
+cvtChoiceChips.addEventListener('click', function (e) {
+  const chip = e.target.closest('[data-val]');
+  if (!chip || !cvtChoiceChips.contains(chip)) return;
+  cvtChoiceVal[cvtCat] = chip.dataset.val;
+  $$('[data-val]', cvtChoiceChips).forEach(c => {
+    c.setAttribute('aria-checked', String(c === chip));
+  });
+  cvtSync();
 });
 
 /* ---- 交换 ---- */

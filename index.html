@@ -7,7 +7,7 @@
 <meta name="color-scheme" content="light only" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#f4f5f7" />
-<title>Nova</title>
+<title>Nova Offline</title>
 
 <!-- 站点图标：浏览器标签 / 书签 / 手机主屏 -->
 <link rel="icon" href="favicon.ico" sizes="any" />
@@ -15,188 +15,26 @@
 <link rel="icon" type="image/png" sizes="512x512" href="img/icon-512.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="img/icon-512.png" />
 
-<!-- 样式：base 通用 → auth 登录页 → app 登录后的界面 -->
+<!-- 样式：base 通用 → app 主界面 → tools 功能页 -->
 <link rel="stylesheet" href="css/base.css" />
-<link rel="stylesheet" href="css/auth.css" />
 <link rel="stylesheet" href="css/app.css" />
 <!-- 功能页样式（格式转换等） -->
 <link rel="stylesheet" href="css/tools.css" />
 </head>
 <body>
 
-<!-- ============================================================
-     一、登录 / 注册 / 管理员登录
-     ============================================================ -->
-<div class="shell">
-
-  <!-- PC 分栏时的左侧品牌栏（手机/平板下自动隐藏） -->
-  <aside class="side">
-    <div class="side-inner">
-      <div class="side-logo"><svg class="mark-n" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.1 3.7h4.32v16.6H4.1zM15.58 3.7h4.32v16.6h-4.32zM4.1 3.7L9.14 3.7L19.9 20.3L14.86 20.3Z"/></svg></div>
-      <div class="side-name">Nova</div>
-      <div class="side-tag">在线工具箱</div>
-    </div>
-  </aside>
-
-  <!-- 表单区 -->
-  <main class="main">
-  <div class="card">
-  <div class="brand" id="brandBanner">
-    <h1>Nova</h1>
-    <span>在线工具箱</span>
-  </div>
-
-  <!-- 标签切换 -->
-  <div class="tabs" id="tabs">
-    <button class="active" data-goto="login">登录</button>
-    <button data-goto="admin">管理员登录</button>
-  </div>
-
-  <!-- ========== 登录 ========== -->
-  <div class="view show" id="view-login">
-    <div class="view-head">
-      <h3>欢迎回来</h3>
-      <p>请登录你的账号以继续</p>
-    </div>
-
-    <form id="form-login" novalidate>
-      <div class="field">
-        <label>账户名</label>
-        <div class="input-wrap" data-field>
-          <input type="text" name="username" placeholder="请输入账户名" autocomplete="username" />
-        </div>
-        <div class="hint"></div>
-      </div>
-
-      <div class="field">
-        <label>密码</label>
-        <div class="input-wrap" data-field>
-          <input type="password" name="password" placeholder="请输入密码" autocomplete="current-password" />
-          <button type="button" class="eye" data-eye aria-label="显示密码">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-        <div class="hint"></div>
-      </div>
-
-      <label class="remember-row">
-        <span class="checkbox"><input type="checkbox" id="rememberMe" /><span></span></span>
-        <span>记住我，下次自动登录</span>
-      </label>
-
-      <label class="agree" data-agree>
-        <span class="checkbox"><input type="checkbox" data-agree-input /><span></span></span>
-        <span>我已阅读并同意 <a data-open-agreement data-doc="terms">《用户服务协议》</a> 与 <a data-open-agreement data-doc="privacy">《隐私政策》</a></span>
-      </label>
-
-      <button type="submit" class="btn">登 录</button>
-      <button type="button" class="btn ghost" data-goto="register">注 册</button>
-    </form>
-  </div>
-
-  <!-- ========== 注册 ========== -->
-  <div class="view" id="view-register">
-    <div class="view-head">
-      <h3>创建账号</h3>
-      <p>填写账户名和密码即可完成注册</p>
-    </div>
-
-    <form id="form-register" novalidate>
-      <div class="field">
-        <label>账户名</label>
-        <div class="input-wrap" data-field>
-          <input type="text" name="username" placeholder="设置你的账户名" autocomplete="username" />
-        </div>
-        <div class="hint"></div>
-      </div>
-
-      <div class="field">
-        <label>密码</label>
-        <div class="input-wrap" data-field>
-          <input type="password" name="password" placeholder="至少 6 位" autocomplete="new-password" />
-          <button type="button" class="eye" data-eye aria-label="显示密码">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-        <div class="hint"></div>
-        <div class="strength" data-strength><i></i><i></i><i></i><i></i></div>
-        <div class="strength-txt" data-strength-txt>密码强度：<b>—</b></div>
-      </div>
-
-      <div class="field">
-        <label>确认密码</label>
-        <div class="input-wrap" data-field>
-          <input type="password" name="confirm" placeholder="请再次输入密码" autocomplete="new-password" />
-          <button type="button" class="eye" data-eye aria-label="显示密码">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-        <div class="hint"></div>
-      </div>
-
-      <label class="agree" data-agree>
-        <span class="checkbox"><input type="checkbox" data-agree-input /><span></span></span>
-        <span>我已阅读并同意 <a data-open-agreement data-doc="terms">《用户服务协议》</a></span>
-      </label>
-
-      <button type="submit" class="btn">注 册</button>
-    </form>
-
-    <div class="back-line">
-      已有账号？<button type="button" data-goto="login">返回登录</button>
-    </div>
-  </div>
-
-  <!-- ========== 管理员 ========== -->
-  <div class="view" id="view-admin">
-    <div class="view-head">
-      <h3>管理员登录</h3>
-      <p>仅限已授权的工作人员访问</p>
-    </div>
-
-    <form id="form-admin" novalidate>
-      <div class="field">
-        <label>管理员账户名</label>
-        <div class="input-wrap" data-field>
-          <input type="text" name="username" placeholder="请输入管理员账户名" autocomplete="off" />
-        </div>
-        <div class="hint"></div>
-      </div>
-
-      <div class="field">
-        <label>密码</label>
-        <div class="input-wrap" data-field>
-          <input type="password" name="password" placeholder="请输入密码" autocomplete="current-password" />
-          <button type="button" class="eye" data-eye aria-label="显示密码">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-        <div class="hint"></div>
-      </div>
-
-      <button type="submit" class="btn">登 录</button>
-    </form>
-  </div>
-  </div>
-  </main>
-
-</div><!-- /.shell -->
-
-<!-- ============================================================
-     二、登录之后：主页 / 设置 / 管理面板
-     ============================================================ -->
-
-<!-- 登录后的主页 -->
 <div class="home-page" id="homePage">
 
-  <!-- 顶部黄色区（占屏幕 1/3） -->
+  <!-- 顶部品牌蓝区（占屏幕 1/3） -->
   <header class="home-hero">
-    <div class="home-mark"><svg class="mark-n" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.1 3.7h4.32v16.6H4.1zM15.58 3.7h4.32v16.6h-4.32zM4.1 3.7L9.14 3.7L19.9 20.3L14.86 20.3Z"/></svg></div>
-    <h1 class="home-hello">你好，<b id="homeUsername">—</b>！</h1>
-    <p class="home-sub">Nova工具箱</p>
+    <div class="home-mark">
+        <img src="img/icon-128.png" alt="Nova 离线版" width="58" height="58" />
+      </div>
+    <h1 class="home-hello">你好，<b id="homeUsername">用户</b>！</h1>
+    <p class="home-sub">Nova 离线版</p>
   </header>
 
-  <!-- 内容区：手机上在黄区下方，PC 分栏时占右侧。
+  <!-- 内容区：手机上在蓝区下方，PC 分栏时占右侧。
        以后新增的功能入口往 .home-tools 里加即可（见 js/tools.js） -->
   <main class="home-main">
 
@@ -565,20 +403,15 @@
       </button>
 
       <!-- 囚徒困境：★ 这一张是「藏起来的门」，不是下线卡片。
-           点得进来，进来是三关问答，三关全过才看得见彩蛋。
-           ★ 角标跟后台的开关走（见 js/prisoner.js 的 paintCard）：
-              后台把这张卡「关掉」（下线维护）→ 挂「维护中」，点它先验管理员身份；
-              后台「打开」（正常上线）      → 挂「开发中」，点它直接进三关。
-             也就是说「开发中」是剧情，不是功能状态 —— 卡片一直是灰的。
+           首页照旧挂灰卡 + 「开发中」（正式版这一页确实没做完），
+           但点进去能答题 —— 三关全过才看得见彩蛋。
            三关里错一次，这张卡当场毁掉：名字变 [404]、角标变「损坏」，
            再点三次（三句台词）之后就彻底变贴图、没反应了。
            状态全在 localStorage，清站点数据可复原。
-           ★ data-card-paint="custom"：外观交给 js/prisoner.js 全权负责，
-             js/cards.js 只把"是否维护中"这个事实同步过来，不自己加标签 ——
-             否则"维护中"和"开发中"两个药丸会同时挂在名字后面。
-           本文件只留三个可改文字的钩子：#prName / #prTag / #prDesc。 -->
-      <button type="button" class="tool-btn is-dev" id="btnPrisoner" data-tool="prisoner"
-              data-card-paint="custom" aria-description="开发中">
+           外观/逻辑见 js/prisoner.js（paintCard），本文件只留三个可改文字的钩子：
+           #prName / #prTag / #prDesc。 -->
+      <button type="button" class="tool-btn is-maintenance" id="btnPrisoner" data-tool="prisoner"
+               aria-description="开发中，暂时不可使用">
         <span class="tool-btn-ico" aria-hidden="true">
           <!-- 囚徒困境：监狱铁栏杆 —— 上下两根横杆 + 四根竖栏杆，
                立起来正好三格。
@@ -783,7 +616,8 @@
         </span>
       </button>
 
-      <button type="button" class="tool-btn" id="btnLife" data-tool="life">
+      <button type="button" class="tool-btn is-maintenance" id="btnLife" data-tool="life"
+               aria-description="开发中，暂时不可使用">
         <span class="tool-btn-ico" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <g style="fill: var(--tool-ico-fg); stroke:none;">
@@ -796,7 +630,7 @@
           </svg>
         </span>
         <span class="tool-btn-text">
-          <span class="tool-btn-name">方格生灭</span>
+          <span class="tool-btn-name">方格生灭<span class="tool-maint-tag">开发中</span></span>
           <span class="tool-btn-desc">三条定生死</span>
         </span>
         <span class="tool-btn-go" aria-hidden="true">
@@ -804,7 +638,8 @@
         </span>
       </button>
 
-      <button type="button" class="tool-btn" id="btnMonty" data-tool="monty">
+      <button type="button" class="tool-btn is-maintenance" id="btnMonty" data-tool="monty"
+               aria-description="开发中，暂时不可使用">
         <span class="tool-btn-ico" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
             <g transform="translate(0,-2.8)">
@@ -821,7 +656,7 @@
           </svg>
         </span>
         <span class="tool-btn-text">
-          <span class="tool-btn-name">三门之惑</span>
+          <span class="tool-btn-name">三门之惑<span class="tool-maint-tag">开发中</span></span>
           <span class="tool-btn-desc">换一扇，胜率翻倍</span>
         </span>
         <span class="tool-btn-go" aria-hidden="true">
@@ -829,7 +664,8 @@
         </span>
       </button>
 
-      <button type="button" class="tool-btn" id="btnCaesar" data-tool="caesar">
+      <button type="button" class="tool-btn is-maintenance" id="btnCaesar" data-tool="caesar"
+               aria-description="开发中，暂时不可使用">
         <span class="tool-btn-ico" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3.5" y="9.5" width="17" height="6" rx="3" style="stroke: var(--tool-ico-fg); stroke-width:1.5; fill:none;" />
@@ -838,7 +674,7 @@
           </svg>
         </span>
         <span class="tool-btn-text">
-          <span class="tool-btn-name">位移之秘</span>
+          <span class="tool-btn-name">位移之秘<span class="tool-maint-tag">开发中</span></span>
           <span class="tool-btn-desc">字母潜移，密意藏形</span>
         </span>
         <span class="tool-btn-go" aria-hidden="true">
@@ -905,11 +741,11 @@
 
   </main>
 
-  <!-- 底部操作：设置齿轮 + 彩蛋墙 + 站内信 + 好友 + 个人主页（退出登录已并入齿轮菜单）
-       按钮都只有图标、不写字；纵向排列靠右
-       DOM 顺序是「齿轮 → 彩蛋 → 站内信 → 好友 → 个人主页」，
-       手机那一排是 row-reverse：个人主页在最左、齿轮在最右，彩蛋就贴在齿轮左边；
-       电脑那一列是正序：齿轮在最上、个人主页在最下，彩蛋在齿轮下面（见 app.css） -->
+  <!-- 底部栏：离线版只剩两颗 ——「彩蛋墙」和「设置」
+       （站内信 / 好友 / 个人主页那几个都在离线版里砍掉了）
+       ★ 彩蛋墙排在齿轮后面是有意的：这层是 row-reverse，先写的贴右边，
+         所以顺序反过来才对——手机上是「彩蛋墙 | 齿轮」，
+         宽屏（.home-footer 转成竖排贴右上角）则是齿轮在上、彩蛋墙在下。 -->
   <div class="home-footer">
     <button type="button" class="home-gear" id="btnSettings" aria-label="设置" title="设置">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -928,40 +764,11 @@
          ★ 裂纹两端必须**落在轮廓上**（最宽处 y=14.2 的 x=4.8 / 19.2），不能悬在蛋里 ——
            悬空就变成"蛋里画了条波浪线"，接上轮廓才读成"裂开的缝"。
          ★ 幅度定在 2.6（峰谷差）。再大（3.2）是锯齿太尖，再小（1.5）21px 下糊成一道平横线。
-         按钮仍是 46px 描边方钮（复用 .home-gear），点它进 #toolArchive（js/archive.js）。
-         ★ 它带 data-tool 但**不是功能卡片**：js/cards.js 的名单只收 .tool-btn，
-           所以后台的「卡片维护」里不会多出这一行。 -->
+         按钮仍是 46px 描边方钮（复用 .home-gear），点它进 #toolArchive（js/archive.js）。 -->
     <button type="button" class="home-gear" id="btnArchive" data-tool="archive" aria-label="彩蛋墙" title="彩蛋墙">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
         <path d="M19.2 14.2C19.2 9 15.9 2.8 12 2.8S4.8 9 4.8 14.2a7.2 7.2 0 0 0 14.4 0Z" />
         <path d="M4.85 14.2 L7.9 15.9 L10.9 13.2 L13.9 15.7 L16.9 13.4 L19.15 15" />
-      </svg>
-    </button>
-
-    <button type="button" class="home-gear" id="btnMail" aria-label="站内信" title="站内信">
-      <!-- 信封：外框 + 折下的封舌 -->
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="5" width="18" height="14" rx="2.6" />
-        <path d="M4.4 7.4l6.8 4.9a1.6 1.6 0 001.8 0l6.8-4.9" />
-      </svg>
-      <!-- 未读角标，0 时隐藏 -->
-      <span class="mail-dot" id="mailDot" hidden>0</span>
-    </button>
-    <button type="button" class="home-gear" id="btnFriends" aria-label="好友" title="好友">
-      <!-- 两个小人：前面一个画全，后面一个只露半边（头发 + 肩线），一眼是"俩人" -->
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="9.2" cy="8" r="3.4" />
-        <path d="M3.2 19.6a6 6 0 0112 0" />
-        <path d="M16.3 5.1a3.4 3.4 0 010 6.5" />
-        <path d="M17.6 14.1a6 6 0 013.2 5.5" />
-      </svg>
-      <!-- 待处理的申请数，0 时隐藏 -->
-      <span class="fr-dot" id="friendDot" hidden>0</span>
-    </button>
-    <button type="button" class="home-gear" id="btnProfile" aria-label="个人主页" title="个人主页">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="8" r="4" />
-        <path d="M4.5 20a7.5 7.5 0 0115 0" />
       </svg>
     </button>
   </div>
@@ -1592,6 +1399,46 @@
                stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
         </span>
       </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="acoustics">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 声学：一只喇叭 + 两道声波弧。画成两个同心弧即可，别塞太多圈。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.4h3.2L12 5.6v12.8l-4.8-3.8H4z" /><path d="M15.4 9a4.4 4.4 0 0 1 0 6" /><path d="M18 6.6a8 8 0 0 1 0 10.8" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">声学</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="ph">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 酸碱度：一支滴管往杯里滴一滴（pH 试纸/滴定）。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M8.4 2.8h3.2M10 2.8v6.4" /><path d="M8.4 9.2h3.2l-1.6 2.6z" /><path d="M6 14h12l-1.4 6.2a1.2 1.2 0 0 1 -1.2 1H8.6a1.2 1.2 0 0 1 -1.2 -1z" /><path d="M10 12.4v-.8" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">酸碱度</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
+      <button type="button" class="tool-btn unit-cat" data-unit-cat="quake">
+        <span class="tool-btn-ico" aria-hidden="true">
+          <!-- 地震：一条折线地震波 + 底下一条基线。 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M2.4 14.2h3.4l2-5.6 2.6 9.2 2.6-12 2.8 8.4 2-3.4h3.8" /></svg>
+        </span>
+        <span class="tool-btn-text"><span class="tool-btn-name">地震</span></span>
+        <span class="tool-btn-go" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+        </span>
+      </button>
+
     </div>
 
     <!-- ---------- 一之二、选量（第二层） ----------
@@ -1722,6 +1569,81 @@
             <div class="hint"></div>
           </div>
         </section>
+
+        <!-- ---------- 比重刻度的标定温度（上下两套，各自独立） ----------
+             密度档的 API / 波美 / 白利 等刻度是按某个温度下的一杯液体标定的，
+             换温度 → 参考液体密度 w 变 → 结果变。上下两栏可能各是一种刻度、
+             各自的标定温度不同，所以给两套独立的「温度 + 温标 + 物质」栏。
+             物质是预填快捷项（水→60°F、糖液→20°C），w 只跟温度走。
+             显隐与文案由 js/units.js 的 cvtTempAux* 一组函数管。 -->
+        <section class="cvt-aux cvt-temp-aux" id="cvtTempAux" hidden>
+          <p class="cvt-aux-head" id="cvtTempAuxHead"></p>
+
+          <div class="cvt-temp-set" id="cvtTempFromSet">
+            <p class="cvt-temp-set-title" id="cvtTempFromTitle">原刻度</p>
+            <div class="cvt-aux-item">
+              <label for="cvtTempFromVal">标定温度</label>
+              <div class="input-wrap" data-field>
+                <input type="text" id="cvtTempFromVal" inputmode="decimal"
+                       autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+                       placeholder="例如 60、20" aria-label="原刻度的标定温度" />
+              </div>
+              <div class="hint"></div>
+            </div>
+            <div class="cvt-temp-row">
+              <span class="cvt-temp-row-lbl">温标</span>
+              <div class="cvt-temp-opts" id="cvtTempFromScale" role="radiogroup" aria-label="原刻度温标">
+                <button type="button" class="chip" role="radio" aria-checked="false" data-val="C">°C</button>
+                <button type="button" class="chip" role="radio" aria-checked="false" data-val="F">°F</button>
+              </div>
+            </div>
+            <div class="cvt-temp-row">
+              <span class="cvt-temp-row-lbl">物质</span>
+              <div class="cvt-temp-opts" id="cvtTempFromMatter" role="radiogroup" aria-label="原刻度物质">
+                <button type="button" class="chip" role="radio" aria-checked="false" data-val="water">水</button>
+                <button type="button" class="chip" role="radio" aria-checked="false" data-val="sugar">糖液</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="cvt-temp-set" id="cvtTempToSet">
+            <p class="cvt-temp-set-title" id="cvtTempToTitle">目标刻度</p>
+            <div class="cvt-aux-item">
+              <label for="cvtTempToVal">标定温度</label>
+              <div class="input-wrap" data-field>
+                <input type="text" id="cvtTempToVal" inputmode="decimal"
+                       autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+                       placeholder="例如 60、20" aria-label="目标刻度的标定温度" />
+              </div>
+              <div class="hint"></div>
+            </div>
+            <div class="cvt-temp-row">
+              <span class="cvt-temp-row-lbl">温标</span>
+              <div class="cvt-temp-opts" id="cvtTempToScale" role="radiogroup" aria-label="目标刻度温标">
+                <button type="button" class="chip" role="radio" aria-checked="false" data-val="C">°C</button>
+                <button type="button" class="chip" role="radio" aria-checked="false" data-val="F">°F</button>
+              </div>
+            </div>
+            <div class="cvt-temp-row">
+              <span class="cvt-temp-row-lbl">物质</span>
+              <div class="cvt-temp-opts" id="cvtTempToMatter" role="radiogroup" aria-label="目标刻度物质">
+                <button type="button" class="chip" role="radio" aria-checked="false" data-val="water">水</button>
+                <button type="button" class="chip" role="radio" aria-checked="false" data-val="sugar">糖液</button>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- ---------- 通用单套选择辅助栏（pH 温度 Kw / 声压级参考介质） ----------
+             一个标题 + 一组 chip，选项由 UNITS[cat].choice 动态生成。
+             只有当前单位带 needChoice 才显示（见 cvtChoiceNeed）。 -->
+        <section class="cvt-aux cvt-choice-aux" id="cvtChoiceAux" hidden>
+          <p class="cvt-aux-head" id="cvtChoiceHead"></p>
+          <div class="cvt-aux-item">
+            <label id="cvtChoiceLbl" for="cvtChoiceChips"></label>
+            <div class="cvt-temp-opts" id="cvtChoiceChips" role="radiogroup" aria-label="辅助选项"></div>
+          </div>
+        </section>
+
 
       </section>
 
@@ -3721,47 +3643,34 @@
 
 <!-- 设置菜单（齿轮弹出） -->
 <div class="menu-overlay" id="menuOverlay">
-  <div class="menu-sheet" role="dialog" aria-modal="true">
-    <button type="button" class="menu-item" id="miChangeName">
+  <div class="menu-sheet" role="dialog" aria-modal="true" aria-label="设置">
+    <button type="button" class="menu-item" id="miName">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="8" r="4" />
         <path d="M4.5 20a7.5 7.5 0 0115 0" />
       </svg>
-      修改账户名
+      更改称呼
     </button>
-    <button type="button" class="menu-item" id="miChangePw">
+    <button type="button" class="menu-item" id="miAbout">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="4" y="10" width="16" height="10" rx="2" />
-        <path d="M8 10V7a4 4 0 018 0v3" />
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 11v5.6" />
+        <path d="M12 7.6h.01" />
       </svg>
-      修改密码
+      关于 Nova
     </button>
-    <button type="button" class="menu-item" id="miFeedback">
+    <!-- 清空缓存：危险项，靠下、单独用红字，点了还要过一道二次确认 -->
+    <button type="button" class="menu-item is-danger" id="miClear">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 11.5a8.4 8.4 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.4 8.4 0 013.8-.9h.5a8.5 8.5 0 018 8v.5z" />
+        <path d="M4 7h16" />
+        <path d="M10 4h4a1 1 0 011 1v2H9V5a1 1 0 011-1z" />
+        <path d="M6.5 7l.9 12a2 2 0 002 1.9h5.2a2 2 0 002-1.9l.9-12" />
+        <path d="M10 11v5.5" />
+        <path d="M14 11v5.5" />
       </svg>
-      意见反馈
-    </button>
-    <!-- 「管理员」入口：只有挂着「管理员」头衔的普通用户才看得到
-         （由 js/manager.js 拉 /api/user/me 后决定显不显示）。
-         点它直接进后台，不用再输密码——权限和标准管理员完全一样。 -->
-    <button type="button" class="menu-item" id="miAdmin" hidden>
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <!-- 盾牌 + 对勾：表示"已获得管理权限" -->
-        <path d="M12 3l7 2.6v5.6c0 4.2-2.9 8-7 9.3-4.1-1.3-7-5.1-7-9.3V5.6z" />
-        <path d="M9.2 12.1l2 2 3.6-3.8" />
-      </svg>
-      管理员
+      清空缓存
     </button>
     <div class="menu-sep"></div>
-    <button type="button" class="menu-item danger" id="miLogout">
-      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-        <path d="M16 17l5-5-5-5" />
-        <path d="M21 12H9" />
-      </svg>
-      退出登录
-    </button>
     <button type="button" class="menu-cancel" id="miCancel">取消</button>
   </div>
 </div>
@@ -4378,652 +4287,6 @@
 </div>
 
 <!-- 修改账户名 -->
-<div class="sub-page" id="pageName">
-  <div class="sub-inner">
-    <div class="sub-bar">
-      <button type="button" class="sub-back" data-back aria-label="返回">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h3>修改账户名</h3>
-    </div>
-
-    <div class="sub-body">
-      <div class="sub-tip">账户名就是登录用的名字，改完之后要用新的名字登录。管理员那边的用户列表也会同步更新。</div>
-
-      <div class="field">
-        <label>新账户名</label>
-        <div class="input-wrap" data-field>
-          <input type="text" id="inpNewName" maxlength="32" placeholder="2-32 个字符" autocomplete="off" />
-        </div>
-        <div class="hint"></div>
-      </div>
-
-      <button type="button" class="sub-save" id="btnSaveName">保 存</button>
-    </div>
-  </div>
-</div>
-
-<!-- 修改密码 -->
-<div class="sub-page" id="pagePw">
-  <div class="sub-inner">
-    <div class="sub-bar">
-      <button type="button" class="sub-back" data-back aria-label="返回">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h3>修改密码</h3>
-    </div>
-
-    <div class="sub-body">
-      <div class="sub-tip">需要先验证原密码。改完之后需要重新登录。</div>
-
-      <div class="field">
-        <label>原密码</label>
-        <div class="input-wrap" data-field>
-          <input type="password" id="inpOldPw" placeholder="请输入当前密码" autocomplete="current-password" />
-          <button type="button" class="eye" data-eye aria-label="显示密码">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-        <div class="hint"></div>
-      </div>
-
-      <div class="field">
-        <label>新密码</label>
-        <div class="input-wrap" data-field>
-          <input type="password" id="inpNewPw" placeholder="至少 6 位" autocomplete="new-password" />
-          <button type="button" class="eye" data-eye aria-label="显示密码">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-        <div class="hint"></div>
-      </div>
-
-      <div class="field">
-        <label>确认新密码</label>
-        <div class="input-wrap" data-field>
-          <input type="password" id="inpCfmPw" placeholder="请再次输入新密码" autocomplete="new-password" />
-          <button type="button" class="eye" data-eye aria-label="显示密码">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </div>
-        <div class="hint"></div>
-      </div>
-
-      <button type="button" class="sub-save" id="btnSavePw">保 存</button>
-    </div>
-  </div>
-</div>
-
-<!-- 个人主页（手机全屏 / 电脑悬浮窗） -->
-<div class="sub-page" id="pageProfile">
-  <div class="sub-inner">
-    <div class="sub-bar">
-      <button type="button" class="sub-back" data-back aria-label="返回">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h3>个人主页</h3>
-      <!-- 悬浮窗式的关闭按钮：手机端有返回箭头就够了，只在电脑端显示 -->
-      <button type="button" class="sub-close" id="btnProfileClose" aria-label="关闭">✕</button>
-    </div>
-
-    <div class="sub-body">
-      <!-- 顶部：N logo + 用户名（放大） -->
-      <div class="profile-hero">
-        <div class="profile-mark"><svg class="mark-n" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.1 3.7h4.32v16.6H4.1zM15.58 3.7h4.32v16.6h-4.32zM4.1 3.7L9.14 3.7L19.9 20.3L14.86 20.3Z"/></svg></div>
-        <div class="profile-name" id="profileName">—</div>
-      </div>
-
-      <!-- 这两项点一下会弹出悬浮窗来选（选项由 app.js 的 ZODIAC_ITEMS / GENDER_ITEMS 生成） -->
-      <div class="field">
-        <label>星座</label>
-        <button type="button" class="picker-trigger" id="triggerZodiac">
-          <span class="picker-value" id="valueZodiac">保密</span>
-          <span class="picker-arrow"></span>
-        </button>
-      </div>
-
-      <div class="field">
-        <label>性别</label>
-        <button type="button" class="picker-trigger" id="triggerGender">
-          <span class="picker-value" id="valueGender">保密</span>
-          <span class="picker-arrow"></span>
-        </button>
-      </div>
-
-      <div class="field">
-        <label>地区</label>
-        <button type="button" class="picker-trigger" id="triggerRegion" aria-label="选择地区">
-          <span class="picker-value" id="valueRegion">保密</span>
-          <span class="picker-arrow"></span>
-        </button>
-      </div>
-
-      <div class="field">
-        <label>年龄</label>
-        <div class="input-wrap" data-field>
-          <input type="number" id="profileAge" min="1" max="120" placeholder="请输入年龄" />
-          <label class="inline-secret">
-            <span class="checkbox"><input type="checkbox" id="profileAgeSecret" /><span></span></span>
-            <span>保密</span>
-          </label>
-        </div>
-        <div class="hint"></div>
-      </div>
-
-      <!-- field-bio：电脑端让签名和保存按钮独占整行（见 app.css） -->
-      <div class="field field-bio">
-        <label>个性签名</label>
-        <div class="input-wrap is-area" data-field>
-          <textarea id="profileBio" rows="3" maxlength="60" placeholder="写点什么介绍一下自己…"></textarea>
-        </div>
-        <div class="hint"></div>
-        <div class="bio-meta"><span id="bioCount">0</span>/60</div>
-      </div>
-
-      <button type="button" class="sub-save" id="btnSaveProfile">保 存</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     站内信（信封按钮弹出）
-     收件箱 / 已发送两个箱子 + 右侧写信。
-     手机：整屏、上下排列；电脑：居中宽卡、左右分栏（见 app.css）
-     ============================================================ -->
-<div class="sub-page" id="pageMail">
-  <div class="sub-inner">
-    <div class="sub-bar">
-      <button type="button" class="sub-back" data-back aria-label="返回">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h3>站内信</h3>
-      <button type="button" class="sub-close" id="btnMailClose" aria-label="关闭">✕</button>
-    </div>
-
-    <div class="sub-body">
-      <!-- 三个平级入口：收件箱 / 已发送 / 写新邮件。
-           以前是「左边信箱 + 右边写信」并排摆着，收和写挤在一起 ——
-           手机上还会堆成上下两坨，一眼看不清是在看信还是在写信。
-           现在一次只显示一块，看信就是看信，写信就是写信。 -->
-      <div class="mail-tabs" id="mailTabs">
-        <button type="button" class="active" data-tab="inbox">
-          收件箱<i class="mail-pill" id="tabUnread" hidden>0</i>
-        </button>
-        <button type="button" data-tab="sent">已发送</button>
-        <button type="button" data-tab="compose">写新邮件</button>
-      </div>
-
-      <!-- ---------- 收件箱 / 已发送 ----------
-           注意：这两个视图块的类名是 .mail-panel，不是 .mail-view ——
-           .mail-view 已经被下面的邮件/反馈详情弹窗占了，同名会把那个
-           弹窗一起隐藏掉（点开信只看到遮罩、没有内容）。 -->
-      <section class="mail-panel show" id="mailBoxView">
-        <div class="mail-toolbar">
-          <button type="button" class="mini-btn" id="btnMailReadAll">一键已读</button>
-          <button type="button" class="mini-btn" id="btnMailRefresh">刷新</button>
-        </div>
-
-        <!-- 列表由 js/mail.js 渲染（内容一律用 textContent 写入） -->
-        <div class="mail-list" id="mailList">
-          <div class="mail-empty">加载中…</div>
-        </div>
-      </section>
-
-      <!-- ---------- 写新邮件 ---------- -->
-      <section class="mail-panel" id="mailComposeView">
-        <div class="field">
-          <label>收件人</label>
-          <div class="input-wrap" data-field>
-            <input type="text" id="mailTo" maxlength="32"
-                   placeholder="输入收件人账户名" autocomplete="off" />
-          </div>
-          <div class="hint"></div>
-        </div>
-
-        <div class="field">
-          <label>正文</label>
-          <div class="input-wrap is-area" data-field>
-            <textarea id="mailBody" rows="5" maxlength="300"
-                      placeholder="300字以内"></textarea>
-          </div>
-          <div class="hint"></div>
-          <div class="bio-meta"><span id="mailCount">0</span>/300</div>
-        </div>
-
-        <button type="button" class="sub-save" id="btnMailSend">发 送</button>
-      </section>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     好友（两个小人按钮弹出）
-     三个平级入口：好友 / 新的申请 / 添加好友。
-     手机：整屏、上下排列；电脑：居中悬浮白卡（见 app.css）。
-     关系存的是 users.id，名字只是快照 —— 对方注销后名字旁边
-     会挂「已注销」标签（见 js/friends.js 的 goneTag()）。
-     ============================================================ -->
-<div class="sub-page" id="pageFriends">
-  <div class="sub-inner">
-    <div class="sub-bar">
-      <button type="button" class="sub-back" data-back aria-label="返回">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <!-- 电脑端（lg）左上角的退出按钮；手机端用上面的返回箭头，这个隐藏 -->
-      <button type="button" class="sub-exit" id="btnFriendsExit" aria-label="退出">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
-        </svg>
-        退出
-      </button>
-      <h3>好友</h3>
-    </div>
-
-    <div class="sub-body">
-      <!-- 和站内信同一套三口结构：一次只显示一块 -->
-      <div class="mail-tabs" id="friendTabs">
-        <button type="button" class="active" data-tab="list">好友<i class="fr-count" id="tabFriendCount" hidden>0</i></button>
-        <button type="button" data-tab="req">新的申请<i class="mail-pill" id="tabReqCount" hidden>0</i></button>
-        <button type="button" data-tab="add">添加好友</button>
-      </div>
-
-      <!-- ---------- 好友名单 ---------- -->
-      <section class="mail-panel show" id="friendListView">
-        <div class="mail-toolbar">
-          <button type="button" class="mini-btn" id="btnFriendRefresh">刷新</button>
-          <!-- 一键已读：好友发来的未读私聊一次全标已读（和站内信那头同一个思路）。
-               不做二次确认 —— 它不删东西，只是把"没看过"变成"看过了"。 -->
-          <button type="button" class="mini-btn" id="btnFriendReadAll">一键已读</button>
-        </div>
-        <!-- 列表由 js/friends.js 渲染（内容一律用 textContent 写入） -->
-        <div class="mail-list" id="friendList">
-          <div class="mail-empty">加载中…</div>
-        </div>
-      </section>
-
-      <!-- ---------- 新的申请：收到的（可同意/拒绝）+ 我发出的（等对方） ---------- -->
-      <section class="mail-panel" id="friendReqView">
-        <div class="mail-list" id="friendReqList">
-          <div class="mail-empty">加载中…</div>
-        </div>
-      </section>
-
-      <!-- ---------- 添加好友 ---------- -->
-      <section class="mail-panel" id="friendAddView">
-        <!-- 我的好友码：注册时就发好了，一生成就固定，用户自己改不了（后端也没给改的接口） -->
-        <div class="fr-mine">
-          <span class="fr-mine-label">我的好友码</span>
-          <div class="fr-mine-row">
-            <b class="fr-code is-pending" id="frMyCode">······</b>
-            <button type="button" class="fr-btn" id="btnFrCopyCode">复制</button>
-          </div>
-        </div>
-
-        <div class="field">
-          <label>账户名或好友码</label>
-          <div class="input-wrap" data-field>
-            <input type="text" id="friendQuery" maxlength="32"
-                   placeholder="输入对方账户名或 6 位好友码" autocomplete="off" />
-          </div>
-          <div class="hint"></div>
-        </div>
-
-        <button type="button" class="sub-save" id="btnFriendSearch">查 找</button>
-
-        <!-- 查找结果：0~2 个候选用户，由 js/friends.js 渲染（内容一律 textContent 写入） -->
-        <div class="fr-results" id="frResults"></div>
-      </section>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     私聊：从好友名单点用户名进来的聊天空间
-     浮在好友页之上（z-index 见 js/chat.js）；整屏，手机上下排、电脑居中卡。
-     顶部对方名字 + 「⋯」二级菜单；中间气泡；底部输入 + 发送。
-     安全：消息正文一律用 textContent 写入，不拼 HTML。
-     ============================================================ -->
-<div class="sub-page" id="pageChat">
-  <div class="sub-inner">
-    <div class="sub-bar">
-      <button type="button" class="sub-back" data-back aria-label="返回">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <!-- 电脑端（lg）左上角退出；手机端用上面的返回箭头，这个隐藏 -->
-      <button type="button" class="sub-exit" id="btnChatExit" aria-label="退出">退出</button>
-      <h3 id="chatPeerName">—</h3>
-      <!-- 「⋯」：进二级页（主页 / 删除好友） -->
-      <button type="button" class="sub-more" id="btnChatMore" aria-label="更多">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
-          <circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" />
-        </svg>
-      </button>
-    </div>
-
-    <div class="sub-body">
-      <div class="chat-body" id="chatBody">
-        <div class="mail-empty">加载中…</div>
-      </div>
-    </div>
-
-    <div class="chat-input">
-      <textarea id="chatInput" maxlength="300" rows="1" placeholder="发条消息…" autocomplete="off"></textarea>
-      <button type="button" class="sub-save" id="btnChatSend">发送</button>
-    </div>
-  </div>
-
-  <!-- 气泡操作菜单：手机双击 / 电脑右键 -->
-  <div class="chat-ctx" id="pageChatCtx">
-    <button type="button" class="chat-ctx-btn" id="ctxRecall">撤回</button>
-    <button type="button" class="chat-ctx-btn" id="ctxCopy">复制</button>
-    <button type="button" class="chat-ctx-btn danger" id="ctxDelete">删除</button>
-  </div>
-</div>
-
-<!-- 私聊的二级页：从聊天顶栏「⋯」进来，放主页 / 删除好友 -->
-<div class="sub-page" id="pageChatMenu">
-  <div class="sub-inner">
-    <div class="sub-bar">
-      <button type="button" class="sub-back" data-back aria-label="返回">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h3>聊天设置</h3>
-    </div>
-    <div class="sub-body">
-      <div class="chat-menu">
-        <!-- 免打扰拨片：开了之后好友名单里他那一行只显示一个小红点、
-             不显示未读条数；未读本身照记，主页角标也照算（不减少总数）。 -->
-        <div class="chat-setting">
-          <div class="chat-setting-txt">
-            <b>免打扰</b>
-            <span>开启后他的新消息只显示一个小红点，不显示未读条数</span>
-          </div>
-          <button type="button" class="chat-switch" id="chatMuteSwitch"
-                  role="switch" aria-checked="false" aria-label="免打扰">
-            <i></i>
-          </button>
-        </div>
-        <button type="button" class="fr-btn" id="btnChatViewProfile">查看主页</button>
-        <button type="button" class="fr-btn" id="btnChatClear">清空历史记录</button>
-        <button type="button" class="fr-btn danger" id="btnChatDelete">删除好友</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     用户主页（从好友名单 / 查找结果点进来，只读）
-     排版刻意与个人主页拉开距离：左对齐 hero + 只读「标签：值」列表，
-     不复用个人主页那套「标签在上、控件在下」的表单样式。
-     ============================================================ -->
-<div class="sub-page" id="pageUserView">
-  <div class="sub-inner">
-    <div class="sub-bar">
-      <button type="button" class="sub-back" data-back aria-label="返回">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h3>用户主页</h3>
-      <button type="button" class="sub-close" id="btnUserViewClose" aria-label="关闭">✕</button>
-    </div>
-
-    <div class="sub-body">
-      <div class="uv-hero">
-        <div class="uv-mark"><svg class="mark-n" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.1 3.7h4.32v16.6H4.1zM15.58 3.7h4.32v16.6h-4.32zM4.1 3.7L9.14 3.7L19.9 20.3L14.86 20.3Z"/></svg></div>
-        <div class="uv-name" id="uvName">—</div>
-        <div class="uv-tags" id="uvTags"></div>
-      </div>
-
-      <!-- 「星座：XX，性别：XX……」只读列表，行由 js/app.js 注入 -->
-      <div class="uv-card" id="uvCard"></div>
-    </div>
-  </div>
-</div>
-
-<!-- 邮件详情：点开一封后放大读全文（手机从底部弹出 / 电脑居中）
-     回信按钮就放在正文末尾（见 .mail-reply-btn） -->
-<div class="overlay mail-view-overlay" id="mailView">
-  <div class="modal mail-view" role="dialog" aria-modal="true">
-    <div class="modal-head">
-      <div>
-        <h4 id="mailViewWho">—</h4>
-        <small id="mailViewTime">—</small>
-      </div>
-      <button class="x" id="mailViewClose" aria-label="关闭">✕</button>
-    </div>
-
-    <div class="modal-body" id="mailViewBody">
-      <div class="mail-meta">
-        <div class="mail-meta-row"><span>发件人</span><b id="mailViewFrom">—</b></div>
-        <div class="mail-meta-row"><span>收件人</span><b id="mailViewTo">—</b></div>
-      </div>
-
-      <!-- 正文全文：一律用 textContent 写入 -->
-      <div class="mail-full" id="mailViewText"></div>
-
-      <!-- 正文的最后：回信（点了跳到写信栏并预填收件人） -->
-      <button type="button" class="sub-save mail-reply-btn" id="btnMailReply">回 信</button>
-    </div>
-  </div>
-</div>
-
-<!-- 反馈详情：点开一条后放大读全文（和邮件详情同一套样式） -->
-<div class="overlay mail-view-overlay" id="fbView">
-  <div class="modal mail-view" role="dialog" aria-modal="true">
-    <div class="modal-head">
-      <div>
-        <h4 id="fbViewWho">—</h4>
-        <small id="fbViewTime">—</small>
-      </div>
-      <button class="x" id="fbViewClose" aria-label="关闭">✕</button>
-    </div>
-
-    <div class="modal-body" id="fbViewBody">
-      <div class="mail-meta">
-        <div class="mail-meta-row"><span>发件人</span><b id="fbViewFrom">—</b></div>
-        <div class="mail-meta-row"><span>状态</span><b id="fbViewState">—</b></div>
-      </div>
-
-      <!-- 全文：一律用 textContent 写入 -->
-      <div class="mail-full" id="fbViewText"></div>
-    </div>
-  </div>
-</div>
-
-<!-- 通用「密码确认」弹窗
-     需要管理密码的操作（删除反馈、关闭校验）共用一个。
-     开关被临时关掉时，密码框会隐藏，它就退化成普通二次确认。 -->
-<div class="overlay" id="pwPrompt">
-  <div class="pw-box" role="dialog" aria-modal="true">
-    <h4 id="pwPromptTitle">确认操作</h4>
-    <p id="pwPromptDesc">—</p>
-
-    <div class="field" id="pwPromptField">
-      <label>管理密码</label>
-      <div class="input-wrap" data-field>
-        <input type="password" id="pwPromptInput" placeholder="请输入管理密码"
-               autocomplete="current-password" />
-        <button type="button" class="eye" data-eye aria-label="显示密码">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-      <div class="hint"></div>
-    </div>
-
-    <div class="confirm-actions">
-      <button type="button" id="btnPwPromptCancel">取消</button>
-      <button type="button" class="danger" id="btnPwPromptOk">确定</button>
-    </div>
-  </div>
-</div>
-
-<!-- 修改管理密码 -->
-<div class="overlay" id="mgmtPwBox">
-  <div class="pw-box" role="dialog" aria-modal="true">
-    <h4>修改管理密码</h4>
-    <p>需要先验证当前密码。新密码以加密方式保存，<b>任何人都无法查看</b>。</p>
-
-    <div class="field">
-      <label>当前密码</label>
-      <div class="input-wrap" data-field>
-        <input type="password" id="mgmtOldPw" placeholder="请输入当前管理密码"
-               autocomplete="current-password" />
-        <button type="button" class="eye" data-eye aria-label="显示密码">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-      <div class="hint"></div>
-    </div>
-
-    <div class="field">
-      <label>新密码</label>
-      <div class="input-wrap" data-field>
-        <input type="password" id="mgmtNewPw" placeholder="至少 4 位"
-               autocomplete="new-password" />
-        <button type="button" class="eye" data-eye aria-label="显示密码">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-      <div class="hint"></div>
-    </div>
-
-    <div class="field">
-      <label>确认新密码</label>
-      <div class="input-wrap" data-field>
-        <input type="password" id="mgmtNewPw2" placeholder="请再次输入新密码"
-               autocomplete="new-password" />
-        <button type="button" class="eye" data-eye aria-label="显示密码">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-      <div class="hint"></div>
-    </div>
-
-    <div class="confirm-actions">
-      <button type="button" id="btnMgmtPwCancel">取消</button>
-      <button type="button" class="primary" id="btnMgmtPwSave">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- 管理员验证：进「维护中」的卡片要先过这一道
-     用的是管理员账号密码（就是登录页「管理员登录」那一对），
-     验对了只放行、不发令牌——想进后台还是得正常登录 -->
-<div class="overlay" id="cardGate">
-  <div class="pw-box" role="dialog" aria-modal="true">
-    <h4>管理员验证</h4>
-    <p id="cardGateDesc">—</p>
-
-    <div class="field" id="cardGateUserField">
-      <label>管理员账户名</label>
-      <div class="input-wrap" data-field>
-        <input type="text" id="cardGateUser" placeholder="请输入管理员账户名"
-               autocomplete="off" />
-      </div>
-      <div class="hint"></div>
-    </div>
-
-    <div class="field">
-      <label>密码</label>
-      <div class="input-wrap" data-field>
-        <input type="password" id="cardGatePw" placeholder="请输入密码"
-               autocomplete="current-password" />
-        <button type="button" class="eye" data-eye aria-label="显示密码">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-      <div class="hint"></div>
-    </div>
-
-    <div class="confirm-actions">
-      <button type="button" id="btnCardGateCancel">取消</button>
-      <button type="button" class="primary" id="btnCardGateOk">维护测试</button>
-    </div>
-  </div>
-</div>
-
-<!-- 删除邮件二次确认 -->
-<div class="confirm-overlay" id="mailDeleteConfirm">
-  <div class="confirm-box2" role="dialog" aria-modal="true">
-    <h4>删除邮件</h4>
-    <p>确定要删除这封邮件吗？<br />只从<b id="mailDelBoxName">收件箱</b>里移除，对方的信箱不受影响。</p>
-    <div class="acts">
-      <button type="button" id="btnMailDelCancel">取消</button>
-      <button type="button" class="danger" id="btnMailDelOk">删除</button>
-    </div>
-  </div>
-</div>
-
-<!-- 删除好友二次确认 -->
-<div class="confirm-overlay" id="friendRemoveConfirm">
-  <div class="confirm-box2" role="dialog" aria-modal="true">
-    <h4>删除好友</h4>
-    <p>确定把 <b id="friendDelName">—</b> 移出好友吗？<br />
-       对方那边的名单里也会跟着去掉；想再加回来，重新申请一次就行。</p>
-    <div class="acts">
-      <button type="button" id="btnFriendDelCancel">取消</button>
-      <button type="button" class="danger" id="btnFriendDelOk">删除</button>
-    </div>
-  </div>
-</div>
-
-<!-- 清空聊天记录二次确认 -->
-<div class="confirm-overlay" id="chatClearConfirm">
-  <div class="confirm-box2" role="dialog" aria-modal="true">
-    <h4>清空聊天记录</h4>
-    <p>确定要清空你和 <b id="chatClearName">—</b> 的全部聊天记录吗？<br />
-       只清你自己这一边，对方那边看到的还是原样，且<b>无法撤销</b>。</p>
-    <div class="acts">
-      <button type="button" id="btnChatClearCancel">取消</button>
-      <button type="button" class="danger" id="btnChatClearOk">清空</button>
-    </div>
-  </div>
-</div>
-
-<!-- 退出登录二次确认 -->
-<div class="confirm-overlay" id="logoutConfirm">
-  <div class="confirm-box2" role="dialog" aria-modal="true">
-    <h4>退出登录</h4>
-    <p>确定要退出当前账号吗？</p>
-    <div class="acts">
-      <button type="button" id="btnLogoutCancel">取消</button>
-      <button type="button" class="danger" id="btnLogoutOk">退出</button>
-    </div>
-  </div>
-</div>
-
-<!-- 选择悬浮窗：星座 / 性别共用（手机从底部弹出，电脑居中弹出） -->
-<div class="picker-overlay" id="pickerOverlay">
-  <div class="picker-sheet" role="dialog" aria-modal="true">
-    <div class="picker-head">
-      <h4 id="pickerTitle">选择</h4>
-      <button type="button" class="x" id="pickerClose" aria-label="关闭">✕</button>
-    </div>
-    <div class="picker-body">
-      <div class="chips" id="pickerChips"></div>
-    </div>
-  </div>
-</div>
-
-<!-- 单位选择的悬浮窗（单位换算用）
-     外观和上面星座/性别那个是同一套（.picker-overlay + .picker-sheet + .chips），
-     但各是独立的一个：那个弹窗被 app.js 绑死在个人资料的字段上，这里由
-     js/units.js 自己管（同一个弹窗要服务上下两栏，选项也跟着类别走）。 -->
 <div class="picker-overlay" id="unitPicker">
   <div class="picker-sheet" role="dialog" aria-modal="true">
     <div class="picker-head">
@@ -5058,561 +4321,72 @@
   </div>
 </div>
 
-<!-- 意见反馈（只有发件，不用填收件人）
-     抬头上的收件人显示为「Nova」；落库后是全体管理员都能看到 -->
-<div class="sub-page" id="pageFeedback">
-  <div class="sub-inner">
-    <div class="sub-bar">
-      <button type="button" class="sub-back" data-back aria-label="返回">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h3>意见反馈</h3>
-      <button type="button" class="sub-close" id="btnFeedbackClose" aria-label="关闭">✕</button>
+<!-- 更改称呼：只改欢迎页显示的名字，存在本机浏览器里 -->
+<div class="confirm-overlay" id="nameOverlay">
+  <div class="confirm-box2" role="dialog" aria-modal="true" aria-labelledby="nameTitle">
+    <h4 id="nameTitle">更改称呼</h4>
+    <p>改的是欢迎页上叫你的名字，只存在这台设备的浏览器里。</p>
+    <div class="set-field">
+      <div class="input-wrap">
+        <input id="nameInput" type="text" maxlength="12" autocomplete="off"
+               placeholder="最多 12 个字，留空就是「用户」" />
+      </div>
+      <div class="set-hint" id="nameHint">留空保存 = 恢复成默认的「用户」</div>
     </div>
-
-    <div class="sub-body">
-      <div class="fb-postcard">
-        <div class="fb-postcard-row">
-          <span>收件</span><b>Nova</b>
-        </div>
-        <div class="fb-postcard-row">
-          <span>发件</span><b id="fbSenderName">—</b>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>正文</label>
-        <div class="input-wrap is-area" data-field>
-          <textarea id="fbBody" rows="6" maxlength="300"
-                    placeholder="300字以内"></textarea>
-        </div>
-        <div class="hint"></div>
-        <div class="bio-meta"><span id="fbCount">0</span>/300</div>
-      </div>
-
-      <button type="button" class="sub-save" id="btnFeedbackSend">发 送</button>
+    <div class="acts">
+      <button type="button" id="nameCancel">取消</button>
+      <button type="button" class="primary" id="nameSave">保存</button>
     </div>
   </div>
 </div>
 
-<!-- 管理员后台面板
-     一张卡片里切成三块视图：首页（功能入口）/ 用户管理 / 反馈来信
-     由 js/app.js 的 showAdminView() 切换 -->
-<div class="admin-page" id="adminPage">
-  <div class="admin-card">
-
-    <div class="admin-head">
-      <div>
-        <h3 id="adminTitle">管理员后台</h3>
-        <p id="adminSub">—</p>
-      </div>
-      <div class="admin-head-actions">
-        <button type="button" class="mini-btn" id="btnAdminBack" hidden>返回</button>
-        <button type="button" class="mini-btn" id="btnAdminRefresh" hidden>刷新</button>
-        <button type="button" class="mini-btn" id="btnAdminLogout">退出登录</button>
-      </div>
+<!-- 关于 Nova：版本号 / 上次更新时间（写死在 js/settings.js 顶部两个常量里） -->
+<div class="confirm-overlay" id="aboutOverlay">
+  <div class="confirm-box2 about-box" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <img class="about-logo" src="img/icon-128.png" alt="" />
+    <h4 id="aboutTitle">Nova 离线版</h4>
+    <div class="about-rows">
+      <div><span>版本号</span><b id="aboutVer">—</b></div>
+      <div><span>上次更新</span><b id="aboutDate">—</b></div>
     </div>
-
-    <div class="admin-body">
-
-      <!-- ---------- 首页：功能入口 ---------- -->
-      <div class="admin-view show" id="adminHome">
-        <button type="button" class="admin-entry" data-admin-go="users">
-          <span class="admin-entry-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="9" cy="8" r="3.4" />
-              <path d="M2.6 20a6.4 6.4 0 0112.8 0" />
-              <path d="M17 8.5a3 3 0 010 5.6" />
-              <path d="M19 19.4a5.6 5.6 0 00-2.2-4.3" />
-            </svg>
-          </span>
-          <span class="admin-entry-text">
-            <span class="admin-entry-name">用户管理</span>
-            <span class="admin-entry-desc">管理用户账号</span>
-          </span>
-          <span class="tool-btn-go" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
-        </button>
-
-        <button type="button" class="admin-entry" data-admin-go="feedback">
-          <span class="admin-entry-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 11.5a8.4 8.4 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.4 8.4 0 013.8-.9h.5a8.5 8.5 0 018 8v.5z" />
-            </svg>
-          </span>
-          <span class="admin-entry-text">
-            <span class="admin-entry-name">反馈来信</span>
-            <span class="admin-entry-desc">用户提交的意见反馈</span>
-          </span>
-          <!-- 未读数：只算「我自己还没读」的。别的管理员读没读不影响它 -->
-          <span class="admin-dot" id="fbDot" hidden>0</span>
-          <span class="tool-btn-go" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
-        </button>
-
-        <button type="button" class="admin-entry" data-admin-go="cards">
-          <span class="admin-entry-ico" aria-hidden="true">
-            <!-- 两张叠起来的卡片：表示"这些功能卡片"本身。
-                 里面刻意**不放**山峦 / 太阳那些装饰线 —— 干净的双卡外形，
-                 缩到小尺寸也认得出来。 -->
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="7.5" width="15" height="11" rx="2.4" />
-              <path d="M6.5 5h11A2.5 2.5 0 0120 7.5v8" />
-            </svg>
-          </span>
-          <span class="admin-entry-text">
-            <span class="admin-entry-name">卡片维护</span>
-            <span class="admin-entry-desc">功能卡片的上线与下线</span>
-          </span>
-          <span class="tool-btn-go" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
-        </button>
-
-        <button type="button" class="admin-entry" data-admin-go="security">
-          <span class="admin-entry-ico" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="4" y="10.5" width="16" height="10" rx="2.6" />
-              <path d="M8 10.5V7a4 4 0 018 0v3.5" />
-              <path d="M12 14.6v2.2" />
-            </svg>
-          </span>
-          <span class="admin-entry-text">
-            <span class="admin-entry-name">安全设置</span>
-            <span class="admin-entry-desc">管理密码与校验开关</span>
-          </span>
-          <span class="tool-btn-go" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
-        </button>
-      </div>
-
-      <!-- ---------- 用户管理 ---------- -->
-      <div class="admin-view" id="adminUsersView">
-        <div class="admin-empty" id="usersLoading">加载中…</div>
-        <table class="user-table" id="userTable" hidden>
-          <thead>
-            <tr>
-              <th style="width:56px">序号</th>
-              <th>用户名</th>
-              <th style="width:166px">注册时间</th>
-              <th style="width:250px">操作</th>
-            </tr>
-          </thead>
-          <tbody id="userTableBody"></tbody>
-        </table>
-        <div class="admin-empty" id="usersEmpty" hidden>还没有任何普通用户</div>
-      </div>
-
-      <!-- ---------- 反馈来信 ---------- -->
-      <div class="admin-view" id="adminFeedbackView">
-        <div class="fb-toolbar">
-          <button type="button" class="mini-btn" id="btnFbReadAll"
-                  title="只把已经有管理员处理过的反馈标记为已读">一键已读已处理</button>
-        </div>
-        <div class="fb-list" id="fbList">
-          <div class="admin-empty">加载中…</div>
-        </div>
-      </div>
-
-      <!-- ---------- 安全设置 ---------- -->
-      <div class="admin-view" id="adminSecurityView">
-        <div class="sec-wrap">
-
-          <div class="sec-row">
-            <div class="sec-text">
-              <div class="sec-title">管理密码</div>
-              <!-- 密码不显示、也不可查看，只说明用途 -->
-              <div class="sec-desc" id="secPwDesc">
-                删除反馈等敏感操作需要输入。密码以加密方式保存，无法查看。
-              </div>
-            </div>
-            <button type="button" class="mini-btn" id="btnSecChange">修改密码</button>
-          </div>
-
-          <div class="sec-row">
-            <div class="sec-text">
-              <div class="sec-title">临时关闭密码校验</div>
-              <div class="sec-desc">
-                关闭后，需要管理密码的操作都会直接执行（仍限管理员）。
-                关闭时需要输入当前密码；重新打开不需要。
-              </div>
-            </div>
-            <label class="switch" title="开关密码校验">
-              <input type="checkbox" id="secToggle" />
-              <span class="switch-track"></span>
-            </label>
-          </div>
-
-          <div class="sec-note" id="secState">—</div>
-
-        </div>
-      </div>
-
-      <!-- ---------- 卡片维护 ----------
-           一行一张卡片：名字和说明由 js/cards.js 从首页那些卡片按钮上读，
-           这里不重复写一遍。开关就是 .switch 拨片，和安全设置同一套；
-           拨片开 = 卡片正常运行，关 = 下线维护。 -->
-      <div class="admin-view" id="adminCardsView">
-        <div class="sec-wrap">
-          <div class="sec-note" id="cardMaintNote">—</div>
-          <div id="cardMaintList"></div>
-        </div>
-      </div>
-
-      <!-- ---------- 彩蛋墙（针对某一个人，从用户管理「高级」进来） ----------
-           墙上的条目本身就是游戏存档算出来的（见 js/archive.js 的 ENTRIES，
-           这里把同一份清单复述在 js/gamepanel.js 里）。所以「点亮 / 删除」
-           改的是那个人的存档，而不是另记一份"后台发的彩蛋"。 -->
-      <div class="admin-view" id="adminEggsView">
-        <div class="ga-wrap">
-          <div class="ga-note" id="gaEggNote">—</div>
-          <div class="ga-egg-list" id="gaEggList"></div>
-        </div>
-      </div>
-
-      <!-- ---------- 游戏进度（三个分栏） ---------- -->
-      <div class="admin-view" id="adminProgressView">        <div class="ga-wrap">
-
-          <div class="ga-tabs" role="tablist">
-            <button type="button" class="ga-tab on" data-ga-tab="p24" role="tab">二十四点</button>
-            <button type="button" class="ga-tab" data-ga-tab="prisoner" role="tab">囚徒困境</button>
-            <button type="button" class="ga-tab" data-ga-tab="g2048" role="tab">二零四八</button>
-          </div>
-
-          <div class="ga-panel show" data-ga-panel="p24">
-            <div class="ga-score">
-              <div class="ga-score-label">累计解出局数</div>
-              <div class="ga-score-val" id="gaP24Val">—</div>
-            </div>
-            <div class="ga-edit">
-              <input type="number" class="ga-input" id="gaP24Input"
-                     min="0" step="1" inputmode="numeric" placeholder="改成…" />
-              <button type="button" class="mini-btn" id="gaP24Save">保存</button>
-              <button type="button" class="mini-btn ga-danger" id="gaP24Clear">清空</button>
-            </div>
-            <div class="ga-hint">保存后立即生效：他下次进二十四点时读到的就是这个数。</div>
-          </div>
-
-          <div class="ga-panel" data-ga-panel="g2048">
-            <div class="ga-score">
-              <div class="ga-score-label">最高分</div>
-              <div class="ga-score-val" id="gaG48Val">—</div>
-            </div>
-            <div class="ga-edit">
-              <input type="number" class="ga-input" id="gaG48Input"
-                     min="0" step="1" inputmode="numeric" placeholder="改成…" />
-              <button type="button" class="mini-btn" id="gaG48Save">保存</button>
-              <button type="button" class="mini-btn ga-danger" id="gaG48Clear">清空</button>
-            </div>
-            <div class="ga-hint">最高分只会被更高的分顶掉，所以改小之后他下次打出更高的分还会照常刷新。</div>
-          </div>
-
-          <div class="ga-panel" data-ga-panel="prisoner">
-            <div class="ga-score">
-              <div class="ga-score-label">是否已触发</div>
-              <div class="ga-score-val" id="gaPrVal">—</div>
-            </div>
-            <div class="ga-hint" id="gaPrHint">—</div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ---------- 点击次数（针对某一个人，从用户管理「高级」进来） ----------
-           一行一张功能卡片：名字 / 最近一次 / 次数 / 「清零」。
-           ★ 名单和顺序由 js/gamepanel.js 从首页那批 .tool-btn 现读，
-             后端只回「点过的那些」，没点过的在这里补 0 ——
-             加一张卡片不用动后端，也不用动这里。
-           ★ 底栏五颗按钮不算（它们不是卡片，前端的点击上报也不认）。 -->
-      <div class="admin-view" id="adminClicksView">
-        <div class="ga-wrap">
-          <div class="ga-note" id="gcNote">—</div>
-          <div class="ga-egg-list" id="gcList"></div>
-          <div class="gc-foot">
-            <button type="button" class="mini-btn ga-danger" id="gcClearAll">全部清零</button>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-  </div>
-</div>
-
-<!-- 删除用户确认
-     （已并入通用「密码确认」弹窗 #pwPrompt：删号要管理员密码。
-     原来这个纯确认框不再需要，删掉免得留死代码。） -->
-
-<!-- 修改用户密码弹窗 -->
-<div class="overlay" id="pwOverlay">
-  <div class="pw-box" role="dialog" aria-modal="true">
-    <h4>更改登录密码</h4>
-    <p>为用户 <b id="pwUserName">—</b> 设置新登录密码。<br />保存后该用户需要用新密码登录。</p>
-
-    <div class="field">
-      <label>新密码</label>
-      <div class="input-wrap" data-field>
-        <input type="password" id="adminNewPw" placeholder="至少 6 位" autocomplete="new-password" />
-        <button type="button" class="eye" data-eye aria-label="显示密码">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-      <div class="hint"></div>
-    </div>
-
-    <div class="field">
-      <label>确认新密码</label>
-      <div class="input-wrap" data-field>
-        <input type="password" id="adminCfmPw" placeholder="请再次输入新密码" autocomplete="new-password" />
-        <button type="button" class="eye" data-eye aria-label="显示密码">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" width="16" height="16"><path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
-      <div class="hint"></div>
-    </div>
-
-    <div class="confirm-actions">
-      <button type="button" id="btnPwCancel">取消</button>
-      <button type="button" class="primary" id="btnPwSave">保存</button>
+    <div class="acts">
+      <button type="button" class="primary" id="aboutClose">知道了</button>
     </div>
   </div>
 </div>
 
-<!-- 用户管理「高级」操作面板：手机端抽屉、电脑端弹窗（参考首页设置齿轮菜单） -->
-<div class="adv-overlay" id="advOverlay">
-  <div class="adv-sheet" role="dialog" aria-modal="true">
-    <div class="adv-head">对「<b id="advUserName">—</b>」进行操作</div>
-    <div class="adv-list">
-      <button type="button" class="adv-item" id="advChangePw">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="4" y="10" width="16" height="10" rx="2" />
-          <path d="M8 10V7a4 4 0 018 0v3" />
-        </svg>
-        更改登录密码
-      </button>
-      <button type="button" class="adv-item" id="advChangeFc">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 7H6a3 3 0 000 6h3M15 7h3a3 3 0 010 6h-3M8 10h8" />
-        </svg>
-        更改好友码
-      </button>
-      <!-- 彩蛋墙 / 游戏进度：都是「看这个人自己那份存档」，
-           点进去是把高级面板收起来、换成后台里的一整块视图（见 js/gamepanel.js） -->
-      <button type="button" class="adv-item" id="advOpenEggs">
-        <!-- 和底栏那颗彩蛋按钮同一个图形：蛋壳（上段 S 曲线 + 下段半圆）+ 一道裂纹 -->
-        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6">
-          <path d="M19.2 14.2C19.2 9 15.9 2.8 12 2.8S4.8 9 4.8 14.2a7.2 7.2 0 0 0 14.4 0Z" />
-          <path d="M4.85 14.2 L7.9 15.9 L10.9 13.2 L13.9 15.7 L16.9 13.4 L19.15 15" />
-        </svg>
-        彩蛋墙
-      </button>
-      <button type="button" class="adv-item" id="advOpenProgress">
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 20h16" />
-          <path d="M7.5 20v-5.5M12 20V8.5M16.5 20v-8.5" />
-        </svg>
-        游戏进度
-      </button>
-      <!-- 点击次数：同样是「看这个人自己的数据」，点进去换成后台的一整块视图 -->
-      <button type="button" class="adv-item" id="advOpenClicks">
-        <!-- 鼠标指针：箭头 + 尾部那截斜杆 -->
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M6.6 3.6l11.4 8-5 1.3 3 5.6-2.6 1.4-3-5.6-3.8 3.7z" />
-        </svg>
-        点击次数
-      </button>
-      <!-- 以后用户管理里新增的高级操作都加在这一列 -->
-    </div>
-    <button type="button" class="adv-cancel" id="advCancel">取消</button>
-  </div>
-</div>
-
-<!-- 用户管理：更改好友码（无管理密码、无二次确认） -->
-<div class="overlay" id="friendCodeOverlay">
-  <div class="pw-box" role="dialog" aria-modal="true">
-    <h4>更改好友码</h4>
-
-    <p class="fc-current">「<span id="fcUserName">用户</span>」的好友码为 <b id="fcCurrent">—</b></p>
-    <p class="fc-sub">输入新的好友码</p>
-
-    <div class="field">
-      <div class="input-wrap" data-field>
-        <input type="text" id="fcInput" maxlength="6" inputmode="numeric"
-               placeholder="6 位数字" autocomplete="off" />
-      </div>
-      <div class="hint"></div>
-    </div>
-
-    <div class="confirm-actions">
-      <button type="button" id="btnFcCancel">取消</button>
-      <button type="button" class="primary" id="btnFcSave">保存</button>
+<!-- 清空缓存：二次确认。清的是本机浏览器里的本地记录（称呼 / 各游戏存档），
+     删完刷新一次，回到刚打开的样子（逻辑见 js/settings.js） -->
+<div class="confirm-overlay" id="clearOverlay">
+  <div class="confirm-box2 clear-box" role="dialog" aria-modal="true" aria-labelledby="clearTitle">
+    <h4 id="clearTitle">清空缓存？</h4>
+    <p>会删掉这台设备上存的全部本地记录：称呼、2048 最高分、24 点战绩、魔方设置区的收起状态等。</p>
+    <p class="clear-warn">清空之后没法恢复，程序本身不受影响。</p>
+    <div class="acts">
+      <button type="button" id="clearCancel">取消</button>
+      <button type="button" class="danger" id="clearConfirm">清空</button>
     </div>
   </div>
 </div>
 
-<!-- 改密码二次确认 -->
-<!-- （已并入通用「密码确认」弹窗 #pwPrompt：改用户密码要管理员密码。
-     原来这个纯确认框不再需要，删掉免得留死代码。） -->
-
-<!-- ============================================================
-     三、用户协议 / 隐私政策弹窗
-     ============================================================ -->
-<div class="overlay" id="overlay">
-  <div class="modal" role="dialog" aria-modal="true">
-    <div class="modal-head">
-      <div>
-        <h4 id="agreementTitle">Nova 用户服务协议</h4>
-        <small id="agreementDate">更新日期：2026 年 9 月 27 日</small>
-      </div>
-      <button class="x" id="closeModal" aria-label="关闭">✕</button>
-    </div>
-
-    <div class="modal-body" id="modalBody">
-      <div class="note">请向下滚动阅读完整条款，滚动到底部后即可点击「同意并继续」。</div>
-
-      <!-- 用户服务协议 -->
-      <div data-doc="terms">
-        <h5>一、协议的接受</h5>
-        <p>1.1 本协议是您与 Nova 平台就注册、登录及使用本平台服务所订立的有效契约。请您审慎阅读并充分理解各条款内容。</p>
-        <p>1.2 您通过点击"登录""注册"按钮即视为已阅读、理解并同意接受本协议全部内容。若不同意，请停止使用本平台服务。</p>
-
-        <h5>二、账号与密码</h5>
-        <p>2.1 您应提供真实、准确、完整的注册信息，并在信息变更时及时更新。</p>
-        <p>2.2 账号的所有权归本平台所有，您仅获得该账号的使用权，禁止赠与、借用、租用、转让或售卖。</p>
-        <p>2.3 您应妥善保管账户名与密码，并对该账号下发生的一切行为承担全部责任。如发现账号被盗用，应立即通知本平台。</p>
-
-        <h5>三、用户行为规范</h5>
-        <p>3.1 您承诺遵守中华人民共和国相关法律法规，不得利用本平台从事任何违法或损害他人合法权益的行为。</p>
-        <p>3.2 您不得上传、发布、传播任何违法、侮辱、诽谤内容，不得侵入他人系统或使用自动化脚本干扰平台正常运行。</p>
-        <p>3.3 若您违反上述规定，本平台有权采取警示、限制功能、暂停或永久终止账号等措施。</p>
-
-        <h5>四、隐私与个人信息保护</h5>
-        <p>4.1 本平台重视您的个人信息保护，将依法收集、使用、存储您的必要信息。</p>
-        <p>4.2 为保障账号安全，本平台可能采集设备型号、IP 地址及登录日志，仅用于安全风控与故障排查。</p>
-        <p>4.3 除法律法规要求或您明确授权外，本平台不会向第三方提供您的个人信息。</p>
-
-        <h5>五、服务中断与免责</h5>
-        <p>5.1 因系统维护、升级或不可抗力导致服务中断的，本平台不承担赔偿责任，但将尽最大努力减少影响并提前通知。</p>
-        <p>5.2 在法律允许的最大范围内，本平台对您使用服务所产生的间接损失、利润损失不承担赔偿责任。</p>
-
-        <h5>六、协议变更与争议解决</h5>
-        <p>6.1 本平台有权根据法律法规变化及业务调整修订本协议，修订后的协议将在平台公告后生效。</p>
-        <p>6.2 本协议适用中华人民共和国法律。因本协议引起的争议，双方应友好协商解决；协商不成的，可向本平台所在地有管辖权的人民法院提起诉讼。</p>
-
-        <p style="color:#9aa1ac;font-size:12px;margin-top:20px">— 本协议正文结束 —</p>
-      </div>
-
-      <!-- 隐私政策 -->
-      <div data-doc="privacy" hidden>
-        <h5>一、我们如何收集信息</h5>
-        <p>1.1 为向您提供账号登录、数据看板等服务，我们会收集您主动填写的账户名与密码。密码将以不可逆的加密方式存储，我们无法查看您的原始密码。</p>
-        <p>1.2 在您使用服务过程中，我们会自动收集设备型号、操作系统、浏览器类型、IP 地址、访问时间及操作日志等必要信息。</p>
-
-        <h5>二、我们如何使用信息</h5>
-        <p>2.1 用于身份验证、账号安全保护、异常登录检测与风险控制。</p>
-        <p>2.2 用于服务的运行维护、故障排查、功能优化与体验改进。</p>
-        <p>2.3 用于向您发送与服务相关的重要通知，例如安全提醒、协议变更通知。</p>
-
-        <h5>三、Cookie 与同类技术</h5>
-        <p>3.1 我们使用 Cookie 及本地存储技术保存您的登录状态与个性化偏好设置。</p>
-        <p>3.2 您可通过浏览器设置管理或清除 Cookie，但部分功能可能因此无法正常使用。</p>
-
-        <h5>四、信息的存储与保护</h5>
-        <p>4.1 您的个人信息存储于中华人民共和国境内的服务器。传输过程采用 TLS 加密。</p>
-        <p>4.2 我们采取访问权限控制、数据加密、安全审计等措施保护您的信息安全，并严格限制可接触信息的人员范围。</p>
-        <p>4.3 我们仅在实现本政策所述目的所必需的期限和法律要求的最短期限内保留您的个人信息。</p>
-
-        <h5>五、信息的共享与披露</h5>
-        <p>5.1 我们不会向任何第三方出售您的个人信息。</p>
-        <p>5.2 仅在下列情形下我们可能共享您的信息：已获得您的明确同意；为履行法律义务或响应司法、行政机关的合法要求。</p>
-
-        <h5>六、您的权利</h5>
-        <p>6.1 您有权查阅、更正您的账户信息，并可随时注销账号。</p>
-        <p>6.2 账号注销后，我们将删除或匿名化处理您的个人信息，法律法规另有规定的除外。</p>
-        <p>6.3 如您对个人信息处理有疑问或投诉，可通过 privacy@nova.example 联系我们。</p>
-
-        <h5>七、未成年人保护</h5>
-        <p>7.1 本平台主要面向成年人。若您为未成年人，请在法定监护人同意并指导下使用本服务。</p>
-
-        <h5>八、本政策的更新</h5>
-        <p>8.1 我们可能适时更新本隐私政策。重大变更时，我们将通过站内公告或弹窗方式另行提示。</p>
-        <p>8.2 若您在本政策更新后继续使用本服务，即表示您接受更新后的内容。</p>
-
-        <p style="color:#9aa1ac;font-size:12px;margin-top:20px">— 本政策正文结束 —</p>
-      </div>
-    </div>
-
-    <div class="modal-foot">
-      <span class="scroll-tip" id="scrollTip">↓ 请向下滚动阅读完整条款</span>
-      <button class="btn" id="agreeBtn" disabled>同意并继续</button>
-    </div>
-  </div>
-</div>
-
-<div class="toasts" id="toasts"></div>
-
-<!--
-  脚本按依赖顺序加载：
-    core.js  公共工具（$ / toast / api / 令牌 / 校验）
-    auth.js  登录注册 + 协议弹窗
-    app.js   主页 + 设置 + 管理面板（末尾会初始化视图切换）
--->
 <script src="js/core.js"></script>
-<!-- 返回键层级栈：让手机返回键一级一级退（功能页 → 子页面 → 弹窗 → 主页），
-     而不是一路退到桌面。盯的是 DOM（不许各处登记），细节见 js/backnav.js 头部。 -->
+<!-- 返回键层级栈：手机返回键一级一级退（功能页 → 弹窗 → 主页），
+     而不是一路退到桌面。细节见 js/backnav.js 头部。 -->
 <script src="js/backnav.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/app.js"></script>
-<!-- 功能页逻辑（格式转换等），依赖 core.js 的 $ 和 toast -->
+<script src="js/home.js"></script>
+<script src="js/settings.js"></script>
 <script src="js/tools.js"></script>
-<!-- 图片格式转换（纯前端编解码），依赖 core.js 与 tools.js -->
 <script src="js/convert.js"></script>
-<!-- 二十四点（纯前端出题 / 判题），依赖 core.js（$ / toast / setError）、
-     tools.js（tool:open 事件）与 app.js（currentAccount） -->
 <script src="js/points24.js"></script>
-<!-- 函数图像（纯前端解析 + canvas 作图），依赖 core.js（$ / setError）与
-     tools.js（tool:open 事件）。不引任何图形库：解析器和画布都是自己写的。 -->
 <script src="js/graph.js"></script>
-<!-- 单位换算（纯前端换系数），依赖 core.js（$ / setError / Device）与
-     tools.js（tool:open 事件）。两层视图 + 单位药丸弹窗都在这个文件里。 -->
 <script src="js/units.js"></script>
-<!-- 罗马数字（纯前端查表 + 校验），依赖 core.js（$ / setError / clearError /
-     Device）、tools.js（tool:open 事件）与 app.js（currentAccount）。
-     软键盘复用 css/tools.css 第六节那套 .gfx-* 外观。 -->
 <script src="js/roman.js"></script>
-<!-- 九宫幻方（纯前端造幻方 + 挖空 + 判题），依赖 core.js（$ / $$ / toast /
-     Device）与 tools.js（tool:open 事件）。三种造法见 js/magic.js 头部说明。 -->
 <script src="js/magic.js"></script>
 <script src="js/xor.js"></script>
-<!-- 梵天汉诺 / 汉诺塔（纯前端玩 + 任意局面最短路求解），依赖 core.js
-     （$ / $$ / toast / Device）与 tools.js（tool:open 事件）。
-     盘面几何、抬起-平移-落下三段动画、三柱竖排/横排两套排版都在这一个文件里。 -->
 <script src="js/brahma.js"></script>
-<!-- 二零四八（纯前端玩 + 本地最高分，只有最高分走后端），
-     依赖 core.js（$ / toast / apiUser / userToken / Device）、
-     tools.js（tool:open 事件）与 app.js（currentAccount）。
-     滑动 / 合并的时序、撤销栈、方向键和触摸都在这一个文件里。 -->
 <script src="js/game2048.js"></script>
-<!-- 数字桥屿 / 数桥（纯前端的出题器 + 唯一解求解器 + 落子判错），
-     依赖 core.js（$ / $$ / toast）与 tools.js（tool:open 事件）。
-     盘面是一张现铺的 SVG，出题、判题、撤销全在这一个文件里。 -->
 <script src="js/bridge.js"></script>
 <script src="js/sl.js"></script>
-<!-- 互不相犯（N 皇后）：纯前端的出题器（随机解 + 预设几枚）与落子判定，
-     依赖 core.js（$ / $$）与 tools.js（tool:open 事件）。 -->
 <script src="js/queen.js"></script>
 <script src="js/fourcolor.js"></script>
 <script src="js/bash.js"></script>
@@ -5621,40 +4395,10 @@
 <script src="js/morse-terms.js"></script>
 <script src="js/morse.js"></script>
 <script src="js/hamming.js"></script>
-<!-- 关灯游戏（纯前端的出题器 + GF(2) 最少步求解器），
-     依赖 core.js（$）与 tools.js（tool:open 事件），结构对齐互不相犯 queen.js。 -->
 <script src="js/lights.js"></script>
-<!-- 站内信，依赖 core.js（$ / apiUser / toast）与 app.js（closeSubPage / handleUserAuthLost） -->
-<script src="js/mail.js"></script>
-<!-- 好友（加好友 / 同意 / 拒绝 / 删除），依赖 core.js（$ / $$ / apiUser / toast /
-     setError / submitWith / goneTag）与 app.js（closeSubPage / handleUserAuthLost）。
-     好友行整行可点进私聊（js/chat.js），主页 / 删除收进聊天页的「⋯」二级菜单。 -->
-<script src="js/friends.js"></script>
-<!-- 好友私聊：从好友名单点整行进来的聊天空间，依赖 core.js、app.js（openUserView）
-     与 friends.js（closeFriends / friendItems / askRemoveFriend / loadChatPreviews）。
-     放在 friends.js 之后：openChat 由它调用、closeChat 由 friends.js 的删除成功回调调用。 -->
-<script src="js/chat.js"></script>
-<!-- 意见反馈（用户发件 + 管理员来信列表），依赖 core.js 与 app.js -->
-<script src="js/feedback.js"></script>
-<!-- 管理员安全设置 + 通用密码确认弹窗，依赖 core.js 与 app.js -->
-<script src="js/security.js"></script>
-<!-- 卡片维护（首页卡片变灰 + 维护中放行 + 后台开关），
-     依赖 core.js、tools.js（openTool）与 app.js（adminViews） -->
-<script src="js/cards.js"></script>
-<!-- 囚徒困境：三关问答 + 彩蛋（卡片本身是灰的「开发中」，见 index.html 那张卡的注释）。
-     依赖 core.js（$ / toast）、tools.js（closeTool / tool:open）、
-     cards.js（cardInMaintenance —— 角标随后台开关在「维护中 / 开发中」之间切）。
-     必须在 cards.js 之后：它注册自己的卡片画法（data-card-paint="custom"）。 -->
+<!-- 囚徒困境：藏起来的三关问答（卡片本身是灰的「开发中」，见 js/prisoner.js） -->
 <script src="js/prisoner.js"></script>
-<!-- 彩蛋墙（#toolArchive）：按囚徒困境的存档现算格子状态，入口在主页底栏那颗蛋。
-     依赖 core.js（$）、tools.js（tool:open / tool:close 广播）与 prisoner.js（同一对存档键）。 -->
+<!-- 彩蛋墙（#toolArchive）：按囚徒困境的存档现算格子状态，入口在主页底栏（见 js/archive.js） -->
 <script src="js/archive.js"></script>
-<!-- 头衔管理员：齿轮菜单里的「管理员」入口 + 后台的进入/退出模式，
-     依赖 core.js（apiUser / toast）与 app.js（showAdminPanel / adminPanelMode） -->
-<script src="js/manager.js"></script>
-<!-- 后台：彩蛋墙 / 游戏进度（用户管理 →「高级」里那两项），
-     依赖 core.js（apiAdmin / toast）、app.js（showAdminView / adminViews）、
-     security.js（openPasswordPrompt：清空分数前的那道确认）。 -->
-<script src="js/gamepanel.js"></script>
 </body>
 </html>
