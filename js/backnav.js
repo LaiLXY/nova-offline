@@ -58,6 +58,9 @@ const NB_LAYER_SEL = [
    离线版没有登录 / 站内信 / 好友那套页面，设置抽屉里的面板统一走 closePanel。 */
 const NB_CLOSERS = {
   menuOverlay:  'closePanel',
+  /* 单位换算的「选单位」弹窗：它带放大镜搜索行的状态（cvtPicking / 搜索词），
+     只把 .show 摘掉会留一半状态，所以走它自己的关闭函数 */
+  unitPicker:   'cvtClosePicker',
   nameOverlay:  'closePanel',
   aboutOverlay: 'closePanel',
   clearOverlay: 'closePanel',

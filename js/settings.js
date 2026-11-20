@@ -7,8 +7,8 @@
    ========================================================================== */
 
 /* ★ 发版时只改这两行，其他地方都读它们 */
-const APP_VERSION = '1.1.8';
-const APP_UPDATED = '2026.11.18';
+const APP_VERSION = '1.1.9';
+const APP_UPDATED = '2026.11.21';
 
 const btnSettings  = $('#btnSettings');
 const menuOverlay  = $('#menuOverlay');

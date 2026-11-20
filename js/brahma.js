@@ -299,6 +299,25 @@ function bhSyncScrollLock() {
   document.documentElement.classList.toggle('bh-lock', lock);
 }
 
+/** 盘厚不能超过最窄那只盘的宽度 —— 否则 1 号盘会立成竖椭圆。
+ *
+ *  ★ 宽屏窄栏实测（1366×700、盘面 400 宽）：最窄盘才 32px，而盘厚按视口高度
+ *    给到 58，1 号盘直接就成了一颗竖着的胶囊（2026-11-21 截图）。
+ *    手机上不会有这毛病：竖排时一根柱子独占一行，盘宽 300 上下，58 厚绰绰有余。
+ *  ★ 必须量完柱子才知道柱宽（bhMeasure 之后 bhGeo 才有 pegs[].wLocal），
+ *    所以这件事不能塞进 bhFitBoard —— 那里只能看到"盘面高过一屏"。
+ *  返回 true 表示刚压过盘厚，调用方要重写 CSS 变量并重新量一次。
+ */
+function bhCapDhByWidth() {
+  if (!bhGeo || !bhRowMode()) return false;   // 竖排：一柱一行，盘永远够宽
+  const wMin = bhDiskW(1);                    // 1 号盘 = 最窄那只
+  const cap  = Math.round(wMin * 0.95);       // 略窄于盘，看上去才是横的
+  if (cap < BH_DH_MIN) return false;
+  if (bhDiskH() <= cap) return false;
+  bhDhCap = bhDhCap ? Math.min(bhDhCap, cap) : cap;
+  return true;
+}
+
 /** 量一次盘面。以 .bh-disks 这一层为原点（盘就摆在它里头），
  *  每根柱子记两组坐标：
  *    cx / top / bottom —— 柱子的中线、"柱顶"/底座上沿（盘层局部坐标，算盘位用）
@@ -397,6 +416,9 @@ function bhLayout(animate) {
   // bhFitBoard 里面就带 bhApplyVars：它先按自然盘厚排一遍，装不下再压薄重写。
   bhFitBoard();
   bhMeasure();
+  // 第二道按**宽度**收：盘厚不能宽过最窄那只盘（窄栏宽屏上 58 厚的 1 号盘
+  // 会立成竖椭圆）。它要读 bhMeasure 的柱宽，所以只能排在量的后面。
+  if (bhCapDhByWidth()) { bhApplyVars(); bhMeasure(); }
   const dur = animate ? BH_REFLOW_MS : 0;
   for (let k = 1; k <= bhN; k++) {
     const el = bhDiskEls[k];

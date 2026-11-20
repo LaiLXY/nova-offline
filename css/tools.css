@@ -4,7 +4,7 @@
    2) 点进去的功能页 .tool-page（现在是白屏占位 + 返回按钮）
 
    配色沿用全局变量（见 base.css :root）：
-   品牌蓝 --brand / 蓝底上的字 --on-brand / 深底 --on-brand
+   主题黄 --yellow / 黄底上的字 --on-yellow / 深底 --on-yellow
    ========================================================================== */
 
 /* ======================================================
@@ -37,16 +37,16 @@
   box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
 }
 .tool-btn:hover {
-  border-color: #c7d7f5;
-  background: #f7faff;
+  border-color: #d9d0a8;
+  background: #fffdf5;
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(16, 24, 40, .06), 0 14px 28px -16px rgba(16, 24, 40, .24);
 }
 .tool-btn:active { transform: translateY(0); }
 .tool-btn:focus-visible {
   outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
 }
 
 /* 左侧图标：圆角块 + 描线。
@@ -56,14 +56,14 @@
 .tool-btn-ico {
   width: 52px; height: 52px;
   border-radius: 14px;
-  background: var(--tool-ico-bg, var(--icon-tile-bg));
+  background: var(--tool-ico-bg, var(--yellow));
   display: grid;
   place-items: center;
   flex: 0 0 auto;
 }
 .tool-btn-ico svg {
   width: 28px; height: 28px;
-  stroke: var(--tool-ico-fg, var(--icon-tile-fg));
+  stroke: var(--tool-ico-fg, var(--on-yellow));
 }
 
 /* 二十四点：棕红底 + 白色描线（色号由设计指定）。
@@ -121,8 +121,8 @@
    写出来是为了留住"和格式转换同色"这个意图，同时主题黄以后调了也跟着走。
    维护态照样盖得住：.tool-btn.is-maintenance 那条规则权重更高。 */
 .tool-btn[data-tool="bash"] {
-  --tool-ico-bg: var(--icon-tile-bg);
-  --tool-ico-fg: var(--icon-tile-fg);
+  --tool-ico-bg: var(--yellow);
+  --tool-ico-fg: var(--on-yellow);
 }
 
 /* 梵天汉诺：砖红底 + 白色三层汉诺塔（底色参考「二十四点」那张，色号 #E25539）。 */
@@ -162,12 +162,12 @@
   --tool-ico-fg: #FFFFFF;
 }
 
-/* ===== 新增 7 张卡片：配色严格承接「黄·红·蓝·绿·橙·青·紫」循环第 15–21 位 ===== */
+/* ===== 新增 7 张占位卡片：配色严格承接「黄·红·蓝·绿·橙·青·紫」循环第 15–21 位 ===== */
 
 /* 点阵连线（数回 / Slitherlink）：黄底 + 深色描线（承接「格式转换 / 巴什博弈」位） */
 .tool-btn[data-tool="sl"] {
-  --tool-ico-bg: var(--icon-tile-bg);
-  --tool-ico-fg: var(--icon-tile-fg);
+  --tool-ico-bg: var(--yellow);
+  --tool-ico-fg: var(--on-yellow);
 }
 /* 互不相犯（八皇后）：砖红底 + 白图（承接「二十四点 / 梵天汉诺」位） */
 .tool-btn[data-tool="queen"] {
@@ -238,14 +238,20 @@
 /* 触摸设备上把整行做高一点，好点 */
 html[data-touch="1"] .tool-btn { padding-top: 16px; padding-bottom: 16px; }
 
-/* ---------- 「维护中」的卡片 ----------
+/* ---------- 「维护中」/「开发中」的卡片 ----------
+   两个类共用同一套灰卡视觉，语义完全不同：
+     .is-maintenance  后台把这张卡下线了（由 js/cards.js 按后端状态挂）
+     .is-dev          剧情上的「开发中」（囚徒困境那种"藏起来的门"，由页面自己挂）
    三个地方变灰，和正常卡片一眼分得开：
-     · logo 的彩色底（黄）→ 灰
+     · logo 的彩色底（黄 / 绿）→ 灰
      · logo 上那些黑色描线 → 白（灰底上要浅色才看得清）
      · 卡片大标题（近黑）→ 灰
-   另外标题后面挂一个灰药丸写「维护中」。
-   —— 卡片仍然可点：点进去是「管理员验证」，不是禁用。 */
-.tool-btn.is-maintenance .tool-btn-ico {
+   另外标题后面挂一个灰药丸（维护中 / 开发中）。
+   —— 卡片仍然可点：维护中那张点进去是「管理员验证」，开发中那张点进去就是功能本身。
+   ★ 两个类互斥，绝不同时挂：同时挂上去之后再摘掉 is-maintenance，
+     卡片会"看着还在下线、却已经能点进去了"。分寸由 js/prisoner.js 把握。 */
+.tool-btn.is-maintenance .tool-btn-ico,
+.tool-btn.is-dev .tool-btn-ico {
   background: #c8ced8;
   /* ★ 文字类图标（罗马数字的 V、函数图像的 f(x)、异或法则的 XOR）
      不走 stroke 走 fill，fill 取的是 --tool-ico-fg；下面那条只管
@@ -256,14 +262,18 @@ html[data-touch="1"] .tool-btn { padding-top: 16px; padding-bottom: 16px; }
      权重稳稳压过上面 .tool-btn[data-tool=…] 里那几条。 */
   --tool-ico-fg: #fff;
 }
-.tool-btn.is-maintenance .tool-btn-ico svg { stroke: #fff; }
-.tool-btn.is-maintenance .tool-btn-name { color: var(--muted); }
-/* 悬停也别再泛蓝光，否则看着像还是启用状态 */
-.tool-btn.is-maintenance:hover {
+.tool-btn.is-maintenance .tool-btn-ico svg,
+.tool-btn.is-dev .tool-btn-ico svg { stroke: #fff; }
+.tool-btn.is-maintenance .tool-btn-name,
+.tool-btn.is-dev .tool-btn-name { color: var(--muted); }
+/* 悬停也别再泛品牌色光，否则看着像还是启用状态 */
+.tool-btn.is-maintenance:hover,
+.tool-btn.is-dev:hover {
   border-color: #cdd3dc;
   background: #fafbfc;
 }
-.tool-btn.is-maintenance:hover .tool-btn-go { color: #c3c9d4; }
+.tool-btn.is-maintenance:hover .tool-btn-go,
+.tool-btn.is-dev:hover .tool-btn-go { color: #c3c9d4; }
 
 /* 标题后面那个「维护中」药丸（由 js/cards.js 插入 .tool-btn-name 里） */
 .tool-maint-tag {
@@ -287,7 +297,7 @@ html[data-layout="tablet"] .tool-maint-tag { font-size: 14px; padding: 3px 11px;
 
 /* 囚徒困境被彻底封死（三句台词都听完了）：
    连"坏掉的按钮"都不剩，只剩一张图 —— 点不动、悬停无反应、颜色抽掉。
-   ★ 用 id 提权重，稳稳压过上面 .tool-btn.is-maintenance 那几条。 */
+   ★ 用 id 提权重，稳稳压过上面 .tool-btn.is-dev 那几条。 */
 #btnPrisoner.is-sealed {
   pointer-events: none;
   filter: grayscale(1) contrast(.88) brightness(1.02);
@@ -320,19 +330,19 @@ html[data-layout="tablet"] .tool-btn-go svg { width: 24px; height: 24px; }
 .tool-page.show { display: flex; }
 
 /* 顶栏：返回按钮 + 标题
-   底色用品牌蓝，和登录页的 .brand、主页的 .home-hero 是同一套语汇 ——
-   进来一眼就知道还在 Nova 里。文字/图标统一用蓝底上的白色 --on-brand。
+   底色用主题黄，和登录页的 .brand、主页的 .home-hero 是同一套语汇 ——
+   进来一眼就知道还在 Nova 里。文字/图标统一用黄底上的深色 --on-yellow。
    这条顶栏本来就不会动（.tool-page 是整屏 fixed 的纵向 flex，它不参与滚动），
-   但蓝白交界处要和主页那条保持一致，所以同样描一条细分界线。 */
+   但黄白交界处要和主页那条保持一致，所以同样描一条细分界线。 */
 .tool-bar {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 10px;
   padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
-  background: var(--brand);
-  color: var(--on-brand);
-  /* 蓝白交界处的细分界线（颜色同主页 .home-hero 那条） */
+  background: var(--yellow);
+  color: var(--on-yellow);
+  /* 黄白交界处的细分界线（颜色同主页 .home-hero 那条） */
   border-bottom: 1px solid #E6E7EB;
 }
 .tool-back {
@@ -343,23 +353,23 @@ html[data-layout="tablet"] .tool-btn-go svg { width: 24px; height: 24px; }
   background: none;
   border: 0;
   border-radius: 10px;
-  color: var(--on-brand);
+  color: var(--on-yellow);
   cursor: pointer;
   transition: background .15s;
 }
-/* 蓝底上不能用浅灰 hover（看不见），改成压一层淡白 */
-.tool-back:hover { background: rgba(255, 255, 255, .18); }
-.tool-back:active { background: rgba(255, 255, 255, .28); }
+/* 黄底上不能用浅灰 hover（看不见），改成压一层淡黑 */
+.tool-back:hover { background: rgba(26, 26, 26, .1); }
+.tool-back:active { background: rgba(26, 26, 26, .16); }
 .tool-back:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, .4);
+  box-shadow: 0 0 0 3px rgba(26, 26, 26, .2);
 }
 .tool-back svg { width: 21px; height: 21px; stroke: currentColor; }
 
 .tool-title {
   font-size: 17px;
   font-weight: 600;
-  color: var(--on-brand);
+  color: var(--on-yellow);
 }
 
 /* 内容区：白屏占位，撑满剩余高度 */
@@ -377,6 +387,20 @@ html[data-layout="tablet"] .tool-btn-go svg { width: 24px; height: 24px; }
      留一条槽位就没这回事：有没有滚动条，内容宽度都不变。
      （滚动条是浮层（overlay）的系统本来就占 0 宽，这条规则自然不生效。） */
   scrollbar-gutter: stable;
+}
+
+/* 占位页「玩法规则」通用区块（真实功能页也可复用） */
+.tool-rules { max-width: 640px; margin: 0 auto; }
+.tool-rules-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.tool-rules-note {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--muted);
 }
 
 /* 触摸设备：返回按钮加大 */
@@ -422,35 +446,35 @@ html[data-layout="tablet"] .tool-body { padding: 26px 24px calc(26px + env(safe-
   justify-content: center;
   gap: 12px;
   padding: 26px 18px;
-  background: #f7faff;
-  border: 1.5px dashed #c2d6f7;
+  background: #fffdf5;
+  border: 1.5px dashed #ded4a4;
   border-radius: 12px;
   font-family: inherit;
   color: var(--text);
   cursor: pointer;
   transition: background .15s, border-color .15s, box-shadow .15s;
 }
-.cv-drop:hover { background: #eef4ff; border-color: var(--brand); }
+.cv-drop:hover { background: #fff8e0; border-color: var(--yellow); }
 .cv-drop:focus-visible {
   outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
 }
 /* 拖到上面时：虚线变实线，底色更明显 */
 .cv-drop.is-over {
   background: #fff5cc;
-  border-color: var(--brand);
+  border-color: var(--yellow);
   border-style: solid;
 }
 .cv-drop-ico {
   width: 48px; height: 48px;
   flex: 0 0 auto;
   border-radius: 14px;
-  background: var(--brand);
+  background: var(--yellow);
   display: grid;
   place-items: center;
 }
-.cv-drop-ico svg { width: 25px; height: 25px; stroke: var(--on-brand); }
+.cv-drop-ico svg { width: 25px; height: 25px; stroke: var(--on-yellow); }
 .cv-drop-txt { display: block; text-align: center; }
 .cv-drop-txt b { display: block; font-size: 16px; font-weight: 700; }
 .cv-drop-txt > span {
@@ -485,7 +509,7 @@ html[data-layout="tablet"] .tool-body { padding: 26px 24px calc(26px + env(safe-
 .cv-range {
   width: 100%;
   height: 26px;
-  accent-color: var(--brand);   /* 轨道/滑块跟着主题走 */
+  accent-color: var(--yellow);   /* 轨道/滑块跟着主题走 */
   cursor: pointer;
 }
 
@@ -535,7 +559,7 @@ html[data-layout="tablet"] .tool-body { padding: 26px 24px calc(26px + env(safe-
 .cv-pip:hover { transform: translateY(-1px); }
 .cv-pip:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
 }
 .cv-pip.on {
   /* 选中的那个：外圈描一道，不管本身是深色还是浅色都看得见 */
@@ -638,7 +662,7 @@ html[data-layout="tablet"] .tool-body { padding: 26px 24px calc(26px + env(safe-
   width: 20px; height: 20px;
   border-radius: 50%;
   border: 2px solid rgba(0, 0, 0, .14);
-  border-top-color: var(--on-brand);
+  border-top-color: var(--on-yellow);
   animation: spin .6s linear infinite;
 }
 
@@ -675,17 +699,17 @@ html[data-layout="tablet"] .tool-body { padding: 26px 24px calc(26px + env(safe-
 }
 .cv-dl {
   padding: 7px 13px;
-  border: 1px solid var(--brand);
+  border: 1px solid var(--yellow);
   border-radius: 8px;
-  background: var(--brand);
-  color: var(--on-brand);
+  background: var(--yellow);
+  color: var(--on-yellow);
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: background .15s, border-color .15s;
 }
-.cv-dl:hover { background: var(--brand-hover); border-color: var(--brand-hover); }
+.cv-dl:hover { background: var(--yellow-hover); border-color: var(--yellow-hover); }
 .cv-dl:disabled {
   background: #e3e5ea; border-color: #e3e5ea;
   color: #9aa1ac; cursor: not-allowed;
@@ -737,7 +761,7 @@ html[data-layout="tablet"] .cv-dl { font-size: 15px; padding: 9px 16px; }
 /* ======================================================
    四、二十四点（.pt-* 见 js/points24.js）
    卡片、字号、圆角都沿用上面的 .cv-* / .tool-btn，
-   配色继续走全局变量（--brand / --line / --text …）
+   配色继续走全局变量（--yellow / --line / --text …）
    ====================================================== */
 .pt-wrap {
   display: flex;
@@ -793,17 +817,17 @@ html[data-layout="tablet"] .cv-dl { font-size: 15px; padding: 9px 16px; }
   cursor: pointer;
   transition: transform .12s, border-color .15s, background .15s, box-shadow .15s;
 }
-/* 悬停泛蓝、微抬 —— 和 .tool-btn 同一套语汇 */
+/* 悬停泛黄、微抬 —— 和 .tool-btn 同一套语汇 */
 .pt-num:hover {
-  border-color: var(--brand);
-  background: #f7faff;
+  border-color: var(--yellow);
+  background: #fffdf5;
   transform: translateY(-2px);
 }
 .pt-num:active { transform: translateY(0); }
 .pt-num:focus-visible {
   outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
 }
 
 .pt-tip {
@@ -941,7 +965,7 @@ html[data-layout="tablet"] .pt-foot { font-size: 14px; }
 .gfx-dot:hover { transform: scale(1.15); }
 .gfx-dot:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
 }
 
 /* 输入框 + 报错提示：占满中间那一列。
@@ -977,7 +1001,7 @@ html[data-layout="tablet"] .pt-foot { font-size: 14px; }
   transition: background .15s, color .15s;
 }
 .gfx-del:hover { background: #fdf2f3; color: var(--danger); }
-.gfx-del:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--brand-glow); }
+.gfx-del:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--yellow-glow); }
 
 .gfx-rows-foot {
   margin-top: 12px;
@@ -1074,7 +1098,7 @@ html[data-layout="tablet"] .pt-foot { font-size: 14px; }
   transition: background .15s, border-color .15s;
 }
 .graph-zbtn:hover { background: #fff; border-color: #b9c0cb; }
-.graph-zbtn:focus-visible { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-glow); }
+.graph-zbtn:focus-visible { outline: none; border-color: var(--yellow); box-shadow: 0 0 0 3px var(--yellow-glow); }
 .graph-zbtn.is-wide { font-size: 13px; }
 
 /* 左下角的坐标读数 */
@@ -1218,7 +1242,7 @@ html[data-viewport="lg"][data-aspect="wide"] #toolGraph .gfx-pad {
 }
 
 /* ---------- 单位换算的数字盘：顶上多一行 ----------
-   16 个键排成 5 行：第一行 4 个（e+ / e- / / / π），下面 4 行还是
+   17 个键排成 5 行：第一行 5 个（e+ / e- / / / - / π），下面 4 行还是
    标准的 3 列数字盘。用 15 列网格做到"同宽不同份"：
 
      顶行每键占 3 格 → 3 × 5 = 15，一行正好 5 个（每个 1/5 宽）
@@ -1278,8 +1302,8 @@ html[data-viewport="lg"][data-aspect="wide"] #toolGraph .gfx-pad {
 .gfx-key:active { background: #eef1f6; }
 .gfx-key:focus-visible {
   outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
 }
 
 /* 函数键（sin / √ / |x| / 退格…）：蓝调，和数字键区分开 */
@@ -1475,8 +1499,8 @@ html[data-layout="tablet"] .graph-readout { font-size: 14px; padding: 6px 11px; 
 .cvt-unit:hover { background: #f8f9fb; border-color: #b9c0cb; }
 .cvt-unit:focus-visible {
   outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
 }
 
 /* 字段头：左边是「数值 / 换算结果」，右边挂一颗小「复制」。
@@ -1524,8 +1548,8 @@ html[data-layout="tablet"] .graph-readout { font-size: 14px; padding: 6px 11px; 
 .cvt-copy:active { background: #eef1f6; }
 .cvt-copy:focus-visible {
   outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
 }
 
 /* ---------- 中间的互换按钮 ---------- */
@@ -1542,15 +1566,15 @@ html[data-layout="tablet"] .graph-readout { font-size: 14px; padding: 6px 11px; 
   transition: background .15s, border-color .15s, color .15s, transform .25s;
 }
 .cvt-swap-btn:hover {
-  background: #f7faff;
-  border-color: var(--brand);
+  background: #fffdf5;
+  border-color: var(--yellow);
   color: var(--text);
   transform: rotate(180deg);      /* 转半圈，点下去会发生什么一眼就懂 */
 }
 .cvt-swap-btn:focus-visible {
   outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
 }
 .cvt-swap-btn svg { width: 21px; height: 21px; stroke: currentColor; }
 
@@ -1619,7 +1643,6 @@ html[data-layout="tablet"] .graph-readout { font-size: 14px; padding: 6px 11px; 
   margin-top: 0;
   transform: rotate(-45deg);
 }
-
 
 /* ---------- 副输入框（立体角 / 面积，见 js/units.js 的 cvtAux 那一节） ----------
    只有「亮度」那一档用得上：那一档的单位跨了四个量，光靠系数换不过去，
@@ -1886,8 +1909,8 @@ html[data-touch="1"] .unit-bridge .input-wrap.is-area > textarea { font-size: 17
 .rm-copy:active { background: #eef1f6; }
 .rm-copy:focus-visible {
   outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
 }
 
 /* 两栏之间那条说明已经去掉了：输入栏的 label 写清了两种都能填，
@@ -2019,7 +2042,7 @@ html[data-layout="tablet"] .rm-foot { font-size: 14px; }
    九、九宫幻方（.mg-* 见 js/magic.js）
    一张"选阶数 / 难度"的卡 + 一张棋盘卡 + 一排操作按钮 + 一张说明卡。
    卡片、按钮、圆角都沿用上面的 .pt-* / .mini-btn / .sub-save，
-   配色继续走全局变量（--brand / --line / --text …）。
+   配色继续走全局变量（--yellow / --line / --text …）。
    ====================================================== */
 .mg-wrap {
   display: flex;
@@ -2076,15 +2099,15 @@ html[data-layout="tablet"] .rm-foot { font-size: 14px; }
 }
 
 /* 触摸屏上点击会留下"粘住的" :hover —— 鼠标移开就没了，手指点完却不会。
-   全局那条 .chip[aria-checked="true"]:hover 用的是 --brand-hover（比常态的
-   --brand 略深），于是"刚点的那一个"偏深、"另一行选中的"是常态蓝，
+   全局那条 .chip[aria-checked="true"]:hover 用的是 --yellow-hover（比常态的
+   --yellow 略深），于是"刚点的那一个"偏深、"另一行选中的"是常态黄，
    两行的高亮看着就不是一个颜色。
    这里只在"主输入根本没法 hover"的设备上，把选中态压回常态 ——
    粘住的 hover 就看不出来了，两行高亮重新一致。 */
 @media (hover: none) {
   .mg-chips .chip[aria-checked="true"]:hover {
-    background: var(--brand);
-    border-color: var(--brand);
+    background: var(--yellow);
+    border-color: var(--yellow);
   }
 }
 
@@ -2135,7 +2158,7 @@ html[data-layout="tablet"] .rm-foot { font-size: 14px; }
   border-color: var(--line);
 }
 
-/* 聚焦高亮：同行同列淡蓝、两条对角线淡蓝、当前这一格蓝圈。
+/* 聚焦高亮：同行同列淡黄、两条对角线淡蓝、当前这一格黄圈。
    幻方是"线上求和"的游戏，把整条线一起点亮才好推。 */
 .mg-cell.is-hl { background: #fffbeb; border-color: #f2e5b8; }
 .mg-cell.is-clue.is-hl { background: #fdf7e0; }
@@ -2143,8 +2166,8 @@ html[data-layout="tablet"] .rm-foot { font-size: 14px; }
 .mg-cell.is-clue.is-diag { background: #e8f0fd; }
 .mg-cell.is-sel {
   background: #fff;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
   z-index: 1;
 }
 
@@ -2223,7 +2246,7 @@ html[data-layout="tablet"] .rm-foot { font-size: 14px; }
 
 /* 过关：整盘描一圈淡绿，一眼看出"这局成了" */
 .mg-board.is-done .mg-cell { border-color: rgba(22, 163, 74, .45); }
-.mg-board.is-done .mg-cell.is-sel { border-color: var(--brand); }
+.mg-board.is-done .mg-cell.is-sel { border-color: var(--yellow); }
 
 .mg-tip {
   margin-top: 12px;
@@ -2653,7 +2676,7 @@ html[data-layout="tablet"] .xo-quit { padding: 9px 15px; font-size: 14.5px; }
    ------------------------------------------------------
    四块：分数条 → 棋盘 → 操作（十字方向盘 + 撤销 / 重开）→ 说明。
    卡片、按钮、圆角沿用上面的 .cv-* / .pt-* / .mini-btn / .sub-save，
-   配色继续走全局变量（--brand / --line / --text …）。
+   配色继续走全局变量（--yellow / --line / --text …）。
 
    ★ 方块的定位方式（这一节最要紧的一段）
      每个方块是**绝对定位**的，位置由三个东西算出来：
@@ -2673,8 +2696,8 @@ html[data-layout="tablet"] .xo-quit { padding: 9px 15px; font-size: 14.5px; }
      位置动画（滑动）和缩放动画（落下来、合并弹一下）都要占 transform，
      套在同一个元素上会互相覆盖；拆成父子两层就各演各的、互不打架。
 
-   配色阶梯：米白 → 明黄 → 琥珀 → 橙 → 深棕（牌面自己的色阶，不跟品牌色走），
-   2048 那一档翻成**深底 + 品牌蓝字**，一眼就是最高档。
+   配色阶梯：米白 → 主题黄 → 琥珀 → 橙 → 深棕，
+   2048 那一档翻成**深底 + 主题黄字**，一眼就是最高档。
    阶梯只到 8192 —— 再往上（理论上打完要几千下）落回基础色，
    反正也看不到。
    ====================================================== */
@@ -2842,10 +2865,10 @@ html[data-layout="tablet"] .xo-quit { padding: 9px 15px; font-size: 14.5px; }
 .g48-face[data-v="256"]  { background-color: #cd5400; color: #ffffff; }
 .g48-face[data-v="512"]  { background-color: #b23f05; color: #ffffff; }
 .g48-face[data-v="1024"] { background-color: #8f2f0a; color: #ffffff; }
-/* 2048 往上翻成深底 + 品牌蓝字：整盘最高的一档，一眼认得出来 */
-.g48-face[data-v="2048"] { background-color: #262b36; color: var(--brand); }
-.g48-face[data-v="4096"] { background-color: #1b1f28; color: var(--brand); }
-.g48-face[data-v="8192"] { background-color: #11141a; color: var(--brand); }
+/* 2048 往上翻成深底 + 主题黄字：整盘最高的一档，一眼认得出来 */
+.g48-face[data-v="2048"] { background-color: #262b36; color: var(--yellow); }
+.g48-face[data-v="4096"] { background-color: #1b1f28; color: var(--yellow); }
+.g48-face[data-v="8192"] { background-color: #11141a; color: var(--yellow); }
 
 /* 新块落下来：缩放淡入。
    落子发生在滑动**之后**（见 js/game2048.js），所以这里不用再等，直接放。 */
@@ -2932,13 +2955,13 @@ html[data-layout="tablet"] .xo-quit { padding: 9px 15px; font-size: 14.5px; }
   transition: background .15s, border-color .15s, transform .1s, box-shadow .15s;
 }
 .g48-key svg { width: 22px; height: 22px; stroke: currentColor; }
-/* 悬停泛蓝、按下压一下 —— 和 .pt-num / .tool-btn 同一套语汇 */
-.g48-key:hover { background: #f7faff; border-color: var(--brand); }
+/* 悬停泛黄、按下压一下 —— 和 .pt-num / .tool-btn 同一套语汇 */
+.g48-key:hover { background: #fffdf5; border-color: var(--yellow); }
 .g48-key:active { transform: scale(.94); background: #fff6cc; }
 .g48-key:focus-visible {
   outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px var(--brand-glow);
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
 }
 .g48-key-up    { grid-area: 1 / 2 / 2 / 3; }
 .g48-key-left  { grid-area: 2 / 1 / 3 / 2; }
@@ -3054,7 +3077,7 @@ html[data-layout="tablet"] .g48-overlay-box p { font-size: 15.5px; }
      换屏幕、转个向，整张盘由浏览器自己缩放，JS 一次像素都不用量。
 
    ★ 配色
-     岛和桥走墨色 --text；「选中」和「连够数字」用品牌蓝 --brand；
+     岛和桥走墨色 --text；「选中」和「连够数字」用品牌黄 --yellow；
      「超数」「交叉的红结」用 --danger。不引紫色 —— 紫色只是首页那张
      卡片的图标底色，盘面上用会显得不是同一个 App。
    ====================================================== */
@@ -3240,7 +3263,7 @@ html[data-layout="tablet"] .g48-overlay-box p { font-size: 15.5px; }
   opacity: .55;
 }
 
-/* 岛：圆 + 数字。三态 —— 还差（白底墨圈）/ 连够（墨底蓝字）/ 超数（红圈红字） */
+/* 岛：圆 + 数字。三态 —— 还差（白底墨圈）/ 连够（墨底黄字）/ 超数（红圈红字） */
 .br-dot { fill: #fff; stroke: var(--text); stroke-width: 4; }
 .br-num {
   font-size: 40px;
@@ -3250,13 +3273,13 @@ html[data-layout="tablet"] .g48-overlay-box p { font-size: 15.5px; }
   font-variant-numeric: tabular-nums;
 }
 .br-ring-sel, .br-ring-bad { fill: none; display: none; }
-.br-ring-sel { stroke: var(--brand); stroke-width: 7; }
+.br-ring-sel { stroke: var(--yellow); stroke-width: 7; }
 .br-ring-bad { stroke: var(--danger); stroke-width: 6; opacity: .85; }
 
 .br-island.is-sel .br-ring-sel { display: block; }
 .br-island.is-sel .br-dot { stroke-width: 6; }
 .br-island.is-ok .br-dot { fill: var(--text); }
-.br-island.is-ok .br-num { fill: var(--brand); }
+.br-island.is-ok .br-num { fill: var(--yellow); }
 .br-island.is-bad .br-dot { stroke: var(--danger); }
 .br-island.is-bad .br-num { fill: var(--danger); }
 .br-island.is-bad .br-ring-bad { display: block; }
@@ -3664,16 +3687,16 @@ html:not(.bh-lock) #toolBrahma .bh-disk { touch-action: pan-y; }
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
-  color: var(--on-brand);
-  background: rgba(255, 255, 255, .18);
+  color: var(--on-yellow);
+  background: rgba(26, 26, 26, .09);
   border: 0;
   border-radius: 10px;
   cursor: pointer;
   transition: background .15s;
 }
-.bh-rotbtn:hover { background: rgba(255, 255, 255, .26); }
-.bh-rotbtn:active { background: rgba(255, 255, 255, .34); }
-.bh-rotbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255, 255, 255, .4); }
+.bh-rotbtn:hover { background: rgba(26, 26, 26, .15); }
+.bh-rotbtn:active { background: rgba(26, 26, 26, .21); }
+.bh-rotbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(26, 26, 26, .2); }
 .bh-rotbtn svg {
   width: 17px; height: 17px;
   stroke: currentColor;
@@ -4045,8 +4068,8 @@ html[data-viewport="lg"] .fc-palette {
      · 第一页选难度 + 玩法说明（规则垫在下面）
      · 第二页：剩余数 + 石堆 + m+1 刻度尺 + 取子按钮 + 回合记录
      · 结算浮层复用同一套交互（.bs-overlay 跟 .fc-overlay 一个写法）
-   主色走品牌蓝 --brand；石子、刻度、取完高亮都用它，
-   不拿品牌蓝当大块文字底（大块蓝底上的字走 --on-brand）。
+   主题色走主页那张「巴什博弈」卡片的黄（--yellow）；石子、刻度、
+   取完高亮都用它，不拿黄当大块文字底（文字走 --on-yellow 只在黄底上）。
    ====================================================== */
 .bs-wrap { width: 100%; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 /* hidden 属性要压得住下面的 display 改写，否则藏不住 */
@@ -4132,7 +4155,7 @@ html[data-viewport="lg"] .fc-palette {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--brand);
+  background: var(--yellow);
   box-shadow: inset 0 -2px 0 rgba(26, 26, 26, .12);
   transition: transform .22s ease, opacity .22s ease;
 }
@@ -4151,7 +4174,7 @@ html[data-viewport="lg"] .fc-palette {
 .bs-ruler-fill {
   height: 100%;
   width: 100%;
-  background: var(--brand);
+  background: var(--yellow);
   border-radius: 6px;
   transition: width .25s ease;
 }
@@ -4182,9 +4205,9 @@ html[data-viewport="lg"] .fc-palette {
 .bs-take:not(:disabled):hover { background: #f8f9fb; }
 .bs-take:not(:disabled):active { transform: scale(.96); }
 .bs-take:disabled { opacity: .4; cursor: not-allowed; }
-/* 取完即赢的那颗：换主色（蓝底白字，和主按钮同一套语汇） */
-.bs-take.is-win { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
-.bs-take.is-win:not(:disabled):hover { background: var(--brand-hover); }
+/* 取完即赢的那颗：换主色（黄底黑字，符合项目黄底上的深色字约定） */
+.bs-take.is-win { background: var(--yellow); border-color: var(--yellow); color: var(--on-yellow); }
+.bs-take.is-win:not(:disabled):hover { background: var(--yellow-hover); }
 
 /* 回合记录 */
 .bs-log { display: flex; flex-direction: column; gap: 4px; }
@@ -4236,9 +4259,9 @@ html[data-viewport="lg"] .fc-palette {
 
 /* ======================================================
    十六、异语道破（.ms-* 见 js/morse.js）
-   二级模式选择（翻译 / 译电）→ 各自三级；翻译双输入框照罗马数字
+   二级模式选择（翻译 / 译电 / 播报）→ 各自三级；翻译双输入框照罗马数字
    成式（复用 .rm-row / .rm-copy / .input-wrap），软键盘复用第六节
-   .gfx-pad（键面自绘）。主题色：天蓝 #0369a1，只做小面积强调。
+   .gfx-pad（键面自绘，翻译页与播报页共用同一个）。主题色：天蓝 #0369a1。
    ====================================================== */
 .ms-wrap { width: 100%; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 .ms-wrap [hidden] { display: none !important; }
@@ -4371,10 +4394,10 @@ html[data-touch="1"] .ms-chart-code { font-size: 12.5px; }
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   width: 62px; padding: 9px 4px 8px;
   border-radius: 10px;
-  border: 1px solid #d8e4fa; background: #f7faff;
+  border: 1px solid #e6d9b4; background: #fffdf5;
   transition: background .15s, border-color .15s, box-shadow .15s;
 }
-.ms-cell.is-cur { border-color: var(--brand); background: #eef4ff; box-shadow: 0 0 0 2px rgba(60, 131, 245, .28); }
+.ms-cell.is-cur { border-color: #f0c419; background: #fff7d1; box-shadow: 0 0 0 2px #fde68a; }
 .ms-cell.is-ok { border-color: #86efac; background: #f0fdf4; }
 .ms-cell.is-shake { animation: msShake .3s; }
 @keyframes msShake {
@@ -4577,9 +4600,7 @@ html[data-touch="1"] .ms-plsym.is-dash { width: 21px; height: 8px; }
    整段电码播完、且解出来的正是那句话时才演（js/morse.js 的 msHomeStage）。
    三层同时发生：卡片泛一圈天蓝光、一条扫描线从上扫到下、四个字从模糊里浮上来再散掉。
    总时长 3.8s —— 和 js 里那个 setTimeout 对齐，改一处得改另一处。
-   ★ 只演一次：存进 nova_morse_home 之后，这段电码就只是普通播放。
-   ★ 配色是暖蓝（#0369A1 / #0EA5E9），不上 --brand：这张卡的播报纸带、
-     播放键本来就是这套海蓝，演出跟着它们才不会像另一件主题的东西。 */
+   ★ 只演一次：存进 nova_morse_home 之后，这段电码就只是普通播放。 */
 .ms-player { position: relative; }            /* 演出层是绝对定位的，得有个锚 */
 .ms-player.is-home { animation: msHomeCard 3.8s ease-out both; }
 
@@ -4598,7 +4619,7 @@ html[data-touch="1"] .ms-plsym.is-dash { width: 21px; height: 8px; }
 .ms-homelayer.show { opacity: 1; }
 
 /* 扫描线：像一条电波从上往下走一遍。
-   在浅蓝的毛玻璃底上要压得住，所以线本身 3px 且走「亮芯 + 晕」两层。 */
+   在浅蓝的毛玻璃底上要压得住，所以线本身加粗到 3px 且走「亮芯 + 晕」两层。 */
 .ms-homeline {
   position: absolute; left: 0; right: 0; top: 0; height: 3px;
   background: linear-gradient(90deg, transparent, #0284c7 18%, #7dd3fc 50%, #0284c7 82%, transparent);
@@ -5125,38 +5146,12 @@ html[data-viewport="xs"] .qn-size { padding: 9px 4px; font-size: 13.5px; }
 html[data-viewport="xs"] .qn-size span { font-size: 11.5px; }
 html[data-viewport="xs"] .qn-tool { padding: 7px 9px; font-size: 12.5px; }
 
-/* ---------- 电脑 ---------- */
-html[data-viewport="lg"] .qn-wrap { max-width: 620px; }
-html[data-viewport="lg"] .qn-board { max-width: 460px; }
-
-/* ---------- 平板 ---------- */
-html[data-layout="tablet"] .qn-wrap { max-width: 640px; gap: 18px; }
-html[data-layout="tablet"] .qn-card { padding: 20px; border-radius: 16px; }
-html[data-layout="tablet"] .qn-setup-title { font-size: 17px; }
-html[data-layout="tablet"] .qn-rules-list { font-size: 14.5px; }
-html[data-layout="tablet"] .qn-size { padding: 12px 8px; font-size: 17px; }
-html[data-layout="tablet"] .qn-size span { font-size: 13px; }
-html[data-layout="tablet"] .qn-board { max-width: 520px; }
-html[data-layout="tablet"] .qn-stat-val { font-size: 24px; }
-html[data-layout="tablet"] .qn-stat-label { font-size: 13.5px; }
-html[data-layout="tablet"] .qn-tool { padding: 9px 14px; font-size: 14.5px; }
-html[data-layout="tablet"] .qn-round { font-size: 16px; }
-html[data-layout="tablet"] .qn-meta { font-size: 14px; }
-html[data-layout="tablet"] .qn-tip { font-size: 13.5px; }
-html[data-layout="tablet"] .qn-overlay-box { max-width: 400px; padding: 28px 26px; }
-html[data-layout="tablet"] .qn-overlay-box h4 { font-size: 21px; }
-html[data-layout="tablet"] .qn-overlay-box p { font-size: 15.5px; }
-
 /* ======================================================
    关灯游戏（lights.js）
    结构对齐「互不相犯」，类名 .lt-*；灭灯 = 冷灰格，
-   亮灯 = 内缩的黄色圆角块；演示答案 = 蓝底脉冲框圈出正要按的格子。
-   ★ 离线版主色是品牌蓝（--brand），但「亮着的灯」保留原来的黄：
-     它是玩法里的图元，不是主题装饰；而且和演示的蓝框要能分清。
-     离线版没有 --yellow，所以灯色用本节自己声明的 --lt-lamp。
+   亮灯 = 内缩的品牌黄圆角块；答案 = 蓝色圆圈标记要按的格子。
    ====================================================== */
 .lt-wrap {
-  --lt-lamp: #ffd900;          /* 亮灯的黄（离线版不设 --yellow） */
   width: 100%;
   max-width: 560px;
   margin: 0 auto;
@@ -5263,7 +5258,7 @@ html[data-layout="tablet"] .qn-overlay-box p { font-size: 15.5px; }
 .lt-bg { fill: #fff; }
 .lt-offcell { fill: #e9edf4; }
 /* 亮灯：内缩的品牌黄圆角块（黄只做浅色，配白盘面刚好） */
-.lt-oncell { fill: var(--lt-lamp); }
+.lt-oncell { fill: var(--yellow); }
 
 /* 顶栏按钮组（常规 / 演示入口 / 播放器）：display:contents 让按钮直接
    参与父级 flex 排版；hidden 开关必须显式压回去，否则 contents 会盖掉 hidden */
@@ -5381,8 +5376,30 @@ html[data-viewport="xs"] .lt-size { padding: 9px 4px; font-size: 13.5px; }
 html[data-viewport="xs"] .lt-size span { font-size: 11.5px; }
 html[data-viewport="xs"] .lt-tool { padding: 7px 9px; font-size: 12.5px; }
 
+/* ---------- 电脑 ---------- */
+html[data-viewport="lg"] .qn-wrap { max-width: 620px; }
+html[data-viewport="lg"] .qn-board { max-width: 460px; }
+
+/* ---------- 平板 ---------- */
+html[data-layout="tablet"] .qn-wrap { max-width: 640px; gap: 18px; }
+html[data-layout="tablet"] .qn-card { padding: 20px; border-radius: 16px; }
+html[data-layout="tablet"] .qn-setup-title { font-size: 17px; }
+html[data-layout="tablet"] .qn-rules-list { font-size: 14.5px; }
+html[data-layout="tablet"] .qn-size { padding: 12px 8px; font-size: 17px; }
+html[data-layout="tablet"] .qn-size span { font-size: 13px; }
+html[data-layout="tablet"] .qn-board { max-width: 520px; }
+html[data-layout="tablet"] .qn-stat-val { font-size: 24px; }
+html[data-layout="tablet"] .qn-stat-label { font-size: 13.5px; }
+html[data-layout="tablet"] .qn-tool { padding: 9px 14px; font-size: 14.5px; }
+html[data-layout="tablet"] .qn-round { font-size: 16px; }
+html[data-layout="tablet"] .qn-meta { font-size: 14px; }
+html[data-layout="tablet"] .qn-tip { font-size: 13.5px; }
+html[data-layout="tablet"] .qn-overlay-box { max-width: 400px; padding: 28px 26px; }
+html[data-layout="tablet"] .qn-overlay-box h4 { font-size: 21px; }
+html[data-layout="tablet"] .qn-overlay-box p { font-size: 15.5px; }
+
 /* ======================================================
-   一位之差（.hm-* 见 js/hamming.js）
+   十八、一位之差（.hm-* 见 js/hamming.js）
    三模式（纠错 / 距离 / 编码）+ 玩法规则卡。
    ★ 卡片壳与摩斯（十六节）**完全同一套成式**，不再另起皮肤：
      ms-wrap / ms-card / ms-choose / ms-choose-title / ms-modes /
@@ -5484,327 +5501,6 @@ html[data-touch="1"] .hm-pos { font-size: 11px; }
 html[data-layout="tablet"] .hm-bit { font-size: 23px; }
 
 /* ======================================================
-   五、囚徒困境（三关问答 + 彩蛋，见 js/prisoner.js）
-   类名前缀 .pr-*（prisoner）；配色借囚徒卡片那个绿 #1DB994，
-   和 .hm-* / .lt-* / .fc-* 互不相犯。
-   ====================================================== */
-.pr-wrap {
-  width: 100%;
-  max-width: 560px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* 四幕靠 hidden 切换，而 .pr-stage 自己带 display:flex ——
-   所以必须补这条 !important，否则藏不住（老坑，别再踩） */
-.pr-stage { display: flex; flex-direction: column; gap: 16px; }
-.pr-stage[hidden],
-.pr-wrap [hidden] { display: none !important; }
-
-/* ---------- 氛围层：极淡网格 + 卡片扫描光 ----------
-   不放"第几关""剩几次机会"这类字样 —— 系统不解释规则，只看着你。
-   网格底色和扫描光都压到 4% 上下，白底上几乎看不见，移动时才察觉。 */
-#toolPrisoner .tool-body {
-  position: relative;
-  background-color: #fff;
-  background-image:
-    linear-gradient(rgba(29, 185, 148, .028) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(29, 185, 148, .028) 1px, transparent 1px);
-  background-size: 28px 28px;
-  background-attachment: local;
-}
-
-.pr-brief { position: relative; overflow: hidden; }
-/* 一条扫描光横向掠过简报，4.5 秒一轮 —— 像有台机器在读这张纸 */
-.pr-brief::after {
-  content: "";
-  position: absolute;
-  top: 0; bottom: 0;
-  left: -70px;
-  width: 70px;
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent, rgba(29, 185, 148, .10), transparent);
-  animation: prSweep 4.6s linear infinite;
-}
-@keyframes prSweep {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(760px); }   /* 大于卡片宽度即可，靠 overflow 裁掉 */
-}
-
-/* ---------- 案情简报 ---------- */
-.pr-brief {
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
-}
-.pr-sys { font-size: 14.5px; font-weight: 600; line-height: 1.7; color: var(--text); }
-.pr-sys-sub { margin-top: 6px; font-size: 13.5px; line-height: 1.75; color: var(--muted); }
-
-.pr-rows-title {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: .06em;
-  color: var(--muted);
-}
-.pr-rows { list-style: none; margin: 6px 0 0; padding: 0; }
-.pr-rows li {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 6px 0;
-  font-size: 13.5px;
-  line-height: 1.6;
-}
-.pr-rows li + li { border-top: 1px dashed #eef0f4; }
-.pr-rows span { flex: 0 1 auto; color: var(--muted); }
-.pr-rows b { flex: 0 0 auto; text-align: right; font-weight: 600; color: var(--text); }
-
-/* ---------- 密文：等宽字体 + 拉开字距，一眼看出是"码" ---------- */
-.pr-cipher {
-  margin-top: 12px;
-  padding: 16px 10px;
-  border: 1px solid #cfeae2;
-  border-radius: 10px;
-  background: #eef8f5;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: .16em;
-  color: #0f6b58;
-  text-align: center;
-  word-break: break-word;
-}
-
-/* ---------- 题面 ---------- */
-.pr-q { font-size: 15px; font-weight: 600; line-height: 1.75; color: var(--text); }
-.pr-q-lg { font-size: 17px; line-height: 1.8; }
-
-/* ---------- 选项 ---------- */
-.pr-opts { display: flex; flex-direction: column; gap: 10px; }
-.pr-opt {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 13px 14px;
-  border: 1px solid var(--line-strong);
-  border-radius: 10px;
-  background: #fff;
-  font-family: inherit;
-  font-size: 15px;
-  color: var(--text);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color .15s, background .15s;
-}
-.pr-opt i {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  background: #f1f3f6;
-  color: #6b7280;
-  font-style: normal;
-  font-size: 12.5px;
-  font-weight: 700;
-  transition: background .15s, color .15s;
-}
-.pr-opt:hover { border-color: #b9c0cb; background: #f8f9fb; }
-.pr-opt.on { border-color: var(--brand); background: #f2f7ff; }
-.pr-opt.on:hover { background: #eaf2ff; }
-.pr-opt.on i { background: var(--brand); color: #fff; }
-
-/* ---------- 第二关输入框 ---------- */
-.pr-input {
-  width: 100%;
-  padding: 14px 16px;
-  border: 1px solid var(--line-strong);
-  border-radius: 10px;
-  background: #fff;
-  font-family: inherit;
-  font-size: 16px;            /* 16px 以下 iOS 会整页放大，别改小 */
-  letter-spacing: .06em;
-  text-align: center;
-  color: var(--text);
-}
-.pr-input::placeholder { letter-spacing: 0; color: #9aa1ac; }
-.pr-input:focus {
-  outline: none;
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px rgba(60, 131, 245, .14);
-}
-
-/* .sub-save 自带 margin-top:20px，这里是 flex + gap:16，要压掉 */
-.pr-submit { margin-top: 0; }
-
-/* ---------- 动效：让它像"系统正在处理你" ----------
-   四层节奏，全都短：
-     · 进一幕      —— 每个直接子元素依次浮起（stagger 60ms）
-     · 选项悬停    —— 左沿滑出一根绿竖线，像被锁定
-     · 选项选中    —— 一圈蓝光扩散出去（一次性，不循环）
-     · 答对转场    —— 整幕横向抖一下 + 掉透明度（glitch），才换下一幕
-     · 答错        —— 四角泛红、整屏压暗，然后才被弹出去
-   ★ animation 一律 0.4s 以内，宁可快得像系统，不要慢得像网页。 */
-.pr-stage.is-enter > * { animation: prRise .38s cubic-bezier(.2, .8, .3, 1) both; }
-.pr-stage.is-enter > *:nth-child(2) { animation-delay: .06s; }
-.pr-stage.is-enter > *:nth-child(3) { animation-delay: .12s; }
-.pr-stage.is-enter > *:nth-child(4) { animation-delay: .18s; }
-.pr-stage.is-enter > *:nth-child(5) { animation-delay: .24s; }
-
-@keyframes prRise {
-  from { opacity: 0; transform: translateY(9px); }
-  to   { opacity: 1; transform: none; }
-}
-
-/* 选项：左沿一根竖线，悬停/选中时从中间长出来 */
-.pr-opt { position: relative; overflow: hidden; }
-.pr-opt::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 50%;
-  width: 2px; height: 0;
-  background: #1DB994;
-  transform: translateY(-50%);
-  transition: height .18s ease;
-}
-.pr-opt:hover::before,
-.pr-opt.on::before { height: 62%; }
-
-/* 选中那一下的蓝色扩散 */
-.pr-opt.on { animation: prLock .34s ease-out; }
-@keyframes prLock {
-  0%   { box-shadow: 0 0 0 0 rgba(60, 131, 245, .34); }
-  100% { box-shadow: 0 0 0 9px rgba(60, 131, 245, 0); }
-}
-
-/* 打字机光标：正在打的时候跟着闪，打完就收 */
-.is-typing::after {
-  content: "";
-  display: inline-block;
-  width: 2px; height: 1em;
-  margin-left: 3px;
-  vertical-align: -.16em;
-  background: #1DB994;
-  animation: prCaret .72s steps(1) infinite;
-}
-@keyframes prCaret { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
-
-/* 答对转场：整幕故障一下 */
-.pr-stage.is-glitch { animation: prGlitch .21s steps(2) both; }
-@keyframes prGlitch {
-  0%   { transform: none; opacity: 1; }
-  35%  { transform: translateX(-4px); opacity: .5; filter: blur(.5px); }
-  70%  { transform: translateX(3px); opacity: 1; filter: none; }
-  100% { transform: none; opacity: 1; }
-}
-
-/* 答错：四角泛红 + 压暗（挂在工具页上，盖住整个内容区） */
-#toolPrisoner.is-alarm .tool-body::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 50% 46%, rgba(180, 20, 30, 0) 33%, rgba(180, 20, 30, .40) 100%);
-  animation: prAlarm .44s ease-out both;
-}
-@keyframes prAlarm {
-  0%   { opacity: 0; }
-  28%  { opacity: 1; }
-  100% { opacity: .95; }
-}
-
-/* 密文打完之后"解"一下：一圈绿光从框内散掉（一次性，不循环） */
-.pr-cipher.is-decoded { animation: prDecode .55s ease-out; }
-@keyframes prDecode {
-  0%   { box-shadow: inset 0 0 0 1px rgba(29, 185, 148, .55), 0 0 20px rgba(29, 185, 148, .26); }
-  100% { box-shadow: inset 0 0 0 1px rgba(29, 185, 148, 0), 0 0 0 rgba(29, 185, 148, 0); }
-}
-
-/* 通关标题：从发光、字距拉开，收成安静的一行 */
-.pr-egg.is-enter .pr-egg-title { animation: prGlow 1s cubic-bezier(.2, .8, .3, 1) both; }
-@keyframes prGlow {
-  0%   { opacity: 0; letter-spacing: .22em; text-shadow: 0 0 22px rgba(29, 185, 148, .85); }
-  60%  { opacity: 1; }
-  100% { opacity: 1; letter-spacing: normal; text-shadow: 0 0 0 rgba(29, 185, 148, 0); }
-}
-
-/* ---------- 彩蛋 ---------- */
-.pr-egg { padding-top: 4px; }
-.pr-egg-title { font-size: 20px; font-weight: 700; color: var(--text); }
-.pr-egg-lead { font-size: 14.5px; line-height: 1.8; color: #4b5563; }
-
-/* 两个选择：纯文字，故意不做成按钮 —— 不点，只读 */
-.pr-choos {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fbfcfd;
-}
-.pr-choos-row {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  font-size: 14.5px;
-  line-height: 1.7;
-}
-.pr-choos-row b { flex: 0 0 auto; font-weight: 600; color: var(--text); }
-.pr-choos-row span { color: var(--muted); }
-
-/* ---------- 逻辑规则（折叠） ---------- */
-.pr-rule-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  width: 100%;
-  padding: 13px 16px;
-  border: 1px solid var(--line-strong);
-  border-radius: 10px;
-  background: #fff;
-  font-family: inherit;
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--text);
-  cursor: pointer;
-  transition: border-color .15s, background .15s;
-}
-.pr-rule-toggle:hover { border-color: #b9c0cb; background: #f8f9fb; }
-.pr-rule-toggle svg { width: 18px; height: 18px; stroke: #9aa1ac; transition: transform .2s; }
-.pr-rule-toggle.on svg { transform: rotate(180deg); }
-
-.pr-rule {
-  padding: 16px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #fff;
-}
-.pr-rule h5 { font-size: 14px; font-weight: 700; color: var(--text); }
-.pr-rule p { margin-top: 12px; font-size: 13.5px; line-height: 1.85; color: #4b5563; }
-.pr-rule p + p { padding-top: 12px; border-top: 1px dashed #eef0f4; }
-.pr-rule b { color: var(--text); font-weight: 600; }
-
-/* ---------- 触屏 / 平板微调 ---------- */
-html[data-touch="1"] .pr-opt { padding: 15px 14px; }
-html[data-layout="tablet"] .pr-q { font-size: 16.5px; }
-html[data-layout="tablet"] .pr-q-lg { font-size: 19px; }
-html[data-layout="tablet"] .pr-opt { padding: 15px 16px; font-size: 16px; }
-html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
-
-/* ======================================================
    二十、PC 宽屏适配（1920×1080 / 2560×1440）
    ------------------------------------------------------
    以前 PC 只有「lg」一档，所有卡沿用手机那套单列 560/620：
@@ -5831,9 +5527,17 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
   min-width: 0;
 }
 
-/* ---------- 0) 档位变量 ---------- */@media (min-width: 1024px) {
+/* ---------- 0) 档位变量 ---------- */
+/* --pc-8x8：所有「8×8 方格盘」共用的边长基准（八皇后、异或法则）。
+   ★ 为什么不直接用 --pc-board：那张棋盘卡还要在右栏放统计 / 操作，
+     可用高度比单栏的方格盘少一截，400 的盘在 1366 上就偏小了。
+     这里按「视口高 − 240」算，下限有 760 兜着，三档分别是
+     371 / 460 / 760 —— 八皇后和异或永远同一个边长，格子大小一致。
+     （2026-11-21 用户：局内八皇后有点小、异或怎么这么硕大。） */
+@media (min-width: 1024px) {
   html[data-device="pc"][data-aspect="wide"] {
     --pc-board: min(calc(100vh - 300px), 640px);
+    --pc-8x8: min(calc(100vh - 240px), 760px);
     --pc-side: 280px;
     --pc-gap: 22px;
   }
@@ -5842,6 +5546,7 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
   html[data-device="pc"][data-aspect="wide"] {
     /* 1920×1080：盘面吃满高度，旁边信息栏一并放宽 */
     --pc-board: min(calc(100vh - 280px), 820px);
+    --pc-8x8: min(calc(100vh - 240px), 780px);
     --pc-side: 340px;
     --pc-gap: 28px;
   }
@@ -5850,6 +5555,7 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
   html[data-device="pc"][data-aspect="wide"] {
     /* 2560×1440：屏更高，盘面可以再放大一圈，不然棋盘缩在中间一小块 */
     --pc-board: min(calc(100vh - 320px), 1000px);
+    --pc-8x8: min(calc(100vh - 260px), 900px);
     --pc-side: 420px;
     --pc-gap: 32px;
   }
@@ -5868,6 +5574,16 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
        直接 center 会把顶上那截顶到滚动区外面去（和摩斯侧栏同一个坑）。
        单位换算这种「一层类别卡 + 一层换算卡」的页面靠这条一起居中。 */
     justify-content: safe center;
+  }
+  /* ★ 扁平窗口（宽而矮：1366×700、1280×611 这类）一律靠上排，不要垂直居中。
+     居中只对"内容几乎填满一屏"的页有益；棋盘 / 盘面 / 囚徒困境这种矮内容
+     在扁窗口里居中就是上下各空两百多像素、整页浮在半空，一眼看得出来。
+     判据用高度而不是宽高比 —— 1920×960 这种"宽但也高"的屏居中仍然好看，
+     只有高度不够时才改贴顶（用户 2026-11-21 明确：扁平窗口偏上更协调）。 */
+  @media (max-height: 820px) {
+    html[data-device="pc"] .tool-body {
+      justify-content: flex-start;
+    }
   }
   /* ★ width:100% 不能省：这些 wrap 普遍带 margin:0 auto，
      flex 子项一旦有横向 auto 外边距就按内容宽度收缩，max-width 形同虚设
@@ -5932,10 +5648,22 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
     border-radius: 12px;
     background: #f8f9fb;
   }
+  /* 梵天的典故和「玩法规则」是同一层信息（一段正文），
+     既然规则套了灰框，典故裸在白底上就像右栏漏了一截 —— 给它同款外壳，
+     两条 border-top 一起被 border 覆盖掉。 */
   html[data-device="pc"][data-aspect="wide"] .bh-lore {
     grid-column: 2;
     align-self: start;
     margin-top: 0;
+    padding: 16px 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #f8f9fb;
+  }
+  /* 梵天单独：右栏「规则 + 传说」比左栏高得多，左栏按 align-self:center 居中
+     会浮在卡片正中间、上下各空一大块（2026-11-21 截图）。顶对齐才像一张面板。 */
+  html[data-device="pc"][data-aspect="wide"] #toolBrahma .bh-setup-main {
+    align-self: start;
   }
 
   /* ---------- 3) 五张同构棋盘卡：左盘面 / 右信息操作 ----------
@@ -5991,6 +5719,21 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
     #toolBridge .br-board, #toolFourColor .fc-board
   ) {
     max-width: var(--pc-board);
+  }
+  /* 八皇后单独放大一档：它的右栏只有「用时 / 已放」两块统计，盘面按
+     --pc-board 排（1366×768 上才 400）时整页偏空 —— 用户 2026-11-21 直说
+     「局内八皇后有点小」。盘是 8×8 的方格，放大不会显得挤，所以加 60。
+     两道封顶：视口高（再大就顶出可视区）和 760（再大就是一面墙）。
+     ★ 盘面要真变大，得连 .qn-game 的限宽一起放宽 —— 不然 1fr 列宽
+       就等于 --pc-board + 26，boardcard 的 max-width 写得再大也被列宽卡死。 */
+  html[data-device="pc"][data-aspect="wide"] #toolQueen .qn-game {
+    max-width: calc(var(--pc-8x8) + var(--pc-side) + var(--pc-gap) + 26px);
+  }
+  html[data-device="pc"][data-aspect="wide"] #toolQueen .qn-boardcard {
+    max-width: calc(var(--pc-8x8) + 26px);
+  }
+  html[data-device="pc"][data-aspect="wide"] #toolQueen .qn-board {
+    max-width: var(--pc-8x8);
   }
   /* 统计（用时 / 步骤 / 已放）搬到右栏，竖着叠 */
   html[data-device="pc"][data-aspect="wide"] :is(
@@ -6076,29 +5819,27 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
   html[data-device="pc"][data-aspect="wide"] #toolBrahma .bh-wrap {
     max-width: calc(var(--pc-board) + var(--pc-side) + var(--pc-gap));
   }
+  /* ★ 对局页不出右栏。本来照五张棋盘卡的骨架排成「左盘面 / 右提示」，
+     可这张卡的右栏里只有一行字（提示语），却占掉 280–340px ——
+     盘面被挤到左半边、右边空一大片，顶上三个按钮还跨栏飞到最右端
+     （2026-11-21 截图：402px 的盘面配 630px 的空白）。
+     这里改回单列：顶栏一行、盘面居中、提示在盘面底下 —— 窄屏上的观感一致，
+     宽屏上盘面还能吃满整行。 */
   html[data-device="pc"][data-aspect="wide"] #toolBrahma .bh-game {
     width: 100%;
-    max-width: calc(var(--pc-board) + var(--pc-side) + var(--pc-gap));
+    max-width: 900px;
     margin-left: auto;
     margin-right: auto;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--pc-side);
-    grid-template-rows: auto minmax(0, 1fr);
-    column-gap: var(--pc-gap);
-    row-gap: 14px;
-    align-items: start;
   }
-  html[data-device="pc"][data-aspect="wide"] #toolBrahma .bh-head { grid-column: 1 / -1; grid-row: 1; }
-  html[data-device="pc"][data-aspect="wide"] #toolBrahma .bh-board { grid-column: 1; grid-row: 2; }
-  html[data-device="pc"][data-aspect="wide"] #toolBrahma .bh-tip { grid-column: 2; grid-row: 2; }
-  /* 盘面别跟着左栏一起撑到 900：3 阶只有 3 只盘，横向铺太开就成一长条了。
-     ★ 用 width:100% + 左右 auto 外边距居中，别用 justify-self:center ——
-       那会让网格项按内容宽度收缩，盘面直接压成一根竖条（柱子里全是绝对定位）。 */
+  /* 单列之后盘面就吃满整行（外层 .bh-game 已经限了 900）：
+     盘宽是柱宽的百分比，柱子一宽盘自然跟着大，3 阶也不至于缩成一小块。
+     ★ 用 width:100%，别用 justify-self:center —— 那会让网格项按内容宽度收缩，
+       盘面直接压成一根竖条（柱子里全是绝对定位）。 */
   html[data-device="pc"][data-aspect="wide"] #toolBrahma .bh-board {
     width: 100%;
-    max-width: 560px;
-    margin-left: auto;
-    margin-right: auto;
+  }
+  html[data-device="pc"][data-aspect="wide"] #toolBrahma .bh-tip {
+    text-align: center;
   }
 
   /* ---------- 6) 工具型卡：单列加宽 ----------
@@ -6134,9 +5875,10 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
   }
   html[data-device="pc"][data-aspect="wide"] #toolMagic .mg-foot { grid-column: 2; grid-row: 4; }
 
-  /* 九宫幻方的格子跟着放大（--n 是 JS 写的阶数） */
+  /* 九宫幻方：每格目标宽度恒定（--n 是 JS 写的阶数），
+     3–9 阶格子一样大，比例才协调；别用 n*140 那种越高越小的公式。 */
   html[data-device="pc"][data-aspect="wide"] #toolMagic .mg-board {
-    max-width: min(640px, calc(var(--n, 3) * 140px));
+    max-width: min(calc(var(--n, 3) * 52px + 32px), 500px);
   }
   /* 二零四八：4×4 的盘，460 左右最舒服（每格 ~115），
      再大就顶到底下的方向键那一排了。 */
@@ -6185,7 +5927,7 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
     max-width: min(100%, 940px);
   }
   html[data-device="pc"][data-aspect="wide"] #toolMagic .mg-board {
-    max-width: min(700px, calc(var(--n, 3) * 150px));
+    max-width: min(calc(var(--n, 3) * 62px + 32px), 620px);
   }
   /* 异或法则：1920 上 880 太窄（只占 46%），放宽并放大操作盘格子 */
   html[data-device="pc"][data-aspect="wide"] #toolXor .xo-wrap { max-width: 1200px; }
@@ -6276,7 +6018,7 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
     max-width: min(1800px, 70vw);
   }
   html[data-device="pc"][data-aspect="wide"] #toolMagic .mg-board {
-    max-width: min(880px, calc(var(--n, 3) * 170px));
+    max-width: min(calc(var(--n, 3) * 70px + 36px), 720px);
   }
   html[data-device="pc"][data-aspect="wide"] #toolGame2048 .g48-board {
     max-width: clamp(460px, calc(100vh - 560px), 760px);
@@ -6482,12 +6224,18 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
   }
 }
 
-/* ---------- 九宫幻方：盘面按可用高度封顶 ----------
-   它的左栏是「设置 + 盘面 + 操作」竖着叠，1366×768 上会超出 170px。
-   盘面跟着可用高度缩，就塞得回去了。 */
+/* ---------- 九宫幻方：盘宽按「每格目标宽度 × 阶数」算 ----------
+   ★ 不能按 100vh 减固定数：原来那句 min(100vh - 540px, 420px) 在
+     611 高的扁窗口只剩 71px，9 阶格子被压成 4×17px，数字全糊成一团
+     （2026-11-21 用户截图）。根因是格子有 aspect-ratio:1，盘宽一旦
+     小于「n × 最小可读格宽」，grid 列就被 input 撑破、正方形失效。
+   ★ 也不能用 n*150px 这类「盘宽随阶数涨」的公式：那会让 3 阶每格 150px、
+     9 阶每格 78px —— 阶数越高格子反而越小，比例完全颠倒。
+   正解：每格目标宽度恒定（这里 46px，两位数 17px 字号放得下），
+   盘宽 = n×46 + 和列余量；9 阶封顶 440。矮窗口略滚一点可接受。 */
 @media (min-width: 1024px) and (max-width: 1599px) {
   html[data-device="pc"][data-aspect="wide"] #toolMagic .mg-board {
-    max-width: min(calc(100vh - 540px), 420px);
+    max-width: min(calc(var(--n, 3) * 46px + 26px), 440px);
   }
 }
 
@@ -6831,23 +6579,38 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
 /* 盘面卡收到和盘面一样宽再居中：不然白框比盘面宽一大圈，看着松散
    （其余五张棋盘卡就是这么处理的）。三档各按自己的盘面上限算。 */
 @media (min-width: 1024px) and (max-width: 1599px) {
+  /* 盘面尺寸跟全站那套 --pc-board 走（五张棋盘卡都是它），别再自己写 100vh-460：
+     611 高的窗口上那个式子只剩 151px，四格 25px、数字 38px 挤成一团，
+     而右栏操作区还空着一整屏。 */
   html[data-device="pc"][data-aspect="wide"] #toolGame2048 .g48-board {
-    max-width: min(calc(100vh - 460px), 440px);
+    max-width: min(var(--pc-board), 440px);
   }
+  /* ★ 这里不能用 justify-self:center —— 网格项一旦这么写就按**内容宽度**收缩，
+     而里头的 .g48-board 是 width:100%，宽度来源又指回父级，循环依赖的结果是
+     盘面塌成 0×0（2026-11-21 实测：1092/1366/1440/1920 四档全一样，整块盘面
+     只剩卡片 26px 的内边距）。改成 width:100% + 左右 auto 外边距居中，
+     和 .bh-board / 五张棋盘卡同一套修法。 */
   html[data-device="pc"][data-aspect="wide"] #toolGame2048 .g48-boardcard {
-    max-width: calc(min(calc(100vh - 460px), 440px) + 26px);
-    justify-self: center;
+    width: 100%;
+    max-width: calc(min(var(--pc-board), 440px) + 26px);
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 @media (min-width: 1600px) {
   html[data-device="pc"][data-aspect="wide"] #toolGame2048 .g48-boardcard {
+    width: 100%;                       /* 同上：别用 justify-self:center */
     max-width: calc(clamp(400px, calc(100vh - 500px), 640px) + 26px);
-    justify-self: center;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 @media (min-width: 2200px) {
   html[data-device="pc"][data-aspect="wide"] #toolGame2048 .g48-boardcard {
+    width: 100%;
     max-width: calc(clamp(460px, calc(100vh - 560px), 760px) + 26px);
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 
@@ -6865,9 +6628,16 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
      1024 档（1366×768）左栏只给 270，1600/2200 档给 380/480。
    ====================================================== */
 @media (min-width: 1024px) and (max-width: 1599px) {
-  html[data-device="pc"][data-aspect="wide"] #toolXor .xo-wrap { max-width: 1040px; }
+  /* ★ 操作盘锚到 --pc-board（五张棋盘卡都是这条基准），别再写死 56px：
+     8×8 出来 476，比八皇后的 400 还硕大一圈，而且 611 高的窗口上
+     整页被顶出可视区（bodyScroll 687 / bodyH 635）。
+     8 格 + 7 条 4px 缝 = 28px 的余量要从盘面尺寸里扣掉。 */
+  html[data-device="pc"][data-aspect="wide"] #toolXor .xo-wrap {
+    /* 舞台宽度跟着盘走：1040 是配 476 的盘算的，盘缩了框就空出一大圈 */
+    max-width: calc(var(--pc-8x8) + 564px);
+  }
   html[data-device="pc"][data-aspect="wide"] #toolXor .xo-stage {
-    --xo-cell: 56px;
+    --xo-cell: calc((var(--pc-8x8) - 28px) / 8);
     --xo-gap: 4px;
     grid-template-columns: 270px auto auto;
     column-gap: 26px;
@@ -6906,7 +6676,7 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
   html[data-device="pc"][data-aspect="wide"] #toolXor .xo-stage {
     /* 格子按可用高度封顶：盘是 8×8，页高不够就得缩格，
        否则 8 行格子直接顶出屏幕。左栏同理（两张参照图竖着摞）。 */
-    --xo-cell: min(78px, calc((100vh - 330px) / 8.4));
+    --xo-cell: calc((var(--pc-8x8) - 35px) / 8);
     --xo-gap: 5px;
     grid-template-columns: min(calc((100vh - 230px) / 2), 400px) auto auto;
     column-gap: 30px;
@@ -6944,7 +6714,7 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
   html[data-device="pc"][data-aspect="wide"] #toolXor .xo-wrap { max-width: 1900px; }
   html[data-device="pc"][data-aspect="wide"] #toolXor .xo-stage {
     /* 同上：格子 8 行、左栏两张图，都按可用高度封顶 */
-    --xo-cell: min(104px, calc((100vh - 340px) / 8.4));
+    --xo-cell: calc((var(--pc-8x8) - 42px) / 8);
     --xo-gap: 6px;
     grid-template-columns: min(calc((100vh - 230px) / 2), 540px) auto auto;
     column-gap: 36px;
@@ -7166,7 +6936,6 @@ html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
     padding: 16px;
   }
 }
-
 
 /* ======================================================
    二十四、单位换算：换算页 / 密度桥页「近乎全屏 + 置顶」
@@ -7431,8 +7200,384 @@ html[data-device="pc"][data-aspect="wide"] #unitPicker .picker-head .x {
 }
 
 /* ======================================================
-   二十五、彩蛋墙
-   主页底栏「彩蛋」按钮 → #toolArchive（逻辑见 js/archive.js）。
+   二十五、囚徒困境（三关问答 + 彩蛋，见 js/prisoner.js）
+   ------------------------------------------------------
+   类名前缀 .pr-*（prisoner）；配色借囚徒卡片那个绿 #1DB994，
+   和 .hm-* / .lt-* / .fc-* 互不相犯。
+   ★ 这一页的气质是"终端"：等宽密文、打字机、答错时闪一下故障。
+     主按钮仍用主版那套黄（.sub-save），只有"选中 / 聚焦"借 --accent 蓝。
+     —— 主版**没有** --brand 这个变量（那是离线版的主题蓝，见 base.css
+        的说明），从离线版搬样式时这几个 var() 全换过了，别再搬回去。
+   ====================================================== */
+.pr-wrap {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 四幕靠 hidden 切换，而 .pr-stage 自己带 display:flex ——
+   所以必须补这条 !important，否则藏不住（老坑，别再踩） */
+.pr-stage { display: flex; flex-direction: column; gap: 16px; }
+.pr-stage[hidden],
+.pr-wrap [hidden] { display: none !important; }
+
+/* ---------- 氛围层：极淡网格 + 卡片扫描光 ----------
+   不放"第几关""剩几次机会"这类字样 —— 系统不解释规则，只看着你。
+   网格底色和扫描光都压到 4% 上下，白底上几乎看不见，移动时才察觉。 */
+#toolPrisoner .tool-body {
+  position: relative;
+  background-color: #fff;
+  background-image:
+    linear-gradient(rgba(29, 185, 148, .028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 185, 148, .028) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-attachment: local;
+}
+
+.pr-brief { position: relative; overflow: hidden; }
+/* 一条扫描光横向掠过简报，4.5 秒一轮 —— 像有台机器在读这张纸 */
+.pr-brief::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: -70px;
+  width: 70px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(29, 185, 148, .10), transparent);
+  animation: prSweep 4.6s linear infinite;
+}
+@keyframes prSweep {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(760px); }   /* 大于卡片宽度即可，靠 overflow 裁掉 */
+}
+
+/* ---------- 案情简报 ---------- */
+.pr-brief {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 20px -14px rgba(16, 24, 40, .16);
+}
+.pr-sys { font-size: 14.5px; font-weight: 600; line-height: 1.7; color: var(--text); }
+.pr-sys-sub { margin-top: 6px; font-size: 13.5px; line-height: 1.75; color: var(--muted); }
+
+.pr-rows-title {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--muted);
+}
+.pr-rows { list-style: none; margin: 6px 0 0; padding: 0; }
+.pr-rows li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.pr-rows li + li { border-top: 1px dashed #eef0f4; }
+.pr-rows span { flex: 0 1 auto; color: var(--muted); }
+.pr-rows b { flex: 0 0 auto; text-align: right; font-weight: 600; color: var(--text); }
+
+/* ---------- 密文：等宽字体 + 拉开字距，一眼看出是"码" ---------- */
+.pr-cipher {
+  margin-top: 12px;
+  padding: 16px 10px;
+  border: 1px solid #cfeae2;
+  border-radius: 10px;
+  background: #eef8f5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  color: #0f6b58;
+  text-align: center;
+  word-break: break-word;
+}
+
+/* ---------- 题面 ---------- */
+.pr-q { font-size: 15px; font-weight: 600; line-height: 1.75; color: var(--text); }
+.pr-q-lg { font-size: 17px; line-height: 1.8; }
+
+/* ---------- 选项 ---------- */
+.pr-opts { display: flex; flex-direction: column; gap: 10px; }
+.pr-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.pr-opt i {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #f1f3f6;
+  color: #6b7280;
+  font-style: normal;
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: background .15s, color .15s;
+}
+.pr-opt:hover { border-color: #b9c0cb; background: #f8f9fb; }
+.pr-opt.on { border-color: var(--accent); background: #f2f7ff; }
+.pr-opt.on:hover { background: #eaf2ff; }
+.pr-opt.on i { background: var(--accent); color: #fff; }
+
+/* ---------- 第二关输入框 ---------- */
+.pr-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 16px;            /* 16px 以下 iOS 会整页放大，别改小 */
+  letter-spacing: .06em;
+  text-align: center;
+  color: var(--text);
+}
+.pr-input::placeholder { letter-spacing: 0; color: #9aa1ac; }
+.pr-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .14);
+}
+
+/* .sub-save 自带 margin-top:20px，这里是 flex + gap:16，要压掉 */
+.pr-submit { margin-top: 0; }
+
+/* ---------- 动效：让它像"系统正在处理你" ----------
+   四层节奏，全都短：
+     · 进一幕      —— 每个直接子元素依次浮起（stagger 60ms）
+     · 选项悬停    —— 左沿滑出一根绿竖线，像被锁定
+     · 选项选中    —— 一圈蓝光扩散出去（一次性，不循环）
+     · 答对转场    —— 整幕横向抖一下 + 掉透明度（glitch），才换下一幕
+     · 答错        —— 四角泛红、整屏压暗，然后才被弹出去
+   ★ animation 一律 0.4s 以内，宁可快得像系统，不要慢得像网页。 */
+.pr-stage.is-enter > * { animation: prRise .38s cubic-bezier(.2, .8, .3, 1) both; }
+.pr-stage.is-enter > *:nth-child(2) { animation-delay: .06s; }
+.pr-stage.is-enter > *:nth-child(3) { animation-delay: .12s; }
+.pr-stage.is-enter > *:nth-child(4) { animation-delay: .18s; }
+.pr-stage.is-enter > *:nth-child(5) { animation-delay: .24s; }
+
+@keyframes prRise {
+  from { opacity: 0; transform: translateY(9px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 选项：左沿一根竖线，悬停/选中时从中间长出来 */
+.pr-opt { position: relative; overflow: hidden; }
+.pr-opt::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 50%;
+  width: 2px; height: 0;
+  background: #1DB994;
+  transform: translateY(-50%);
+  transition: height .18s ease;
+}
+.pr-opt:hover::before,
+.pr-opt.on::before { height: 62%; }
+
+/* 选中那一下的蓝色扩散 */
+.pr-opt.on { animation: prLock .34s ease-out; }
+@keyframes prLock {
+  0%   { box-shadow: 0 0 0 0 rgba(37, 99, 235, .34); }
+  100% { box-shadow: 0 0 0 9px rgba(37, 99, 235, 0); }
+}
+
+/* 打字机光标：正在打的时候跟着闪，打完就收 */
+.is-typing::after {
+  content: "";
+  display: inline-block;
+  width: 2px; height: 1em;
+  margin-left: 3px;
+  vertical-align: -.16em;
+  background: #1DB994;
+  animation: prCaret .72s steps(1) infinite;
+}
+@keyframes prCaret { 0%, 55% { opacity: 1; } 56%, 100% { opacity: 0; } }
+
+/* 答对转场：整幕故障一下 */
+.pr-stage.is-glitch { animation: prGlitch .21s steps(2) both; }
+@keyframes prGlitch {
+  0%   { transform: none; opacity: 1; }
+  35%  { transform: translateX(-4px); opacity: .5; filter: blur(.5px); }
+  70%  { transform: translateX(3px); opacity: 1; filter: none; }
+  100% { transform: none; opacity: 1; }
+}
+
+/* 答错：四角泛红 + 压暗（挂在工具页上，盖住整个内容区） */
+#toolPrisoner.is-alarm .tool-body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 46%, rgba(180, 20, 30, 0) 33%, rgba(180, 20, 30, .40) 100%);
+  animation: prAlarm .44s ease-out both;
+}
+@keyframes prAlarm {
+  0%   { opacity: 0; }
+  28%  { opacity: 1; }
+  100% { opacity: .95; }
+}
+
+/* 密文打完之后"解"一下：一圈绿光从框内散掉（一次性，不循环） */
+.pr-cipher.is-decoded { animation: prDecode .55s ease-out; }
+@keyframes prDecode {
+  0%   { box-shadow: inset 0 0 0 1px rgba(29, 185, 148, .55), 0 0 20px rgba(29, 185, 148, .26); }
+  100% { box-shadow: inset 0 0 0 1px rgba(29, 185, 148, 0), 0 0 0 rgba(29, 185, 148, 0); }
+}
+
+/* 通关标题：从发光、字距拉开，收成安静的一行 */
+.pr-egg.is-enter .pr-egg-title { animation: prGlow 1s cubic-bezier(.2, .8, .3, 1) both; }
+@keyframes prGlow {
+  0%   { opacity: 0; letter-spacing: .22em; text-shadow: 0 0 22px rgba(29, 185, 148, .85); }
+  60%  { opacity: 1; }
+  100% { opacity: 1; letter-spacing: normal; text-shadow: 0 0 0 rgba(29, 185, 148, 0); }
+}
+
+/* ---------- 彩蛋 ---------- */
+.pr-egg { padding-top: 4px; }
+.pr-egg-title { font-size: 20px; font-weight: 700; color: var(--text); }
+.pr-egg-lead { font-size: 14.5px; line-height: 1.8; color: #4b5563; }
+
+/* 两个选择：纯文字，故意不做成按钮 —— 不点，只读 */
+.pr-choos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fbfcfd;
+}
+.pr-choos-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+.pr-choos-row b { flex: 0 0 auto; font-weight: 600; color: var(--text); }
+.pr-choos-row span { color: var(--muted); }
+
+/* ---------- 逻辑规则（折叠） ---------- */
+.pr-rule-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.pr-rule-toggle:hover { border-color: #b9c0cb; background: #f8f9fb; }
+.pr-rule-toggle svg { width: 18px; height: 18px; stroke: #9aa1ac; transition: transform .2s; }
+.pr-rule-toggle.on svg { transform: rotate(180deg); }
+
+.pr-rule {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+.pr-rule h5 { font-size: 14px; font-weight: 700; color: var(--text); }
+.pr-rule p { margin-top: 12px; font-size: 13.5px; line-height: 1.85; color: #4b5563; }
+.pr-rule p + p { padding-top: 12px; border-top: 1px dashed #eef0f4; }
+.pr-rule b { color: var(--text); font-weight: 600; }
+
+/* ---------- 触屏 / 平板微调 ---------- */
+html[data-touch="1"] .pr-opt { padding: 15px 14px; }
+html[data-layout="tablet"] .pr-q { font-size: 16.5px; }
+html[data-layout="tablet"] .pr-q-lg { font-size: 19px; }
+html[data-layout="tablet"] .pr-opt { padding: 15px 16px; font-size: 16px; }
+html[data-layout="tablet"] .pr-cipher { font-size: 20px; }
+
+/* ---------- 宽屏：整列放大一档 ----------
+   这一页只有一竖列（简报 / 题面 / 选项 / 确认），所以不是"拉宽"而是
+   「放宽 + 字号跟上」—— 只把 560 拉到 900、字还是 13.5px，就成了
+   一条又宽又空的纸。三档比例和第一节手机的观感一致（≈1.15 / 1.3 / 1.45）。 */
+@media (min-width: 1024px) {
+  html[data-device="pc"][data-aspect="wide"] .pr-wrap { max-width: 640px; gap: 18px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-q { font-size: 16.5px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-q-lg { font-size: 19px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-sys { font-size: 16px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-sys-sub,
+  html[data-device="pc"][data-aspect="wide"] .pr-rows li { font-size: 14.5px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-opt { font-size: 16px; padding: 15px 16px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-cipher { font-size: 19px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-egg-title { font-size: 22px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-egg-lead,
+  html[data-device="pc"][data-aspect="wide"] .pr-choos-row { font-size: 15.5px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-rule p { font-size: 14.5px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-rule-toggle { font-size: 15.5px; }
+}
+@media (min-width: 1600px) {
+  html[data-device="pc"][data-aspect="wide"] .pr-wrap { max-width: 760px; gap: 20px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-q { font-size: 18px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-q-lg { font-size: 21px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-sys { font-size: 17.5px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-sys-sub,
+  html[data-device="pc"][data-aspect="wide"] .pr-rows li { font-size: 16px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-opt { font-size: 17.5px; padding: 17px 18px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-cipher { font-size: 22px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-egg-title { font-size: 25px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-egg-lead,
+  html[data-device="pc"][data-aspect="wide"] .pr-choos-row { font-size: 17px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-rule p { font-size: 16px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-rule-toggle { font-size: 17px; }
+}
+@media (min-width: 2200px) {
+  html[data-device="pc"][data-aspect="wide"] .pr-wrap { max-width: 860px; gap: 22px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-q { font-size: 20px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-q-lg { font-size: 23px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-sys { font-size: 19px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-sys-sub,
+  html[data-device="pc"][data-aspect="wide"] .pr-rows li { font-size: 17.5px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-opt { font-size: 19px; padding: 19px 20px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-cipher { font-size: 25px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-egg-title { font-size: 28px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-egg-lead,
+  html[data-device="pc"][data-aspect="wide"] .pr-choos-row { font-size: 18.5px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-rule p { font-size: 17.5px; }
+  html[data-device="pc"][data-aspect="wide"] .pr-rule-toggle { font-size: 18.5px; }
+}
+
+/* ======================================================
+   二十六、彩蛋墙
+   主页底栏那颗蛋 → #toolArchive（逻辑见 js/archive.js）。
 
    格子是竖长方形（3:4），上下按 2:1 分：上 2/3 一块圆角图标，
    下 1/3 主标题 + 副标题。未解锁的图标是黑底白问号，
@@ -7587,3 +7732,544 @@ html[data-layout="tablet"] .arc-grid { max-width: 620px; }
 }
 
 
+/* ======================================================
+   二十六、单位换算：搜索 / 显示设置
+   ------------------------------------------------------
+   见 index.html 的 #cvtTopbar / #cvtResults / #unitSettings / #unitSelf，
+   逻辑在 js/units.js 的十~十三节。
+
+   三样东西：
+     · 顶部一条搜索（跨量搜全库，出结果就顶掉下面的列表）
+     · 齿轮 → 显示设置（全部 / 常用 / 自定义）
+     · 自定义页（领域 → 量 → 单位勾选，带导出 / 导入 json）
+
+   ★ 都是 .tool-page 的直接 flex 子项或 tool-body 里的整块视图，和原来的
+     .unit-cats / .unit-conv 平级；hidden 属性照例要显式写回 display:none
+     （这几块自己带 display:flex / grid，会盖掉 hidden 的效果）。
+   ====================================================== */
+
+/* ---------- 顶部条（搜索 + 齿轮） ---------- */
+.cvt-topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #fff;
+  border-bottom: 1px solid var(--line);
+}
+.cvt-topbar[hidden] { display: none; }
+
+.cvt-search {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;              /* 不写死会把齿轮挤出屏幕 */
+  /* ★ 搜索条必须和下面的结果列同宽、同左边界。
+     直接 flex:1 会横跨整页（1920 上是一条 1900px 的长条，底下结果只有 820，
+     两者对不齐非常怪）。这里把「搜索框 + 齿轮」当成一个组推进中间：
+     组宽 = 结果列宽，左右 auto 各吃一半剩余空间。
+     508 = 结果 560 − gap 10 − 齿轮 42；628 / 758 见两个断点。 */
+  max-width: 508px;
+  margin-left: auto;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #F5F6F8;
+  transition: border-color .16s, background .16s;
+}
+.cvt-search:focus-within { border-color: var(--accent); background: #fff; }
+.cvt-search-ico {
+  width: 18px; height: 18px;
+  flex: 0 0 auto;
+  stroke: var(--muted);
+  transition: stroke .16s;
+}
+.cvt-search:focus-within .cvt-search-ico { stroke: var(--accent); }
+.cvt-search-in {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  outline: 0;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+}
+.cvt-search-in::placeholder { color: #9AA1AD; }
+.cvt-search-clear {
+  flex: 0 0 auto;
+  width: 22px; height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: #CBD1DA;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+.cvt-search-clear[hidden] { display: none; }
+
+.cvt-gear {
+  flex: 0 0 auto;
+  /* 和 .cvt-search 的 margin-left:auto 配对，把这个组整体居中 */
+  margin-right: auto;
+  width: 42px; height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  transition: color .16s, background .16s, border-color .16s;
+}
+.cvt-gear svg { width: 21px; height: 21px; stroke: currentColor; }
+.cvt-gear:active { background: #F2F4F7; }
+
+/* ---------- 搜索结果 ----------
+   每行：单位名 +（符号）+ 右顶格的灰色归属量。
+   归属量必须写：单位 id 跨量重名（ms / h / t / s / kg…），
+   只写「毫秒」看不出是时间还是电导。 */
+.cvt-results {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.cvt-results[hidden] { display: none; }
+/* 行式列表在宽屏上不该跟着类别卡挤在 560 里：一行「单位名 …… 归属量」
+   拉开才看得清，560 太窄（width 一宽，右顶格的归属才对得上眼睛的动线） */
+@media (min-width: 768px) {
+  .cvt-results { max-width: 680px; }
+  /* 搜索条跟着结果列的宽度走：680 − gap 10 − 齿轮 42 */
+  .cvt-search { max-width: 628px; }
+}
+
+.cvt-results-head {
+  padding: 2px 2px 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.cvt-results-list { display: flex; flex-direction: column; }
+
+.cvt-sr {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 2px;
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cvt-sr:active { background: #FAFBFC; }
+.cvt-sr.is-open { background: #FAFBFC; }
+.cvt-sr-name { font-size: 16px; color: var(--text); }
+.cvt-sr-sym { font-size: 12.5px; color: var(--muted); }
+/* 右顶格：margin-left:auto 把它推到最右，不再跟着名字长短跑 */
+.cvt-sr-cat { margin-left: auto; font-size: 12.5px; color: #99A0AC; white-space: nowrap; }
+
+/* 行内展开的两颗按钮：定宽靠左，别各占半行。
+   铺满整行（flex:1）在 680 宽下会变成两块 320px 的巨型色块，很笨；
+   200 的 basis 在手机上会自己缩到放得下两颗。 */
+.cvt-sr-acts {
+  display: flex;
+  gap: 10px;
+  padding: 4px 2px 13px;
+  border-bottom: 1px solid var(--line);
+  background: #FAFBFC;
+}
+.cvt-sr-acts[hidden] { display: none; }
+.cvt-sr-act {
+  flex: 0 1 200px;
+  min-width: 0;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+@media (hover: hover) {
+  .cvt-sr:hover { background: #FAFBFC; }
+  .cvt-sr-act:hover { border-color: #C7CDD8; }
+}
+/* 「设为原始单位」是这次点开的主要意图，给主色底 */
+.cvt-sr-act[data-sr-act="from"] {
+  border-color: var(--yellow);
+  background: var(--yellow);
+  color: var(--on-yellow);
+  font-weight: 600;
+}
+
+/* ---------- 显示设置 ---------- */
+.cvt-settings {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.cvt-settings[hidden] { display: none; }
+
+.cvt-set-lead {
+  margin-bottom: 14px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+.cvt-set-lead b { color: var(--text); }
+/* 设置页里第二组（排序方式）那一段标题：跟上面那组拉开距离，不然两段
+   混成一片，看不出是「显示范围」和「排序」两件事 */
+.cvt-opt-group + .cvt-set-lead { margin-top: 26px; }
+
+.cvt-opt-group {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+.cvt-opt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 15px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cvt-opt:last-child { border-bottom: 0; }
+.cvt-opt:active { background: #FAFBFC; }
+.cvt-opt-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.cvt-opt-txt b { font-size: 15.5px; font-weight: 600; color: var(--text); }
+.cvt-opt-sub { font-size: 12.5px; color: var(--muted); }
+
+/* 选中圈：未选是空心灰圈，选中是实心蓝底 + 白勾（勾用两条边旋转出来） */
+.cvt-opt-tick {
+  position: relative;
+  flex: 0 0 auto;
+  margin-left: auto;
+  width: 20px; height: 20px;
+  border: 1.6px solid #CFD4DC;
+  border-radius: 50%;
+  transition: background .16s, border-color .16s;
+}
+.cvt-opt[aria-checked="true"] .cvt-opt-tick {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+.cvt-opt[aria-checked="true"] .cvt-opt-tick::after {
+  content: '';
+  position: absolute;
+  left: 6px; top: 3px;
+  width: 5px; height: 9px;
+  border: 2px solid #fff;
+  border-top: 0;
+  border-left: 0;
+  transform: rotate(42deg);
+}
+.cvt-opt[aria-checked="true"] .cvt-opt-txt b { color: var(--accent); }
+
+.cvt-set-foot {
+  margin-top: 14px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+/* ---------- 自定义显示 ---------- */
+.cvt-self {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.cvt-self[hidden] { display: none; }
+/* 自定义页里那张 .unit-cats 不能再走首页那套列宽：
+   它已经在 560 的框里了，而 `html[data-device="pc"][data-aspect="wide"] #toolUnits .unit-cats`
+   （四列 + 1160）和基础的 minmax(260px) 都会把卡片压到 90~130px —— 名字竖排、
+   说明被截成「62 / 62 …」。那条规则带 id，所以这里必须**也带两个 id**
+   （#toolUnits #unitSelf）才压得住，单个 #unitSelf 的权重不够。
+     · 168px 一列：560 宽正好 3 列，手机 358 宽正好 2 列
+     · 去掉右侧箭头（这页点进去是看清单，不是"跳转到新功能"，箭头是噪音）
+     · 名字允许折两行（「体积＆容积」「压力＆压强」七个字硬挤会出省略号） */
+#toolUnits #unitSelf .unit-cats {
+  max-width: none;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 10px;
+}
+#toolUnits #unitSelf .unit-cat { padding: 10px 12px; gap: 10px; }
+#toolUnits #unitSelf .unit-cat .tool-btn-ico {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  flex: 0 0 auto;
+}
+#toolUnits #unitSelf .unit-cat .tool-btn-ico.unit-kid-sym { font-size: 16px; }
+#toolUnits #unitSelf .unit-cat .tool-btn-text { min-width: 0; }
+#toolUnits #unitSelf .unit-cat .tool-btn-name {
+  display: block;
+  font-size: 14px;
+  line-height: 1.3;
+}
+#toolUnits #unitSelf .unit-cat .tool-btn-desc {
+  margin-top: 2px;
+  font-size: 11.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#toolUnits #unitSelf .unit-cat .tool-btn-go { display: none; }
+
+.cvt-self-tools { display: flex; gap: 10px; margin-bottom: 12px; }
+.cvt-mini {
+  flex: 1 1 0;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+.cvt-mini:active { background: #F2F4F7; }
+
+.cvt-search.is-self { margin-bottom: 14px; background: #fff; }
+
+.cvt-self-list { display: flex; flex-direction: column; }
+.cvt-self-list[hidden] { display: none; }
+
+.cvt-self-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 2px 10px;
+}
+.cvt-self-head span { font-size: 12.5px; color: var(--muted); }
+.cvt-self-all {
+  margin-left: auto;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.cvt-self-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.cvt-self-row:active { background: #FAFBFC; }
+.cvt-self-name { font-size: 15px; color: var(--text); }
+.cvt-self-name em {
+  font-style: normal;
+  margin-left: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+/* 关掉的那一行：名字淡下去，开关变灰 —— 一眼看出哪些是关的 */
+.cvt-self-row[aria-checked="false"] .cvt-self-name { color: #A6ABB6; }
+
+.cvt-self-switch {
+  position: relative;
+  flex: 0 0 auto;
+  margin-left: auto;
+  width: 36px; height: 21px;
+  border-radius: 11px;
+  background: #D8DBE2;
+  transition: background .16s;
+}
+.cvt-self-switch::after {
+  content: '';
+  position: absolute;
+  top: 2.5px; left: 2.5px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform .16s;
+}
+.cvt-self-row[aria-checked="true"] .cvt-self-switch { background: var(--accent); }
+.cvt-self-row[aria-checked="true"] .cvt-self-switch::after { transform: translateX(15px); }
+
+/* ---------- 选单位弹窗里的放大镜 ---------- */
+.picker-acts { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+.picker-find {
+  width: 34px; height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+}
+.picker-find svg { width: 20px; height: 20px; stroke: currentColor; }
+.picker-find[aria-expanded="true"] { color: var(--accent); background: #EEF3FF; }
+/* 触摸设备给到 40px（和 .tool-back 一样的道理）：34 在手机上点不准 */
+html[data-touch="1"] .picker-find { width: 40px; height: 40px; }
+
+.picker-findbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.picker-findbar[hidden] { display: none; }
+.picker-findbar input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--text);
+  outline: 0;
+}
+.picker-findbar input:focus { border-color: var(--accent); }
+
+.cvt-picker-empty {
+  padding: 24px 2px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}
+.cvt-picker-empty[hidden] { display: none; }
+
+/* ---------- PC 宽屏：字和控件一起放大 ----------
+   只拉宽不放大，会变成一条超长扁输入框（同第二十一节那条教训），
+   所以高度 / 字号 / 行高都要跟着档位走。 */
+@media (min-width: 1600px) {
+  html[data-device="pc"][data-aspect="wide"] .cvt-topbar { padding: 14px 24px; gap: 12px; }
+  /* 820 − gap 12 − 齿轮 50：宽屏上搜索条依旧与结果列左右对齐 */
+  html[data-device="pc"][data-aspect="wide"] .cvt-search { height: 50px; border-radius: 14px; max-width: 758px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-search-in { font-size: 17px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-gear { width: 50px; height: 50px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-sr { padding: 16px 2px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-sr-name { font-size: 18px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-sr-cat,
+  html[data-device="pc"][data-aspect="wide"] .cvt-sr-sym { font-size: 14px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-sr-act { height: 46px; font-size: 15.5px; flex-basis: 240px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-opt { padding: 19px 20px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-opt-txt b { font-size: 18px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-opt-sub { font-size: 14px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-self-row { padding: 15px 2px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-self-name { font-size: 17px; }
+}
+@media (min-width: 2200px) {
+  html[data-device="pc"][data-aspect="wide"] .cvt-search { height: 56px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-search-in { font-size: 19px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-sr-name { font-size: 20px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-opt-txt b { font-size: 20px; }
+}
+
+/* ---------- 5 秒引导条（从搜索「设为原始单位」进来时才有） ----------
+   .tool-page 是 position:fixed 的整屏 flex，所以 absolute 就贴着这一页的底。
+   它不是 modal：不挡操作、5 秒自己收，点取消或开始敲数也收。 */
+.cvt-guide {
+  position: absolute;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  width: min(560px, calc(100% - 32px));
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px 10px 14px;
+  border-radius: 14px;
+  background: #1F2430;
+  box-shadow: 0 10px 28px rgba(17, 24, 39, .24);
+  font-size: 13px;
+  opacity: 0;
+  transform: translate(-50%, 10px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+.cvt-guide[hidden] { display: none; }
+.cvt-guide.is-in { opacity: 1; transform: translate(-50%, 0); }
+
+.cvt-guide-txt {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #E8EAF0;
+  line-height: 1.45;
+}
+.cvt-guide-btn {
+  flex: 0 0 auto;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--yellow);
+  color: var(--on-yellow);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cvt-guide-x {
+  flex: 0 0 auto;
+  height: 32px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: #B9BFCC;
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* 搜索结果里顺带挂的归属量（自定义页的勾选行用）：和 .cvt-sr-cat 一个灰 */
+.cvt-self-name .cvt-self-cat {
+  margin-left: 10px;
+  color: #A6ABB6;
+}
+/* 名字撑满整行，开关就自然靠右了（不用再给 switch 加 auto margin） */
+.cvt-self-row .cvt-self-name { flex: 1 1 auto; min-width: 0; }
+
+/* 自定义页 / 设置页在宽屏上也别拉得太宽 —— 一行字太长不好读 */
+@media (min-width: 1600px) {
+  html[data-device="pc"][data-aspect="wide"] .cvt-settings,
+  html[data-device="pc"][data-aspect="wide"] .cvt-self { max-width: 700px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-results { max-width: 820px; }
+  html[data-device="pc"][data-aspect="wide"] .cvt-guide {
+    width: min(680px, calc(100% - 48px));
+    font-size: 15px;
+  }
+  html[data-device="pc"][data-aspect="wide"] .cvt-guide-btn,
+  html[data-device="pc"][data-aspect="wide"] .cvt-guide-x { height: 38px; font-size: 14px; }
+}
